@@ -9,6 +9,7 @@ import com.google.common.cache.CacheBuilder;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.DefaultErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
+import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.model.DataUpdate;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -25,7 +26,7 @@ import javax.inject.Singleton;
 @Slf4j
 public class StateTransitionEngine {
     private final Provider<WorkflowProvider> workflowProvider;
-    private final Provider<ActionRegistry> actionRegistry;
+    private final Provider<ActionExecutor> actionExecutor;
     private final Provider<TransitionStore> transitionStore;
     private final ObjectMapper mapper;
     private final HopeLangEngine hopeLangEngine;
@@ -37,12 +38,12 @@ public class StateTransitionEngine {
     @Inject
     public StateTransitionEngine(
             Provider<WorkflowProvider> workflowProvider,
-            Provider<ActionRegistry> actionRegistry,
+            Provider<ActionExecutor> actionExecutor,
             Provider<TransitionStore> transitionStore,
             ObjectMapper mapper,
             StateTransitionEventListener listener) {
         this.workflowProvider = workflowProvider;
-        this.actionRegistry = actionRegistry;
+        this.actionExecutor = actionExecutor;
         this.transitionStore = transitionStore;
         this.mapper = mapper;
         this.listener = listener;
@@ -92,9 +93,8 @@ public class StateTransitionEngine {
         workflowProvider.get().saveWorkflow(workflow);
         listener.postStateUpdate(workflow, template, dataUpdate, selectedTransition);
         if(!Strings.isNullOrEmpty(selectedTransition.getAction())) {
-            actionRegistry.get()
-                    .get(selectedTransition.getAction())
-                    .ifPresent(action -> action.apply(workflow));
+            actionExecutor.get()
+                    .execute(selectedTransition.getAction(), workflow);
         }
         /*
         TODO::
