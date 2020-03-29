@@ -1,4 +1,4 @@
-package io.appform.statesman.engine;
+package io.appform.statesman.engine.action;
 
 import io.appform.statesman.model.Action;
 
