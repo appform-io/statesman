@@ -11,7 +11,7 @@
     <modules>
         <module>statesman-model</module>
         <module>statesman-engine</module>
-        <module>stateman-server</module>
+        <module>statesman-server</module>
     </modules>
 
     <properties>
