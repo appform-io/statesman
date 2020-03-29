@@ -1,4 +1,4 @@
-package io.appform.statesman.server;
+package io.appform.statesman.server.resources;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
