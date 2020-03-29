@@ -1,6 +1,5 @@
 package io.appform.statesman.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Value;
 
 /**
@@ -9,7 +8,6 @@ import lombok.Value;
 @Value
 public class Workflow {
     String id;
-    String name;
+    String templateId;
     DataObject dataObject;
-    JsonNode attributes;
 }

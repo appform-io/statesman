@@ -7,7 +7,7 @@ import lombok.Data;
  */
 @Data
 public class StateTransition {
-    String rule;
+    EvalRule rule;
     State toState;
     String action;
 }

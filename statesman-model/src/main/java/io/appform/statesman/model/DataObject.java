@@ -1,17 +1,17 @@
 package io.appform.statesman.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import lombok.Value;
+import lombok.Data;
 
 import java.util.Date;
 
 /**
  *
  */
-@Value
+@Data
 public class DataObject {
-    JsonNode data;
-    State currentState;
-    Date created;
-    Date updated;
+    private JsonNode data;
+    private State currentState;
+    private Date created;
+    private Date updated;
 }

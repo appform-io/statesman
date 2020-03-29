@@ -8,5 +8,6 @@ import lombok.Value;
  */
 @Value
 public class DataUpdate {
+    String workflowId;
     JsonNode data;
 }

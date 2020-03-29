@@ -11,11 +11,25 @@
 
     <artifactId>statesman-engine</artifactId>
 
+    <properties>
+        <hope-lang.version>1.0.7</hope-lang.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.appform</groupId>
             <artifactId>statesman-model</artifactId>
             <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.appform.hope</groupId>
+            <artifactId>hope-lang</artifactId>
+            <version>${hope-lang.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <version>4.2.2</version>
         </dependency>
     </dependencies>
 
