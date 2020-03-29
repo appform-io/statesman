@@ -4,9 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
+import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.List;
 
 /**
  *
@@ -14,11 +13,11 @@ import java.util.List;
 @Singleton
 public class ObservableGuavaEventBus implements ObservableEventBus {
     private final EventBus syncEventBus;
-    private final Provider<List<ObservableEventBusSubscriber>> subscribers;
+    private final ObservableEventBusSubscriber subscriber;
 
     @Inject
-    public ObservableGuavaEventBus(final Provider<List<ObservableEventBusSubscriber>> subscribers) {
-        this.subscribers = subscribers;
+    public ObservableGuavaEventBus(@Named("workflowPersister") final ObservableEventBusSubscriber subscriber) {
+        this.subscriber = subscriber;
         this.syncEventBus = new EventBus("events");
     }
 
@@ -29,7 +28,6 @@ public class ObservableGuavaEventBus implements ObservableEventBus {
 
     @Subscribe
     public void handleEvent(ObservableEvent event) {
-        subscribers.get()
-                .forEach(subscriber -> subscriber.handle(event));
+        subscriber.handle(event);
     }
 }
