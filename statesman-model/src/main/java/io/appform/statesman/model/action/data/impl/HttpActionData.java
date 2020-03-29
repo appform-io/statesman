@@ -2,6 +2,7 @@ package io.appform.statesman.model.action.data.impl;
 
 import io.appform.statesman.model.action.ActionType;
 import io.appform.statesman.model.action.data.ActionData;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
@@ -15,6 +16,7 @@ public class HttpActionData extends ActionData {
         super(ActionType.HTTP);
     }
 
+    @Builder
     public HttpActionData(String method, String url, String payload, String headers) {
         this();
         this.method = method;
