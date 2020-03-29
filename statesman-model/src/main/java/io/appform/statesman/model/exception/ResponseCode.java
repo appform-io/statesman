@@ -1,4 +1,4 @@
-package io.appform.statesman.server.exception;
+package io.appform.statesman.model.exception;
 
 import lombok.Getter;
 
@@ -8,7 +8,10 @@ import lombok.Getter;
 public enum ResponseCode {
 
     VALIDATION_ERROR(400, "VALIDATION FAILED"),
-    INTERNAL_SERVER_ERROR(500, "INTERNAL SERVER ERROR");
+    OPERATION_NOT_SUPPORTED(400, "OPERATION NOT SUPPORTED"),
+    TRANSFORMATION_ERROR(500, "TRANSFORMATION ERROR"),
+    INTERNAL_SERVER_ERROR(500, "INTERNAL SERVER ERROR"),
+    ;
 
     @Getter
     private String message;
