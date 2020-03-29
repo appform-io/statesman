@@ -4,8 +4,8 @@ package io.appform.statesman.server.dao.providers;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.dropwizard.sharding.dao.LookupDao;
-import io.appform.statesman.server.exception.ResponseCode;
-import io.appform.statesman.server.exception.StatesmanError;
+import io.appform.statesman.model.exception.ResponseCode;
+import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 

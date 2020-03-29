@@ -3,6 +3,8 @@ package io.appform.statesman.engine.handlebars;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.google.common.base.Strings;
+import io.appform.statesman.model.exception.ResponseCode;
+import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -82,7 +84,7 @@ public class HandleBarsHelperRegistry {
             if (option instanceof String) {
                 return compareGte(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
             }
-            throw new RuntimeException(OPERATION_NOT_SUPPORTED);
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
     }
 
@@ -101,7 +103,7 @@ public class HandleBarsHelperRegistry {
             if (option instanceof String) {
                 return compareGt(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
             }
-            throw new RuntimeException(OPERATION_NOT_SUPPORTED);
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
     }
 
@@ -120,7 +122,7 @@ public class HandleBarsHelperRegistry {
             if (option instanceof String) {
                 return compareLte(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
             }
-            throw new RuntimeException(OPERATION_NOT_SUPPORTED);
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
     }
 
@@ -141,7 +143,7 @@ public class HandleBarsHelperRegistry {
             if (option instanceof String) {
                 return compareLt(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
             }
-            throw new RuntimeException(OPERATION_NOT_SUPPORTED);
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
     }
 
@@ -161,7 +163,7 @@ public class HandleBarsHelperRegistry {
             if (option instanceof String) {
                 return compareEq(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
             }
-            throw new RuntimeException(OPERATION_NOT_SUPPORTED);
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
     }
 

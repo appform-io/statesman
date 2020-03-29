@@ -1,4 +1,4 @@
-package io.appform.statesman.server.exception;
+package io.appform.statesman.model.exception;
 
 import com.google.common.base.Strings;
 import lombok.Getter;

@@ -6,6 +6,8 @@ import com.github.jknack.handlebars.context.JavaBeanValueResolver;
 import com.github.jknack.handlebars.context.MapValueResolver;
 import com.github.jknack.handlebars.context.MethodValueResolver;
 import com.google.inject.Singleton;
+import io.appform.statesman.model.exception.ResponseCode;
+import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -38,12 +40,11 @@ public class HandleBarsService {
             if (!compiledTemplates.containsKey(template)) {
                 addTemplate(template);
             }
-            return compiledTemplates.get(template).apply(Context.
-                    newBuilder(data)
+            return compiledTemplates.get(template).apply(Context.newBuilder(data)
+                    .resolver(NOTIFY_VALUE_RESOLVERS)
                     .build());
         } catch (Exception e) {
-            //TODO add proper exception
-            throw new RuntimeException();
+            throw StatesmanError.propagate(e, ResponseCode.TRANSFORMATION_ERROR);
         }
     }
 

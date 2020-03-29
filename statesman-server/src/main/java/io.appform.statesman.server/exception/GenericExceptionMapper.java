@@ -1,5 +1,6 @@
 package io.appform.statesman.server.exception;
 
+import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.ws.rs.core.Response;
