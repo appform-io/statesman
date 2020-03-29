@@ -1,4 +1,4 @@
-package io.appform.statesman.server.publisher;
+package io.appform.statesman.publisher.datapublisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
@@ -17,11 +17,6 @@ class BasePublisher {
     static final MediaType APPLICATION_JSON = MediaType.parse("application/json");
 
     final ObjectMapper mapper;
+    final String url;
     final OkHttpClient client;
-
-    static HttpUrl url(final String endpoint, final String relativePath) {
-        final HttpUrl url = HttpUrl.get(String.format("%s:%s", endpoint, relativePath));
-        log.info("url: {}", url);
-        return url;
-    }
 }
