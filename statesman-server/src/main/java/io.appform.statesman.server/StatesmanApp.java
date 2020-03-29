@@ -12,7 +12,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 
-public class StatemanApp extends Application<AppConfig> {
+public class StatesmanApp extends Application<AppConfig> {
 
     private DBShardingBundle<AppConfig> dbShardingBundle;
 
@@ -42,5 +42,10 @@ public class StatemanApp extends Application<AppConfig> {
         environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         environment.getObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
+    }
+
+    public static void main(String args[]) throws Exception {
+        StatesmanApp app = new StatesmanApp();
+        app.run();
     }
 }
