@@ -3,8 +3,7 @@ package io.appform.statesman.server.publisher;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.appform.core.hystrix.CommandFactory;
-import io.appform.statesman.server.exception.ResponseCode;
-import io.appform.statesman.server.exception.StatesmanError;
+import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 
