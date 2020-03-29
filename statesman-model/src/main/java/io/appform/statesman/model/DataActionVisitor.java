@@ -3,5 +3,6 @@ package io.appform.statesman.model;
 /**
  *
  */
-public class DataActionVisitor {
+public interface DataActionVisitor<T> {
+    T visit(MergeDataAction mergeDataAction);
 }

@@ -10,4 +10,5 @@ import lombok.Value;
 public class DataUpdate {
     String workflowId;
     JsonNode data;
+    DataAction dataAction;
 }

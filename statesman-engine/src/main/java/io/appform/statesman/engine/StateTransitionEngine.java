@@ -29,6 +29,8 @@ public class StateTransitionEngine {
     private final Provider<TransitionStore> transitionStore;
     private final ObjectMapper mapper;
     private final HopeLangEngine hopeLangEngine;
+    private final StateTransitionEventListener listener;
+
     private final Cache<String, Evaluatable> evalCache = CacheBuilder.newBuilder()
             .maximumSize(100_000)
             .build();
@@ -37,15 +39,16 @@ public class StateTransitionEngine {
             Provider<WorkflowProvider> workflowProvider,
             Provider<ActionRegistry> actionRegistry,
             Provider<TransitionStore> transitionStore,
-            ObjectMapper mapper) {
+            ObjectMapper mapper,
+            StateTransitionEventListener listener) {
         this.workflowProvider = workflowProvider;
         this.actionRegistry = actionRegistry;
         this.transitionStore = transitionStore;
         this.mapper = mapper;
+        this.listener = listener;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new DefaultErrorHandlingStrategy())
                 .build();
-
     }
 
     void handle(DataUpdate dataUpdate) {
@@ -83,9 +86,11 @@ public class StateTransitionEngine {
                 .findFirst()
                 .orElse(null);
         Preconditions.checkNotNull(selectedTransition);
+        listener.preStateUpdate(workflow, template, dataUpdate, selectedTransition);
+        workflow.getDataObject().setData(DataActionExecutor.apply(workflow.getDataObject(), dataUpdate));
         workflow.getDataObject().setCurrentState(selectedTransition.getToState());
-        workflowProvider.get()
-                .saveWorkflow(workflow);
+        workflowProvider.get().saveWorkflow(workflow);
+        listener.postStateUpdate(workflow, template, dataUpdate, selectedTransition);
         if(!Strings.isNullOrEmpty(selectedTransition.getAction())) {
             actionRegistry.get()
                     .get(selectedTransition.getAction())

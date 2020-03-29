@@ -3,5 +3,6 @@ package io.appform.statesman.model;
 /**
  *
  */
-public class DataActionType {
+public enum DataActionType {
+    MERGE
 }
