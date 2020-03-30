@@ -31,9 +31,11 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
 
     @Inject
     public HttpAction(HandleBarsService handleBarsService,
-                      HttpClient client) {
+                      HttpClient client,
+                      ObjectMapper mapper) {
         this.handleBarsService = handleBarsService;
         this.client = client;
+        this.mapper = mapper;
     }
 
     @Override
