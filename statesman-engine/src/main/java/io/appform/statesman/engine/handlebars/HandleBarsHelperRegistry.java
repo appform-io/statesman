@@ -1,17 +1,19 @@
 package io.appform.statesman.engine.handlebars;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
+import com.github.jknack.handlebars.Options;
 import com.google.common.base.Strings;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.*;
 
 
 @Slf4j
@@ -47,6 +49,7 @@ public class HandleBarsHelperRegistry {
         registerLte();
         registerGt();
         registerGte();
+        registerMapLookup();
     }
 
     private Object compareGte(int lhs) {
@@ -273,6 +276,15 @@ public class HandleBarsHelperRegistry {
                 value = aNumber.doubleValue();
             }
             return decimalFormat.format(value / 100.0);
+        });
+    }
+
+    private void registerMapLookup() {
+        handlebars.registerHelper("map_lookup", new Helper<JsonNode>() {
+            @Override
+            public Object apply(JsonNode node, Options options) throws IOException {
+                return options.hash("op_" + node.get(options.hash("key")).asText());
+            }
         });
     }
 }

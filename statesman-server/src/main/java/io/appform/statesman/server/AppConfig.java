@@ -2,6 +2,7 @@ package io.appform.statesman.server;
 
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.appform.statesman.publisher.impl.EventPublisherConfig;
+import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.dropwizard.Configuration;
 import io.dropwizard.riemann.RiemannConfig;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
@@ -37,4 +38,9 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private EventPublisherConfig eventPublisherConfig;
+
+    @NotNull
+    @Valid
+    private CallbackTransformationTemplates callbackTransformationTemplates;
+
 }

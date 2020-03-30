@@ -8,6 +8,7 @@ import io.appform.statesman.engine.TransitionStore;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.publisher.impl.KafkaEventClient;
 import io.appform.statesman.server.AppConfig;
+import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.appform.statesman.server.dao.action.ActionTemplateStoreCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
@@ -30,4 +31,9 @@ public class StatesmanModule extends AbstractModule {
                 environment.getObjectMapper());
     }
 
+    @Singleton
+    @Provides
+    public CallbackTransformationTemplates callbackTransformationTemplates(AppConfig config) {
+        return config.getCallbackTransformationTemplates();
+    }
 }
