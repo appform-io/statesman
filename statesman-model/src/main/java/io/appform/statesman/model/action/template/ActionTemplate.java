@@ -3,9 +3,11 @@ package io.appform.statesman.model.action.template;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.appform.statesman.model.action.ActionType;
-import io.appform.statesman.model.action.data.ActionData;
 import lombok.Data;
 import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.validation.constraints.NotNull;
 
 @Data
 @ToString
@@ -16,7 +18,12 @@ import lombok.ToString;
 public abstract class ActionTemplate {
 
     protected String templateId;
+
+    @NotNull
+    @NotEmpty
     protected String name;
+
+    protected boolean active;
 
     protected final ActionType type;
 
@@ -24,9 +31,10 @@ public abstract class ActionTemplate {
         this.type = type;
     }
 
-    public ActionTemplate(ActionType type, String templateId, String name) {
+    public ActionTemplate(ActionType type, String templateId, String name, boolean active) {
         this.type = type;
         this.templateId = templateId;
         this.name = name;
+        this.active = active;
     }
 }

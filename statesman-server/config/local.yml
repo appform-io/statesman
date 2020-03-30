@@ -44,7 +44,7 @@ shards:
   - driverClass: org.mariadb.jdbc.Driver
     user: root
     password: root
-    url: jdbc:mariadb://127.0.0.1/statesman_shard1?createDatabaseIfNotExist=true
+    url: jdbc:mariadb://127.0.0.1/statesman_shard2?createDatabaseIfNotExist=true
     properties:
       charSet: UTF-8
       hibernate.dialect: org.hibernate.dialect.MariaDBDialect

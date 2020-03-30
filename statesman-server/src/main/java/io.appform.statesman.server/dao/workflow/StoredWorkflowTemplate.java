@@ -34,7 +34,7 @@ public class StoredWorkflowTemplate {
     private String name;
 
 
-    @Column(name = "attributes")
+    @Column(name = "attributes", columnDefinition = "blob")
     private byte[] attributes;
 
     @Column(name = "active")

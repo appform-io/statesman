@@ -36,7 +36,7 @@ public class StoredActionTemplate {
     private String actionType;
 
     //Keeping it as blob to avoid alters
-    @Column(name = "data")
+    @Column(name = "data", columnDefinition = "blob")
     private byte[] data;
 
     @Column(name = "active")

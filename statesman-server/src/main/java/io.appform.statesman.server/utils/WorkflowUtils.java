@@ -91,9 +91,10 @@ public class WorkflowUtils {
     public static StoredActionTemplate toDao(ActionTemplate actionTemplate) {
         String templateId = Strings.isNullOrEmpty(actionTemplate.getTemplateId())
                                 ? UUID.randomUUID().toString() : actionTemplate.getTemplateId();
+        actionTemplate.setTemplateId(templateId);
         return StoredActionTemplate.builder()
                 .templateId(templateId)
-                .active(true)
+                .active(actionTemplate.isActive())
                 .actionType(actionTemplate.getType().name())
                 .name(actionTemplate.getName())
                 .data(MapperUtils.serialize(actionTemplate))

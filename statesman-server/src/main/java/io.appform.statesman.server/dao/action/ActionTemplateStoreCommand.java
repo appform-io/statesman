@@ -4,10 +4,11 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import io.appform.dropwizard.sharding.dao.LookupDao;
 import io.appform.statesman.engine.ActionTemplateStore;
-import io.appform.statesman.server.utils.WorkflowUtils;
 import io.appform.statesman.model.action.template.ActionTemplate;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
+import io.appform.statesman.server.utils.MapperUtils;
+import io.appform.statesman.server.utils.WorkflowUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -49,7 +50,7 @@ public class ActionTemplateStoreCommand implements ActionTemplateStore {
 
 
     @Override
-    public Optional<ActionTemplate> save(ActionTemplate actionTemplate) {
+    public Optional<ActionTemplate> create(ActionTemplate actionTemplate) {
         try {
             return actionTemplateLookupDao.save(WorkflowUtils.toDao(actionTemplate))
                     .map(WorkflowUtils::toDto);
@@ -62,6 +63,24 @@ public class ActionTemplateStoreCommand implements ActionTemplateStore {
     public Optional<ActionTemplate> get(String actionTemplateId) {
         try {
             return ACTION_TEMPLATE_CACHE.get(actionTemplateId);
+        } catch (Exception e) {
+            throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
+        }
+    }
+
+    @Override
+    public Optional<ActionTemplate> update(ActionTemplate actionTemplate) {
+        try {
+            boolean updated = actionTemplateLookupDao.update(actionTemplate.getTemplateId(), actionTemplateOptional -> {
+                if (actionTemplateOptional.isPresent()) {
+                    actionTemplateOptional.get().setActive(actionTemplate.isActive());
+                    actionTemplateOptional.get().setName(actionTemplate.getName());
+                    actionTemplateOptional.get().setActionType(actionTemplate.getType().name());
+                    actionTemplateOptional.get().setData(MapperUtils.serialize(actionTemplate));
+                }
+                return actionTemplateOptional.orElse(null);
+            });
+            return updated ? getFromDb(actionTemplate.getTemplateId()) : Optional.empty();
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }

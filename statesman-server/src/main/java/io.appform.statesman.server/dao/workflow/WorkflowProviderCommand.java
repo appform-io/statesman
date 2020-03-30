@@ -65,7 +65,7 @@ public class WorkflowProviderCommand implements WorkflowProvider {
              }
              return storedWorkflowTemplate.orElse(null);
             });
-            return updated ? getTemplate(workflowTemplate.getId()) : Optional.empty();
+            return updated ? getTemplateFromDb(workflowTemplate.getId()) : Optional.empty();
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }

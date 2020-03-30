@@ -31,7 +31,7 @@ public class StoredWorkflowInstance {
     @Column(name = "template_id")
     private String templateId;
 
-    @Column(name = "data")
+    @Column(name = "data", columnDefinition = "blob")
     private byte[] data;
 
     @Column(name = "current_state")

@@ -6,7 +6,10 @@ import java.util.Optional;
 
 public interface ActionTemplateStore {
 
-    Optional<ActionTemplate> save(ActionTemplate actionTemplate);
+    Optional<ActionTemplate> create(ActionTemplate actionTemplate);
 
     Optional<ActionTemplate> get(String actionTemplateId);
+
+    Optional<ActionTemplate> update(ActionTemplate actionTemplate);
+
 }
