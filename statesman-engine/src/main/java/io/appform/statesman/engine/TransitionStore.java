@@ -9,7 +9,12 @@ import java.util.Optional;
  *
  */
 public interface TransitionStore {
-    Optional<StateTransition> save(String workflowTemplateId, String fromState, StateTransition stateTransition);
+
+    Optional<StateTransition> create(String workflowTemplateId, StateTransition stateTransition);
+
     List<StateTransition> getTransitionFor(String workflowTemplateId, String fromState);
-    List<StateTransition> allTransitions(String workflowTemplateId);
+
+    List<StateTransition> getAllTransitions(String workflowTemplateId);
+
+    List<StateTransition> update(String workflowTemplateId, StateTransition stateTransition);
 }

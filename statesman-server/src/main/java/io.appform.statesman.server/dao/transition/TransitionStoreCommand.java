@@ -6,10 +6,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.dropwizard.sharding.dao.RelationalDao;
 import io.appform.statesman.engine.TransitionStore;
-import io.appform.statesman.server.utils.WorkflowUtils;
 import io.appform.statesman.model.StateTransition;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
+import io.appform.statesman.server.utils.MapperUtils;
+import io.appform.statesman.server.utils.WorkflowUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -44,12 +45,12 @@ public class TransitionStoreCommand implements TransitionStore {
     }
 
     @Override
-    public Optional<StateTransition> save(String workflowTemplateId, String fromState, StateTransition stateTransition) {
+    public Optional<StateTransition> create(String workflowTemplateId, StateTransition stateTransition) {
         try {
-            StoredStateTransition storedStateTransition = WorkflowUtils.toDao(workflowTemplateId, fromState, stateTransition);
+            StoredStateTransition storedStateTransition = WorkflowUtils.toDao(workflowTemplateId, stateTransition);
             return stateTransitionRelationalDao.save(workflowTemplateId, storedStateTransition)
                     .map(WorkflowUtils::toDto);
-        }  catch (Exception e) {
+        } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
     }
@@ -60,7 +61,7 @@ public class TransitionStoreCommand implements TransitionStore {
     }
 
     @Override
-    public List<StateTransition> allTransitions(String workflowTemplateId) {
+    public List<StateTransition> getAllTransitions(String workflowTemplateId) {
         try {
             DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredStateTransition.class)
                     .add(Restrictions.eq("workflowTemplateId", workflowTemplateId));
@@ -68,6 +69,27 @@ public class TransitionStoreCommand implements TransitionStore {
                     .stream()
                     .map(WorkflowUtils::toDto)
                     .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
+        }
+    }
+
+    @Override
+    public List<StateTransition> update(String workflowTemplateId, StateTransition stateTransition) {
+        try {
+            DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredStateTransition.class)
+                    .add(Restrictions.eq("workflowTemplateId", workflowTemplateId))
+                    .add(Restrictions.eq("transitionId", stateTransition.getId()));
+            boolean updated = stateTransitionRelationalDao.update(workflowTemplateId, detachedCriteria, storedStateTransition -> {
+                storedStateTransition.setActive(stateTransition.isActive());
+                storedStateTransition.setFromState(stateTransition.getFromState());
+                storedStateTransition.setData(MapperUtils.serialize(stateTransition));
+                return storedStateTransition;
+            });
+            return updated ? stateTransitionRelationalDao.select(workflowTemplateId, detachedCriteria, 0, Integer.MAX_VALUE)
+                    .stream()
+                    .map(WorkflowUtils::toDto)
+                    .collect(Collectors.toList()) : null;
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }

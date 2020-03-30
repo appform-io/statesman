@@ -1,12 +1,20 @@
 package io.appform.statesman.model;
 
-import lombok.Value;
+import lombok.*;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  *
  */
-@Value
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class EvalRule {
+
+    @NotEmpty
     String id;
+
+    @NotEmpty
     String rule;
 }

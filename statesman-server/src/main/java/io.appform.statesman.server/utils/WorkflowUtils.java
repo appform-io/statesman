@@ -75,10 +75,14 @@ public class WorkflowUtils {
         return MapperUtils.deserialize(storedStateTransitions.getData(), StateTransition.class);
     }
 
-    public static StoredStateTransition toDao(String workflowTemplateId, String fromState, StateTransition stateTransition) {
+    public static StoredStateTransition toDao(String workflowTemplateId, StateTransition stateTransition) {
+        String transitionId = Strings.isNullOrEmpty(stateTransition.getId())
+                ? UUID.randomUUID().toString() : stateTransition.getId();
+        stateTransition.setId(transitionId);
         return StoredStateTransition.builder()
+                .transitionId(transitionId)
                 .active(true)
-                .fromState(fromState)
+                .fromState(stateTransition.getFromState())
                 .workflowTemplateId(workflowTemplateId)
                 .data(MapperUtils.serialize(stateTransition))
                 .build();
