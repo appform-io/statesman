@@ -60,7 +60,7 @@ public class StateTransitionEngineTest {
 
     @Before
     public void setup() {
-        val wft = new WorkflowTemplate(WF_ID, WF_ID, Collections.emptyList());
+        val wft = new WorkflowTemplate(WF_ID, WF_ID, true, Collections.emptyList());
         val wf = new Workflow(WF_ID,
                               WFT_ID,
                               new DataObject(MAPPER.createObjectNode(), States.A, new Date(), new Date()));

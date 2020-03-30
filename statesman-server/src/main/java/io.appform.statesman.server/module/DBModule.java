@@ -8,7 +8,7 @@ import io.appform.dropwizard.sharding.dao.LookupDao;
 import io.appform.dropwizard.sharding.dao.RelationalDao;
 import io.appform.statesman.server.dao.action.StoredActionTemplate;
 import io.appform.statesman.server.dao.providers.StoredProvider;
-import io.appform.statesman.server.dao.state.StoredStateTransition;
+import io.appform.statesman.server.dao.transition.StoredStateTransition;
 import io.appform.statesman.server.dao.workflow.StoredWorkflowInstance;
 import io.appform.statesman.server.dao.workflow.StoredWorkflowTemplate;
 

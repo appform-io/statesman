@@ -9,7 +9,7 @@ import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.WorkflowTemplate;
 import io.appform.statesman.model.action.template.ActionTemplate;
 import io.appform.statesman.server.dao.action.StoredActionTemplate;
-import io.appform.statesman.server.dao.state.StoredStateTransition;
+import io.appform.statesman.server.dao.transition.StoredStateTransition;
 import io.appform.statesman.server.dao.workflow.StoredWorkflowInstance;
 import io.appform.statesman.server.dao.workflow.StoredWorkflowTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -23,12 +23,13 @@ public class WorkflowUtils {
     private WorkflowUtils() {
     }
 
-    public static StoredWorkflowTemplate toDao(String name, List<String> attributes) {
+    public static StoredWorkflowTemplate toDao(WorkflowTemplate workflowTemplate) {
+        String templateId = Strings.isNullOrEmpty(workflowTemplate.getId()) ? UUID.randomUUID().toString() : workflowTemplate.getId();
         return StoredWorkflowTemplate.builder()
-                .active(true)
-                .name(name)
-                .templateId(UUID.randomUUID().toString())
-                .attributes(MapperUtils.serialize(attributes))
+                .active(workflowTemplate.isActive())
+                .name(workflowTemplate.getName())
+                .templateId(templateId)
+                .attributes(MapperUtils.serialize(workflowTemplate.getAttributes()))
                 .build();
     }
 

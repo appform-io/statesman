@@ -10,6 +10,7 @@ import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +23,7 @@ public class ActionTemplateStoreCommand implements ActionTemplateStore {
     private final LoadingCache<String, Optional<ActionTemplate>> ACTION_TEMPLATE_CACHE;
 
 
+    @Inject
     public ActionTemplateStoreCommand(LookupDao<StoredActionTemplate> actionTemplateLookupDao) {
         this.actionTemplateLookupDao = actionTemplateLookupDao;
         log.info("Initializing cache ACTION_TEMPLATE_CACHE");

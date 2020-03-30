@@ -1,4 +1,4 @@
-package io.appform.statesman.server.dao.state;
+package io.appform.statesman.server.dao.transition;
 
 import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
