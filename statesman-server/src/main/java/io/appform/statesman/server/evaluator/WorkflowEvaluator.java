@@ -12,7 +12,6 @@ import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
-
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -34,12 +33,13 @@ public class WorkflowEvaluator {
     }
 
     public String determineWorkflowId(JsonNode translatedPayload) {
+
         List<WorkflowContext> parsedTemplates = workflowProviderCommand.getAll()
                 .stream()
-                .map(template -> {
+                .flatMap(template -> template.getAttributes().stream().map(attribute -> {
                     Evaluatable parsedTemplateRule;
                     try {
-                        parsedTemplateRule = hopeLangEngine.parse(template.getAttributes().get(0));
+                        parsedTemplateRule = hopeLangEngine.parse(attribute);
                     } catch (Exception e) {
                         log.error("Error parsing template for workflow: " + Objects.toString(template.getId()), e);
                         return null;
@@ -48,7 +48,7 @@ public class WorkflowEvaluator {
                             .parsedTemplateRule(parsedTemplateRule)
                             .workflowId(template.getId())
                             .build();
-                })
+                }))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
