@@ -3,10 +3,7 @@ package io.appform.statesman.server.utils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
-import io.appform.statesman.model.DataObject;
-import io.appform.statesman.model.StateTransition;
-import io.appform.statesman.model.Workflow;
-import io.appform.statesman.model.WorkflowTemplate;
+import io.appform.statesman.model.*;
 import io.appform.statesman.model.action.template.ActionTemplate;
 import io.appform.statesman.server.dao.action.StoredActionTemplate;
 import io.appform.statesman.server.dao.transition.StoredStateTransition;
@@ -29,7 +26,8 @@ public class WorkflowUtils {
                 .active(workflowTemplate.isActive())
                 .name(workflowTemplate.getName())
                 .templateId(templateId)
-                .attributes(MapperUtils.serialize(workflowTemplate.getAttributes()))
+                .rules(MapperUtils.serialize(workflowTemplate.getRules()))
+                .startState(MapperUtils.serialize(workflowTemplate.getStartState()))
                 .build();
     }
 
@@ -37,8 +35,8 @@ public class WorkflowUtils {
         return WorkflowTemplate.builder()
                 .id(workflowTemplate.getTemplateId())
                 .name(workflowTemplate.getName())
-                .attributes(MapperUtils.deserialize(workflowTemplate.getAttributes(), new TypeReference<List<String>>() {
-                }))
+                .rules(MapperUtils.deserialize(workflowTemplate.getRules(), new TypeReference<List<String>>() {}))
+                .startState(MapperUtils.deserialize(workflowTemplate.getStartState(), State.class))
                 .build();
     }
 

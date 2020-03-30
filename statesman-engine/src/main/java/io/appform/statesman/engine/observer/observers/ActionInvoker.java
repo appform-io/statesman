@@ -1,6 +1,7 @@
 package io.appform.statesman.engine.observer.observers;
 
 import com.google.common.base.Strings;
+import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.observer.ObservableEvent;
@@ -10,13 +11,16 @@ import io.appform.statesman.engine.observer.events.StateTransitionEvent;
 import lombok.val;
 
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 /**
  *
  */
+@Singleton
 public class ActionInvoker extends ObservableEventBusSubscriber {
     private final Provider<ActionExecutor> actionExecutor;
 
+    @Inject
     public ActionInvoker(
             @Named("foxtrotEventSender") ObservableEventBusSubscriber next,
             Provider<ActionExecutor> actionExecutor) {

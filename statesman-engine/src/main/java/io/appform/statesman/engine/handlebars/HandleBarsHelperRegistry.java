@@ -1,19 +1,26 @@
 package io.appform.statesman.engine.handlebars;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import com.google.common.base.Strings;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
+import io.dropwizard.jackson.Jackson;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.TimeZone;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 
 @Slf4j
@@ -22,6 +29,7 @@ public class HandleBarsHelperRegistry {
     private static final String OPERATION_NOT_SUPPORTED = "Operation not supported: ";
     private static final String DEFAULT_TIME_ZONE = "IST";
     private static final DecimalFormat decimalFormat = new DecimalFormat("######.##");
+    private static final ObjectMapper MAPPER = Jackson.newObjectMapper();
 
     private final Handlebars handlebars;
 
@@ -53,23 +61,33 @@ public class HandleBarsHelperRegistry {
     }
 
     private Object compareGte(int lhs) {
-        return lhs >= 0 ? "true" : null;
+        return lhs >= 0
+               ? "true"
+               : null;
     }
 
     private Object compareGt(int lhs) {
-        return lhs > 0 ? "true" : null;
+        return lhs > 0
+               ? "true"
+               : null;
     }
 
     private Object compareLte(int lhs) {
-        return lhs <= 0 ? "true" : null;
+        return lhs <= 0
+               ? "true"
+               : null;
     }
 
     private Object compareLt(int lhs) {
-        return lhs < 0 ? "true" : null;
+        return lhs < 0
+               ? "true"
+               : null;
     }
 
     private Object compareEq(int lhs) {
-        return lhs == 0 ? "true" : null;
+        return lhs == 0
+               ? "true"
+               : null;
     }
 
     private void registerGte() {
@@ -187,11 +205,14 @@ public class HandleBarsHelperRegistry {
                 if (null != context) {
                     SimpleDateFormat sdf = new SimpleDateFormat(options.param(0));
                     String timeZone =
-                            options.params.length < 2 ? DEFAULT_TIME_ZONE : options.param(1);
+                            options.params.length < 2
+                            ? DEFAULT_TIME_ZONE
+                            : options.param(1);
                     sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
                     return sdf.format(context);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Error formatting date", e);
             }
             return null;
@@ -237,7 +258,8 @@ public class HandleBarsHelperRegistry {
                 if (null != context) {
                     return sdf.format(new Date(context));
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Error converting date", e);
             }
             return sdf.format(new Date());
@@ -248,19 +270,21 @@ public class HandleBarsHelperRegistry {
         handlebars.registerHelper("decimalFormat", (Helper<Number>) (aNumber, options) -> {
             DecimalFormat decimalFormatReqd =
                     (options.params.length > 0 && !Strings.isNullOrEmpty(options.param(0)))
-                            ? new DecimalFormat(options.param(0)) : decimalFormat;
+                    ? new DecimalFormat(options.param(0))
+                    : decimalFormat;
             return decimalFormatReqd.format(aNumber.doubleValue());
         });
     }
 
     private void registerStr() {
         handlebars.registerHelper("str",
-                (Helper<Number>) (aNumber, options) -> String.valueOf(aNumber.doubleValue()));
+                                  (Helper<Number>) (aNumber, options) -> String.valueOf(aNumber.doubleValue()));
     }
 
     private void registerSuccess() {
         handlebars.registerHelper("success", (Helper<Boolean>) (context, options) -> context
-                ? "succeeded" : "failed");
+                                                                                     ? "succeeded"
+                                                                                     : "failed");
     }
 
     private void registerRupees() {
@@ -282,8 +306,30 @@ public class HandleBarsHelperRegistry {
     private void registerMapLookup() {
         handlebars.registerHelper("map_lookup", new Helper<JsonNode>() {
             @Override
-            public Object apply(JsonNode node, Options options) throws IOException {
-                return options.hash("op_" + node.get(options.hash("key")).asText());
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+                final String key = options.hash("pointer");
+                if (Strings.isNullOrEmpty(key)) {
+                    return null;
+                }
+                val keyNode = node.at(key);
+                if (null == keyNode || keyNode.isNull() || keyNode.isMissingNode()) {
+                    return null;
+                }
+                if (keyNode.isTextual()) {
+                    return MAPPER.writeValueAsString(options.hash("op_" + keyNode.asText()));
+                }
+                if (keyNode.isArray()) {
+                    return MAPPER.writeValueAsString(StreamSupport.stream(Spliterators.spliteratorUnknownSize(keyNode.elements(), Spliterator.ORDERED),
+                                         false)
+                            .filter(JsonNode::isTextual)
+                            .map(jsonNode -> options.hash("op_" + jsonNode.asText()))
+                            .collect(Collectors.toList()));
+                }
+                return null;
+            }
+
+            private JsonNode toNode(Object object) {
+                return MAPPER.valueToTree(object);
             }
         });
     }

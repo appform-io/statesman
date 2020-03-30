@@ -27,11 +27,4 @@ public class StateTransition {
 
     @NotEmpty
     String action;
-
-    @Deprecated
-    public StateTransition(EvalRule rule, State toState, String action) {
-        this.rule = rule;
-        this.toState = toState;
-        this.action = action;
-    }
 }

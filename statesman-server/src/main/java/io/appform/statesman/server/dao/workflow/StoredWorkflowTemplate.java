@@ -23,7 +23,7 @@ public class StoredWorkflowTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "groupingKey")
+    @Column(name = "grouping_key")
     private long id;
 
     @LookupKey
@@ -34,8 +34,11 @@ public class StoredWorkflowTemplate {
     private String name;
 
 
-    @Column(name = "attributes", columnDefinition = "blob")
-    private byte[] attributes;
+    @Column(name = "start_state", columnDefinition = "blob")
+    private byte[] startState;
+
+    @Column(name = "rules", columnDefinition = "blob")
+    private byte[] rules;
 
     @Column(name = "active")
     private boolean active;
@@ -51,11 +54,13 @@ public class StoredWorkflowTemplate {
     @Builder
     public StoredWorkflowTemplate(String templateId,
                                   String name,
-                                  byte[] attributes,
+                                  byte[] startState,
+                                  byte[] rules,
                                   boolean active) {
         this.templateId = templateId;
         this.name = name;
-        this.attributes = attributes;
+        this.startState = startState;
+        this.rules = rules;
         this.active = active;
     }
 }

@@ -15,5 +15,6 @@ public class WorkflowTemplate {
     String id;
     String name;
     boolean active;
-    List<String> attributes;
+    List<String> rules;
+    State startState;
 }

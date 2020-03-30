@@ -21,7 +21,7 @@ import java.util.Date;
 public class StoredWorkflowInstance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "groupingKey")
+    @Column(name = "grouping_key")
     private long id;
 
     @LookupKey

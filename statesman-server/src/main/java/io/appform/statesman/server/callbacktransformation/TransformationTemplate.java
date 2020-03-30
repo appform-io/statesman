@@ -4,14 +4,14 @@ import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
-import java.util.Map;
 
 /**
  *
  */
 @Data
-public class CallbackTransformationTemplates {
+public class TransformationTemplate {
+    private String idPath;
     @NotNull
     @NotEmpty
-    private Map<String, TransformationTemplate> templates;
+    private String template;
 }

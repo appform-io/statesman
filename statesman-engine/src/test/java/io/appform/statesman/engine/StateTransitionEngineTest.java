@@ -42,28 +42,41 @@ public class StateTransitionEngineTest {
         State E = new State("E", true);
     }
 
-    /*
-        private final Provider<WorkflowProvider> workflowProvider;
-        private final Provider<TransitionStore> transitionStore;
-        private final ObjectMapper mapper;
-        private final DataActionExecutor dataActionExecutor;
-        private final ObservableEventBus eventBus;
-    */
     private interface StateTransitions {
-        StateTransition a2b = new StateTransition(new EvalRule("a2b", "\"$.update.Q1\" == 3"), States.B, null);
-        StateTransition b2c = new StateTransition(new EvalRule("b2c", "\"$.update.Q2\" == 4"), States.C, null);
-        StateTransition c2d = new StateTransition(new EvalRule("c2d", "\"$.update.Q3\" == 1"), States.D, null);
-        StateTransition c2e = new StateTransition(new EvalRule("c2e", "\"$.update.Q3\" == 2"), States.E, null);
+        StateTransition a2b = new StateTransition("T1",
+                                                  States.A.getName(),
+                                                  false,
+                                                  new EvalRule("a2b", "\"$.update.Q1\" == 3"),
+                                                  States.B,
+                                                  null);
+        StateTransition b2c = new StateTransition("T2",
+                                                  States.B.getName(),
+                                                  false,
+                                                  new EvalRule("b2c", "\"$.update.Q2\" == 4"),
+                                                  States.C,
+                                                  null);
+        StateTransition c2d = new StateTransition("T3",
+                                                  States.C.getName(),
+                                                  false,
+                                                  new EvalRule("c2d", "\"$.update.Q3\" == 1"),
+                                                  States.D,
+                                                  null);
+        StateTransition c2e = new StateTransition("T4",
+                                                  States.D.getName(),
+                                                  false,
+                                                  new EvalRule("c2e", "\"$.update.Q3\" == 2"),
+                                                  States.E,
+                                                  null);
     }
 
     private StateTransitionEngine engine;
 
     @Before
     public void setup() {
-        val wft = new WorkflowTemplate(WF_ID, WF_ID, true, Collections.emptyList());
+        val wft = new WorkflowTemplate(WF_ID, WF_ID, true, Collections.emptyList(), States.A);
         val wf = new Workflow(WF_ID,
                               WFT_ID,
-                              new DataObject(MAPPER.createObjectNode(), States.A, new Date(), new Date()));
+                              new DataObject(MAPPER.createObjectNode(), wft.getStartState(), new Date(), new Date()));
         final Provider<WorkflowProvider> workflowProvider = () -> {
             val provider = mock(WorkflowProvider.class);
             when(provider.getTemplate(anyString()))

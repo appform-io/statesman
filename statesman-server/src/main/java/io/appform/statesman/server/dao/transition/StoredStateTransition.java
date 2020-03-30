@@ -1,6 +1,5 @@
 package io.appform.statesman.server.dao.transition;
 
-import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,11 +21,10 @@ public class StoredStateTransition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "groupingKey")
+    @Column(name = "grouping_key")
     private long id;
 
-    @LookupKey
-    @Column(name = "transition_id")
+    @Column(name = "transition_id", unique = true)
     private String transitionId;
 
     @Column(name = "workflow_template_id")

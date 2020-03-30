@@ -6,16 +6,20 @@ import io.appform.statesman.engine.observer.ObservableEventBusSubscriber;
 import io.appform.statesman.engine.observer.ObservableEventVisitor;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 /**
  *
  */
+@Singleton
 public class WorkflowPersister extends ObservableEventBusSubscriber {
 
     private final Provider<WorkflowProvider> workflowProvider;
 
+    @Inject
     public WorkflowPersister(@Named("actionHandler") ObservableEventBusSubscriber handler,
                              Provider<WorkflowProvider> workflowProvider) {
         super(handler);

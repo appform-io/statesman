@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Produces(MediaType.APPLICATION_JSON)
-@Path("/v1/template")
+@Path("/v1/templates")
 @Slf4j
 @Api("Template related APIs")
 @Singleton
@@ -43,7 +43,7 @@ public class TemplateResource {
 
     @POST
     @Timed
-    @Path("/create/workflow")
+    @Path("/workflow")
     @ApiOperation("Create Workflow Template")
     public Response createWorkflow(@Valid WorkflowTemplate workflowTemplate) {
         workflowTemplate.setId(null);
@@ -61,7 +61,23 @@ public class TemplateResource {
 
     @GET
     @Timed
-    @Path("/get/workflow/{templateId}")
+    @Path("/workflow")
+    @ApiOperation("Get all templates")
+    public Response getAll() {
+
+        List<WorkflowTemplate> templates = workflowProvider.getAll();
+        if (templates.isEmpty()) {
+            return Response.noContent()
+                    .build();
+        }
+        return Response.ok()
+                .entity(templates)
+                .build();
+    }
+
+    @GET
+    @Timed
+    @Path("/workflow/{templateId}")
     @ApiOperation("Get Workflow Template")
     public Response getWorkflow(@PathParam("templateId") String templateId) {
         Optional<WorkflowTemplate> workflowTemplateOptional =
@@ -78,7 +94,7 @@ public class TemplateResource {
 
     @PUT
     @Timed
-    @Path("/update/workflow")
+    @Path("/workflow")
     @ApiOperation("Update Workflow Template")
     public Response updateWorkflow(@Valid WorkflowTemplate workflowTemplate) {
         Optional<WorkflowTemplate> workflowTemplateOptional =
@@ -94,73 +110,10 @@ public class TemplateResource {
     }
 
 
-    @POST
-    @Timed
-    @Path("/create/action")
-    @ApiOperation("Create Action Template")
-    public Response createAction(@Valid ActionTemplate actionTemplate) {
-        Optional<ActionTemplate> actionTemplateOptional = actionTemplateStore.create(actionTemplate);
-        if (!actionTemplateOptional.isPresent()) {
-            return Response.serverError()
-                    .build();
-        }
-        return Response.ok()
-                .entity(actionTemplateOptional.get())
-                .build();
-    }
-
-
-    @GET
-    @Timed
-    @Path("/get/action/{templateId}")
-    @ApiOperation("Get Action Template")
-    public Response createAction(@PathParam("templateId") String templateId) {
-        Optional<ActionTemplate> actionTemplateOptional = actionTemplateStore.get(templateId);
-        if (!actionTemplateOptional.isPresent()) {
-            return Response.serverError()
-                    .build();
-        }
-        return Response.ok()
-                .entity(actionTemplateOptional.get())
-                .build();
-    }
-
-    @GET
-    @Timed
-    @Path("/all")
-    @ApiOperation("Get all templates")
-    public Response getAll() {
-
-        List<WorkflowTemplate> templates = workflowProvider.getAll();
-        if (templates.isEmpty()) {
-            return Response.noContent()
-                    .build();
-        }
-        return Response.ok()
-                .entity(templates)
-                .build();
-    }
-
-
-    @PUT
-    @Timed
-    @Path("/update/action")
-    @ApiOperation("Update Action Template")
-    public Response updateAction(@Valid ActionTemplate actionTemplate) {
-        Optional<ActionTemplate> actionTemplateOptional = actionTemplateStore.update(actionTemplate);
-        if (!actionTemplateOptional.isPresent()) {
-            return Response.serverError()
-                    .build();
-        }
-        return Response.ok()
-                .entity(actionTemplateOptional.get())
-                .build();
-    }
-
 
     @POST
     @Timed
-    @Path("/create/workflow/{workflowTemplateId}/transition")
+    @Path("/workflow/{workflowTemplateId}/transitions")
     @ApiOperation("Create State Transition")
     public Response createStateTransition(@PathParam("workflowTemplateId") String workflowTemplateId,
                                           @Valid StateTransition stateTransition) {
@@ -177,7 +130,7 @@ public class TemplateResource {
 
     @GET
     @Timed
-    @Path("/get/workflow/{workflowTemplateId}/transition/{fromState}")
+    @Path("/workflow/{workflowTemplateId}/transitions/{fromState}")
     @ApiOperation("Get State Transition")
     public Response getStateTransition(@PathParam("workflowTemplateId") String workflowTemplateId,
                                        @PathParam("fromState") String fromState) {
@@ -189,7 +142,7 @@ public class TemplateResource {
 
     @GET
     @Timed
-    @Path("/get/workflow/{workflowTemplateId}/all/transition")
+    @Path("/workflow/{workflowTemplateId}/transitions")
     @ApiOperation("Get All State  Transition")
     public Response getAllStateTransitions(@PathParam("workflowTemplateId") String workflowTemplateId) {
         List<StateTransition> stateTransitions = transitionStore.getAllTransitions(workflowTemplateId);
@@ -200,13 +153,59 @@ public class TemplateResource {
 
     @PUT
     @Timed
-    @Path("/update/workflow/{workflowTemplateId}/transition")
+    @Path("/workflow/{workflowTemplateId}/transitions")
     @ApiOperation("Update State Transition")
     public Response updateStateTransition(@PathParam("workflowTemplateId") String workflowTemplateId,
                                           @Valid StateTransition stateTransition) {
         List<StateTransition> stateTransitions = transitionStore.update(workflowTemplateId, stateTransition);
         return Response.ok()
                 .entity(stateTransitions)
+                .build();
+    }
+
+    @POST
+    @Timed
+    @Path("/action")
+    @ApiOperation("Create Action Template")
+    public Response createAction(@Valid ActionTemplate actionTemplate) {
+        Optional<ActionTemplate> actionTemplateOptional = actionTemplateStore.create(actionTemplate);
+        if (!actionTemplateOptional.isPresent()) {
+            return Response.serverError()
+                    .build();
+        }
+        return Response.ok()
+                .entity(actionTemplateOptional.get())
+                .build();
+    }
+
+
+    @GET
+    @Timed
+    @Path("/action/{templateId}")
+    @ApiOperation("Get Action Template")
+    public Response createAction(@PathParam("templateId") String templateId) {
+        Optional<ActionTemplate> actionTemplateOptional = actionTemplateStore.get(templateId);
+        if (!actionTemplateOptional.isPresent()) {
+            return Response.serverError()
+                    .build();
+        }
+        return Response.ok()
+                .entity(actionTemplateOptional.get())
+                .build();
+    }
+
+    @PUT
+    @Timed
+    @Path("/action")
+    @ApiOperation("Update Action Template")
+    public Response updateAction(@Valid ActionTemplate actionTemplate) {
+        Optional<ActionTemplate> actionTemplateOptional = actionTemplateStore.update(actionTemplate);
+        if (!actionTemplateOptional.isPresent()) {
+            return Response.serverError()
+                    .build();
+        }
+        return Response.ok()
+                .entity(actionTemplateOptional.get())
                 .build();
     }
 

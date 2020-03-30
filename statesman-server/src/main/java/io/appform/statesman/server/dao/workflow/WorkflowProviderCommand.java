@@ -15,6 +15,7 @@ import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.server.utils.MapperUtils;
 import io.appform.statesman.server.utils.WorkflowUtils;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.util.List;
 import java.util.Optional;
@@ -60,9 +61,11 @@ public class WorkflowProviderCommand implements WorkflowProvider {
         try {
             boolean updated = workflowTemplateLookupDao.update(workflowTemplate.getId(), storedWorkflowTemplate -> {
              if(storedWorkflowTemplate.isPresent()) {
-                 storedWorkflowTemplate.get().setActive(workflowTemplate.isActive());
-                 storedWorkflowTemplate.get().setName(workflowTemplate.getName());
-                 storedWorkflowTemplate.get().setAttributes(MapperUtils.serialize(workflowTemplate.getAttributes()));
+                 val storedTemplate = storedWorkflowTemplate.get();
+                 storedTemplate.setActive(workflowTemplate.isActive());
+                 storedTemplate.setName(workflowTemplate.getName());
+                 storedTemplate.setRules(MapperUtils.serialize(workflowTemplate.getRules()));
+                 storedTemplate.setStartState(MapperUtils.serialize(workflowTemplate.getStartState()));
              }
              return storedWorkflowTemplate.orElse(null);
             });
