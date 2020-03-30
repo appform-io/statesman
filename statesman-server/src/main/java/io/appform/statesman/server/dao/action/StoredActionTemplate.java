@@ -22,7 +22,7 @@ public class StoredActionTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "groupingKey")
     private long id;
 
     @LookupKey

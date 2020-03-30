@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.model.Event;
+import io.appform.statesman.publisher.model.EventType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -35,10 +36,10 @@ public class EventResource {
 
     @POST
     @Timed
-    @Path("/publish")
+    @Path("/reporting/publish")
     @ApiOperation("publish event")
     public Response save(@Valid final Event event) {
-        publisher.publish(event);
+        publisher.publish(event, EventType.REPORTING);
         return Response.ok().build();
     }
 }

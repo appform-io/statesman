@@ -12,7 +12,8 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Event {
-    private String groupingKey;
-    private JsonNode data;
+public class KMessage {
+
+    private String partitionKey;
+    private JsonNode message;
 }
