@@ -17,8 +17,8 @@ public class HttpActionTemplate extends ActionTemplate {
     }
 
     @Builder
-    public HttpActionTemplate(boolean sync, String method, String url, String payload, String headers) {
-        super(ActionType.HTTP, sync);
+    public HttpActionTemplate(String templateId, String name, String method, String url, String payload, String headers) {
+        super(ActionType.HTTP, templateId, name);
         this.method = method;
         this.url = url;
         this.payload = payload;

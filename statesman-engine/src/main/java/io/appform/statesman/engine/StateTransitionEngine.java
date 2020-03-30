@@ -6,14 +6,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.appform.hope.core.Evaluatable;
-import io.appform.hope.core.exceptions.errorstrategy.DefaultErrorHandlingStrategy;
+import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
+import io.appform.statesman.model.AppliedTransition;
 import io.appform.statesman.model.AppliedTransitions;
 import io.appform.statesman.model.DataObject;
 import io.appform.statesman.model.DataUpdate;
-import io.appform.statesman.model.AppliedTransition;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
@@ -54,7 +54,7 @@ public class StateTransitionEngine {
         this.dataActionExecutor = dataActionExecutor;
         this.eventBus = eventBus;
         this.hopeLangEngine = HopeLangEngine.builder()
-                .errorHandlingStrategy(new DefaultErrorHandlingStrategy())
+                .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
     }
 
@@ -87,8 +87,7 @@ public class StateTransitionEngine {
                 .orElse(null);
         Preconditions.checkNotNull(template);
         val transitions = transitionStore.get()
-                .getTransitionFor(template.getId(), currentState.getName())
-                .orElse(null);
+                .getTransitionFor(template.getId(), currentState.getName());
         Preconditions.checkNotNull(transitions);
         val evalNode = mapper.createObjectNode();
         evalNode.putObject("data").setAll((ObjectNode) dataObject.getData());

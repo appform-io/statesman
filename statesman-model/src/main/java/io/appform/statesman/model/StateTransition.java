@@ -1,11 +1,11 @@
 package io.appform.statesman.model;
 
-import lombok.Data;
+import lombok.Value;
 
 /**
  *
  */
-@Data
+@Value
 public class StateTransition {
     EvalRule rule;
     State toState;
