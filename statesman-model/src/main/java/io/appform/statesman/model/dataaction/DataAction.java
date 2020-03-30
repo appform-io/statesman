@@ -1,4 +1,4 @@
-package io.appform.statesman.model;
+package io.appform.statesman.model.dataaction;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.AccessLevel;
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class DataAction {
-    DataActionType type;
+    private final DataActionType type;
 
     public abstract <T> T accept(DataActionVisitor<T> visitor);
 }

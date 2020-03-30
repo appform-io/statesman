@@ -3,14 +3,17 @@ package io.appform.statesman.engine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.DefaultErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
-import io.appform.statesman.engine.action.ActionExecutor;
+import io.appform.statesman.engine.observer.ObservableEventBus;
+import io.appform.statesman.engine.observer.events.StateTransitionEvent;
+import io.appform.statesman.model.AppliedTransitions;
+import io.appform.statesman.model.DataObject;
 import io.appform.statesman.model.DataUpdate;
+import io.appform.statesman.model.AppliedTransition;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
@@ -18,6 +21,8 @@ import lombok.var;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  *
@@ -26,42 +31,56 @@ import javax.inject.Singleton;
 @Slf4j
 public class StateTransitionEngine {
     private final Provider<WorkflowProvider> workflowProvider;
-    private final Provider<ActionExecutor> actionExecutor;
     private final Provider<TransitionStore> transitionStore;
     private final ObjectMapper mapper;
+    private final DataActionExecutor dataActionExecutor;
+    private final ObservableEventBus eventBus;
     private final HopeLangEngine hopeLangEngine;
-    private final StateTransitionEventListener listener;
 
     private final Cache<String, Evaluatable> evalCache = CacheBuilder.newBuilder()
             .maximumSize(100_000)
             .build();
+
     @Inject
     public StateTransitionEngine(
             Provider<WorkflowProvider> workflowProvider,
-            Provider<ActionExecutor> actionExecutor,
             Provider<TransitionStore> transitionStore,
             ObjectMapper mapper,
-            StateTransitionEventListener listener) {
+            DataActionExecutor dataActionExecutor,
+            ObservableEventBus eventBus) {
         this.workflowProvider = workflowProvider;
-        this.actionExecutor = actionExecutor;
         this.transitionStore = transitionStore;
         this.mapper = mapper;
-        this.listener = listener;
+        this.dataActionExecutor = dataActionExecutor;
+        this.eventBus = eventBus;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new DefaultErrorHandlingStrategy())
                 .build();
     }
 
-    void handle(DataUpdate dataUpdate) {
+    public AppliedTransitions handle(DataUpdate dataUpdate) {
+        val transitions = new ArrayList<AppliedTransition>();
+        AppliedTransition transition = null;
+        do {
+            transition = handleSingleTransition(dataUpdate).orElse(null);
+            if(null != transition) {
+                transitions.add(transition);
+            }
+        } while (null != transition);
+        return new AppliedTransitions(dataUpdate.getWorkflowId(), transitions);
+    }
+
+    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate) {
         val workflowId = dataUpdate.getWorkflowId();
         val workflow = workflowProvider.get()
                 .getWorkflow(workflowId)
                 .orElse(null);
         Preconditions.checkNotNull(workflow);
-        val currentState = workflow.getDataObject().getCurrentState();
-        if(currentState.isTerminal()) {
+        final DataObject dataObject = workflow.getDataObject();
+        val currentState = dataObject.getCurrentState();
+        if (currentState.isTerminal()) {
             log.info("Workflow {} is already complete.", workflow.getId());
-            return;
+            return Optional.empty();
         }
         val template = workflowProvider.get()
                 .getTemplate(workflow.getTemplateId())
@@ -72,13 +91,13 @@ public class StateTransitionEngine {
                 .orElse(null);
         Preconditions.checkNotNull(transitions);
         val evalNode = mapper.createObjectNode();
-        evalNode.putObject("data").setAll((ObjectNode)workflow.getDataObject().getData());
-        evalNode.putObject("update").setAll((ObjectNode)dataUpdate.getData());
+        evalNode.putObject("data").setAll((ObjectNode) dataObject.getData());
+        evalNode.putObject("update").setAll((ObjectNode) dataUpdate.getData());
         val selectedTransition = transitions.stream()
                 .filter(stateTransition -> {
                     val transitionRule = stateTransition.getRule();
                     var rule = evalCache.getIfPresent(transitionRule.getId());
-                    if(null == rule) {
+                    if (null == rule) {
                         rule = hopeLangEngine.parse(transitionRule.getRule());
                         evalCache.put(transitionRule.getId(), rule);
                     }
@@ -86,21 +105,13 @@ public class StateTransitionEngine {
                 })
                 .findFirst()
                 .orElse(null);
-        Preconditions.checkNotNull(selectedTransition);
-        listener.preStateUpdate(workflow, template, dataUpdate, selectedTransition);
-        workflow.getDataObject().setData(DataActionExecutor.apply(workflow.getDataObject(), dataUpdate));
-        workflow.getDataObject().setCurrentState(selectedTransition.getToState());
-        workflowProvider.get().saveWorkflow(workflow);
-        listener.postStateUpdate(workflow, template, dataUpdate, selectedTransition);
-        if(!Strings.isNullOrEmpty(selectedTransition.getAction())) {
-            actionExecutor.get()
-                    .execute(selectedTransition.getAction(), workflow);
+        if (null == selectedTransition) {
+            return Optional.empty();
         }
-        /*
-        TODO::
-        0. Implement execution listener and then use that to:
-        1. Move actions out
-        2. Send events
-         */
+        dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
+        dataObject.setCurrentState(selectedTransition.getToState());
+
+        eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
+        return Optional.of(new AppliedTransition(currentState, selectedTransition.getToState()));
     }
 }

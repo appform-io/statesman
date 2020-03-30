@@ -8,6 +8,8 @@ import io.appform.dropwizard.sharding.DBShardingBundle;
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.appform.statesman.server.module.DBModule;
 import io.dropwizard.Application;
+import io.dropwizard.riemann.RiemannBundle;
+import io.dropwizard.riemann.RiemannConfig;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
@@ -26,7 +28,12 @@ public class StatesmanApp extends Application<AppConfig> {
         };
         bootstrap.addBundle(dbShardingBundle);
         bootstrap.addBundle(guiceBundle(dbShardingBundle));
-
+        bootstrap.addBundle(new RiemannBundle<AppConfig>() {
+            @Override
+            public RiemannConfig getRiemannConfiguration(AppConfig configuration) {
+                return configuration.getRiemann();
+            }
+        });
     }
 
     GuiceBundle<AppConfig> guiceBundle(DBShardingBundle<AppConfig> dbShardingBundle) {

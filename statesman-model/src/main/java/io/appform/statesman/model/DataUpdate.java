@@ -1,6 +1,7 @@
 package io.appform.statesman.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.appform.statesman.model.dataaction.DataAction;
 import lombok.Value;
 
 /**

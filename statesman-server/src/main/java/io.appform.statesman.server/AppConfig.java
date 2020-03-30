@@ -2,6 +2,7 @@ package io.appform.statesman.server;
 
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.dropwizard.Configuration;
+import io.dropwizard.riemann.RiemannConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -21,4 +22,8 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private ShardedHibernateFactory shards;
+
+    @NotNull
+    @Valid
+    private RiemannConfig riemann;
 }
