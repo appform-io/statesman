@@ -1,17 +1,17 @@
-package io.appform.statesman.engine.util;
+package io.appform.statesman.server.utils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
-import io.appform.statesman.engine.storage.data.StoredActionTemplate;
-import io.appform.statesman.engine.storage.data.StoredStateTransition;
-import io.appform.statesman.engine.storage.data.StoredWorkflowInstance;
-import io.appform.statesman.engine.storage.data.StoredWorkflowTemplate;
 import io.appform.statesman.model.DataObject;
 import io.appform.statesman.model.StateTransition;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.WorkflowTemplate;
 import io.appform.statesman.model.action.template.ActionTemplate;
+import io.appform.statesman.server.dao.action.StoredActionTemplate;
+import io.appform.statesman.server.dao.state.StoredStateTransition;
+import io.appform.statesman.server.dao.workflow.StoredWorkflowInstance;
+import io.appform.statesman.server.dao.workflow.StoredWorkflowTemplate;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

@@ -1,4 +1,5 @@
-package io.appform.statesman.engine.storage.data;
+package io.appform.statesman.server.dao.workflow;
+
 
 import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
@@ -12,33 +13,32 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "workflow_instances", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "workflow_id")
+@Table(name = "workflow_templates", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "template_id")
 })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoredWorkflowInstance {
+public class StoredWorkflowTemplate {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
 
     @LookupKey
-    @Column(name = "workflow_id")
-    private String workflowId;
-
     @Column(name = "template_id")
     private String templateId;
 
-    @Column(name = "data")
-    private byte[] data;
+    @Column(name = "name")
+    private String name;
 
-    @Column(name = "current_state")
-    private String currentState;
 
-    @Column(name = "completed")
-    private boolean completed;
+    @Column(name = "attributes")
+    private byte[] attributes;
+
+    @Column(name = "active")
+    private boolean active;
 
     @Column(name = "created", columnDefinition = "timestamp", updatable = false, insertable = false)
     @Generated(value = GenerationTime.INSERT)
@@ -49,15 +49,13 @@ public class StoredWorkflowInstance {
     private Date updated;
 
     @Builder
-    public StoredWorkflowInstance(String templateId,
-                                  String workflowId,
-                                  String currentState,
-                                  boolean completed,
-                                  byte[] data) {
+    public StoredWorkflowTemplate(String templateId,
+                                  String name,
+                                  byte[] attributes,
+                                  boolean active) {
         this.templateId = templateId;
-        this.currentState = currentState;
-        this.completed = completed;
-        this.workflowId = workflowId;
-        this.data = data;
+        this.name = name;
+        this.attributes = attributes;
+        this.active = active;
     }
 }

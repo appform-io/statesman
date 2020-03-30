@@ -4,6 +4,7 @@ import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.appform.statesman.publisher.impl.EventPublisherConfig;
 import io.dropwizard.Configuration;
 import io.dropwizard.riemann.RiemannConfig;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,11 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private RiemannConfig riemann;
+
+    @NotNull
+    @Valid
+    private SwaggerBundleConfiguration swagger = new SwaggerBundleConfiguration();
+
 
     @NotNull
     @Valid

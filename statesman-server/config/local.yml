@@ -1,0 +1,79 @@
+server:
+  applicationConnectors:
+  - type: http
+    port: 8080
+  adminConnectors:
+  - type: http
+    port: 8081
+  applicationContextPath: /
+  requestLog:
+    appenders:
+    - type: console
+      timeZone: IST
+
+logging:
+  level: INFO
+  loggers:
+    deprecation: ERROR
+    org.hibernate: ERROR
+    QueuedSender: WARN
+  appenders:
+    - type: console
+      threshold: TRACE
+      timeZone: IST
+      logFormat: "%(%-5level) [%date] %X{TRACE-ID} [%thread] [%logger{0}]: %message%n"
+
+shards:
+  shards:
+  - driverClass: org.mariadb.jdbc.Driver
+    user: root
+    password: root
+    url: jdbc:mariadb://127.0.0.1/statesman_shard1?createDatabaseIfNotExist=true
+    properties:
+      charSet: UTF-8
+      hibernate.dialect: org.hibernate.dialect.MariaDBDialect
+      hibernate.show_sql: true
+    maxWaitForConnection: 1s
+    validationQuery: "/* MyApplication Health Check */ SELECT 1"
+    minSize: 8
+    maxSize: 8
+    initialSize: 8
+    checkConnectionWhileIdle: false
+
+  - driverClass: org.mariadb.jdbc.Driver
+    user: root
+    password: root
+    url: jdbc:mariadb://127.0.0.1/statesman_shard1?createDatabaseIfNotExist=true
+    properties:
+      charSet: UTF-8
+      hibernate.dialect: org.hibernate.dialect.MariaDBDialect
+    maxWaitForConnection: 1s
+    validationQuery: "/* MyApplication Health Check */ SELECT 1"
+    minSize: 8
+    maxSize: 8
+    initialSize: 8
+    checkConnectionWhileIdle: false
+
+swagger:
+  resourcePackage: io.appform.statesman.server.resources
+  title: Statesman
+  description: Statesman Backend
+
+
+riemann:
+  host: 127.0.0.1
+  port: 5555
+  prefix: covid.local.statesman
+  pollingInterval: 30
+  tags:
+    - statesman
+
+eventPublisherConfig:
+  connections: 10
+  idleTimeOutSeconds: 30
+  connectTimeoutMs: 10000
+  opTimeoutMs: 10000
+  endpoint: "http://localhost:8080/events"
+  eventTopics:
+    REPORTING: reporting
+    APP: app

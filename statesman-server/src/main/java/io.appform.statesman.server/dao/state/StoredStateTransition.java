@@ -1,5 +1,4 @@
-package io.appform.statesman.engine.storage.data;
-
+package io.appform.statesman.server.dao.state;
 
 import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
@@ -13,13 +12,13 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "workflow_templates", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "template_id")
+@Table(name = "state_transitions", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "transition_id")
 })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoredWorkflowTemplate {
+public class StoredStateTransition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,15 +26,18 @@ public class StoredWorkflowTemplate {
     private long id;
 
     @LookupKey
-    @Column(name = "template_id")
-    private String templateId;
+    @Column(name = "transition_id")
+    private String transitionId;
 
-    @Column(name = "name")
-    private String name;
+    @Column(name = "workflow_template_id")
+    private String workflowTemplateId;
 
+    @Column(name = "from_state")
+    private String fromState;
 
-    @Column(name = "attributes")
-    private byte[] attributes;
+    //Keeping it as blob to avoid alters
+    @Column(name = "data")
+    private byte[] data;
 
     @Column(name = "active")
     private boolean active;
@@ -49,13 +51,15 @@ public class StoredWorkflowTemplate {
     private Date updated;
 
     @Builder
-    public StoredWorkflowTemplate(String templateId,
-                                  String name,
-                                  byte[] attributes,
-                                  boolean active) {
-        this.templateId = templateId;
-        this.name = name;
-        this.attributes = attributes;
+    public StoredStateTransition(String transitionId,
+                                 String workflowTemplateId,
+                                 String fromState,
+                                 byte[] data,
+                                 boolean active) {
+        this.transitionId = transitionId;
+        this.workflowTemplateId = workflowTemplateId;
+        this.fromState = fromState;
+        this.data = data;
         this.active = active;
     }
 }

@@ -1,4 +1,4 @@
-package io.appform.statesman.engine.storage.data;
+package io.appform.statesman.server.dao.workflow;
 
 import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
@@ -12,35 +12,33 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "action_templates", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "template_id")
+@Table(name = "workflow_instances", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "workflow_id")
 })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoredActionTemplate {
-
+public class StoredWorkflowInstance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private long id;
 
     @LookupKey
+    @Column(name = "workflow_id")
+    private String workflowId;
+
     @Column(name = "template_id")
     private String templateId;
 
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "action_type")
-    private String actionType;
-
-    //Keeping it as blob to avoid alters
     @Column(name = "data")
     private byte[] data;
 
-    @Column(name = "active")
-    private boolean active;
+    @Column(name = "current_state")
+    private String currentState;
+
+    @Column(name = "completed")
+    private boolean completed;
 
     @Column(name = "created", columnDefinition = "timestamp", updatable = false, insertable = false)
     @Generated(value = GenerationTime.INSERT)
@@ -51,15 +49,15 @@ public class StoredActionTemplate {
     private Date updated;
 
     @Builder
-    public StoredActionTemplate(String templateId,
-                                  String name,
-                                  String actionType,
-                                  byte[] data,
-                                  boolean active) {
+    public StoredWorkflowInstance(String templateId,
+                                  String workflowId,
+                                  String currentState,
+                                  boolean completed,
+                                  byte[] data) {
         this.templateId = templateId;
-        this.name = name;
-        this.actionType = actionType;
+        this.currentState = currentState;
+        this.completed = completed;
+        this.workflowId = workflowId;
         this.data = data;
-        this.active = active;
     }
 }

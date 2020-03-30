@@ -1,5 +1,6 @@
 package io.appform.statesman.server.dao.providers;
 
+import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,7 @@ public class StoredProvider {
     @Column(name = "id")
     private long id;
 
+    @LookupKey
     @Column(name = "provider_id")
     private String providerId;
 
