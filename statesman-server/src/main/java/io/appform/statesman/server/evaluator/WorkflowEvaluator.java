@@ -9,10 +9,7 @@ import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -71,16 +68,6 @@ public class WorkflowEvaluator {
 
         return workflowIds.get(0);
 
-    }
-
-
-    @Data
-    @Builder
-    @AllArgsConstructor
-    @NoArgsConstructor
-    private class WorkflowContext {
-        private String workflowId;
-        private Evaluatable parsedTemplateRule;
     }
 
 }
