@@ -2,9 +2,11 @@ package io.appform.statesman.engine.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import io.appform.statesman.engine.storage.data.StoredStateTransition;
 import io.appform.statesman.engine.storage.data.StoredWorkflowInstance;
 import io.appform.statesman.engine.storage.data.StoredWorkflowTemplate;
 import io.appform.statesman.model.DataObject;
+import io.appform.statesman.model.StateTransition;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.WorkflowTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -63,5 +65,18 @@ public class WorkflowUtils {
                 .templateId(storedWorkflowInstance.getTemplateId())
                 .dataObject(MapperUtils.deserialize(storedWorkflowInstance.getData(), DataObject.class))
                 .build();
+    }
+
+    public static StateTransition toDto(StoredStateTransition storedStateTransitions) {
+         return MapperUtils.deserialize(storedStateTransitions.getData(), StateTransition.class);
+    }
+
+    public static StoredStateTransition toDao(String workflowTemplateId, String fromState, StateTransition stateTransition) {
+         return StoredStateTransition.builder()
+                 .active(true)
+                 .fromState(fromState)
+                 .workflowTemplateId(workflowTemplateId)
+                 .data(MapperUtils.serialize(stateTransition))
+                 .build();
     }
 }

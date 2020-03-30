@@ -1,17 +1,16 @@
 package io.appform.statesman.model;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Value;
+import lombok.*;
 
 import java.util.List;
 
 /**
  *
  */
-@Value
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class WorkflowTemplate {
     String id;
     String name;

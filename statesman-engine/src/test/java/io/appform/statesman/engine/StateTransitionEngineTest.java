@@ -78,11 +78,20 @@ public class StateTransitionEngineTest {
                     .put("C", ImmutableList.of(StateTransitions.c2d, StateTransitions.c2e))
                     .build();
             return new TransitionStore() {
+                @Override
+                public Optional<StateTransition> save(String workflowTemplateId, String fromState, StateTransition stateTransition) {
+                   return Optional.empty();
+                }
 
                 @Override
-                public Optional<List<StateTransition>> getTransitionFor(
+                public List<StateTransition> allTransitions(String workflowTemplateId) {
+                    return null;
+                }
+
+                @Override
+                public List<StateTransition> getTransitionFor(
                         String workflowTmplId, String fromState) {
-                    return Optional.ofNullable(transitions.get(fromState));
+                    return transitions.get(fromState);
                 }
             };
         };
