@@ -2,6 +2,8 @@ package io.appform.statesman.engine.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Strings;
+import io.appform.statesman.engine.storage.data.StoredActionTemplate;
 import io.appform.statesman.engine.storage.data.StoredStateTransition;
 import io.appform.statesman.engine.storage.data.StoredWorkflowInstance;
 import io.appform.statesman.engine.storage.data.StoredWorkflowTemplate;
@@ -9,6 +11,7 @@ import io.appform.statesman.model.DataObject;
 import io.appform.statesman.model.StateTransition;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.WorkflowTemplate;
+import io.appform.statesman.model.action.template.ActionTemplate;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -68,15 +71,32 @@ public class WorkflowUtils {
     }
 
     public static StateTransition toDto(StoredStateTransition storedStateTransitions) {
-         return MapperUtils.deserialize(storedStateTransitions.getData(), StateTransition.class);
+        return MapperUtils.deserialize(storedStateTransitions.getData(), StateTransition.class);
     }
 
     public static StoredStateTransition toDao(String workflowTemplateId, String fromState, StateTransition stateTransition) {
-         return StoredStateTransition.builder()
-                 .active(true)
-                 .fromState(fromState)
-                 .workflowTemplateId(workflowTemplateId)
-                 .data(MapperUtils.serialize(stateTransition))
-                 .build();
+        return StoredStateTransition.builder()
+                .active(true)
+                .fromState(fromState)
+                .workflowTemplateId(workflowTemplateId)
+                .data(MapperUtils.serialize(stateTransition))
+                .build();
     }
+
+    public static ActionTemplate toDto(StoredActionTemplate storedActionTemplate) {
+        return MapperUtils.deserialize(storedActionTemplate.getData(), ActionTemplate.class);
+    }
+
+    public static StoredActionTemplate toDao(ActionTemplate actionTemplate) {
+        String templateId = Strings.isNullOrEmpty(actionTemplate.getTemplateId())
+                                ? UUID.randomUUID().toString() : actionTemplate.getTemplateId();
+        return StoredActionTemplate.builder()
+                .templateId(templateId)
+                .active(true)
+                .actionType(actionTemplate.getType().name())
+                .name(actionTemplate.getName())
+                .data(MapperUtils.serialize(actionTemplate))
+                .build();
+    }
+
 }

@@ -41,7 +41,7 @@ public class WorkflowProviderCommand implements WorkflowProvider {
                 .expireAfterWrite(300, TimeUnit.SECONDS)
                 .refreshAfterWrite(60, TimeUnit.SECONDS)
                 .build(key -> {
-                    log.debug("Loading data for transition for key: {}", key);
+                    log.debug("Loading data for workflow for key: {}", key);
                     return getTemplateFromDb(key);
                 });
     }

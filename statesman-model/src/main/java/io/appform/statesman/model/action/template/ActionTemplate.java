@@ -15,7 +15,8 @@ import lombok.ToString;
 })
 public abstract class ActionTemplate {
 
-    protected boolean sync;
+    protected String templateId;
+    protected String name;
 
     protected final ActionType type;
 
@@ -23,8 +24,9 @@ public abstract class ActionTemplate {
         this.type = type;
     }
 
-    public ActionTemplate(ActionType type, boolean sync) {
+    public ActionTemplate(ActionType type, String templateId, String name) {
         this.type = type;
-        this.sync = sync;
+        this.templateId = templateId;
+        this.name = name;
     }
 }

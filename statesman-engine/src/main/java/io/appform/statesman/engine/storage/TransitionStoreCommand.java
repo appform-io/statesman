@@ -79,7 +79,8 @@ public class TransitionStoreCommand implements TransitionStore {
         try {
             DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredStateTransition.class)
                     .add(Restrictions.eq("workflowTemplateId", workflowTemplateId))
-                    .add(Restrictions.eq("fromState", fromState));
+                    .add(Restrictions.eq("fromState", fromState))
+                    .add(Restrictions.eq("active", true));
             return stateTransitionRelationalDao.select(workflowTemplateId, detachedCriteria, 0, Integer.MAX_VALUE)
                     .stream()
                     .map(WorkflowUtils::toDto)

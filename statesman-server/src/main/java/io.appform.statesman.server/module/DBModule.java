@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import io.appform.dropwizard.sharding.DBShardingBundle;
 import io.appform.dropwizard.sharding.dao.LookupDao;
 import io.appform.dropwizard.sharding.dao.RelationalDao;
+import io.appform.statesman.engine.storage.data.StoredActionTemplate;
 import io.appform.statesman.engine.storage.data.StoredStateTransition;
 import io.appform.statesman.engine.storage.data.StoredWorkflowInstance;
 import io.appform.statesman.engine.storage.data.StoredWorkflowTemplate;
@@ -25,6 +26,12 @@ public class DBModule extends AbstractModule {
         return dbShardingBundle.createParentObjectDao(StoredProvider.class);
     }
 
+
+    @Singleton
+    @Provides
+    public LookupDao<StoredActionTemplate> provideActionTemplateLookupDao() {
+        return dbShardingBundle.createParentObjectDao(StoredActionTemplate.class);
+    }
 
     @Singleton
     @Provides
