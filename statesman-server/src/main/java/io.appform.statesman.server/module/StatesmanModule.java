@@ -6,8 +6,7 @@ import com.google.inject.Singleton;
 import io.appform.statesman.engine.ActionTemplateStore;
 import io.appform.statesman.engine.TransitionStore;
 import io.appform.statesman.engine.WorkflowProvider;
-import io.appform.statesman.publisher.EventPublisher;
-import io.appform.statesman.publisher.impl.HttpEventPublisher;
+import io.appform.statesman.publisher.impl.KafkaEventClient;
 import io.appform.statesman.server.AppConfig;
 import io.appform.statesman.server.dao.action.ActionTemplateStoreCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
@@ -25,8 +24,8 @@ public class StatesmanModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public EventPublisher provideEventPublisher(AppConfig appConfig, Environment environment) {
-        return new HttpEventPublisher(appConfig.getEventPublisherConfig(),
+    public io.appform.statesman.publisher.EventPublisher provideEventPublisher(AppConfig appConfig, Environment environment) {
+        return new KafkaEventClient(appConfig.getEventPublisherConfig(),
                 environment.metrics(),
                 environment.getObjectMapper());
     }
