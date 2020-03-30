@@ -38,7 +38,7 @@ shards:
 riemann:
   host: ${RIEMANN_HOST}
   port: ${RIEMANN_PORT}
-  prefix: phonepe.${CONFIG_ENV}.statesman
+  prefix: covid.${CONFIG_ENV}.statesman
   pollingInterval: 30
   tags:
     - statesman

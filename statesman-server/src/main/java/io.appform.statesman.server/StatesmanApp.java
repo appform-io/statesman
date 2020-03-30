@@ -31,41 +31,18 @@ public class StatesmanApp extends Application<AppConfig> {
 
     private DBShardingBundle<AppConfig> dbShardingBundle;
     private EventPublisher eventPublisher;
-    private final HystrixBundle hystrixBundle = initHystrixBundle();
 
     @Override
     public void initialize(Bootstrap<AppConfig> bootstrap) {
         final ObjectMapper mapper = bootstrap.getObjectMapper();
         setMapperProperties(mapper);
         MapperUtils.initialize(mapper);
-        this.dbShardingBundle = new DBShardingBundle<AppConfig>("io.appform.statesman.server") {
-            @Override
-            protected ShardedHibernateFactory getConfig(AppConfig appConfig) {
-                return appConfig.getShards();
-            }
-        };
+        this.dbShardingBundle = dbShardingBundle();
         bootstrap.addBundle(dbShardingBundle);
         bootstrap.addBundle(guiceBundle(dbShardingBundle));
-        bootstrap.addBundle(this.hystrixBundle);
-        bootstrap.addBundle(new RiemannBundle<AppConfig>() {
-            @Override
-            public RiemannConfig getRiemannConfiguration(AppConfig configuration) {
-                return configuration.getRiemann();
-            }
-        });
-        bootstrap.addBundle(new SwaggerBundle<AppConfig>() {
-            @Override
-            protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AppConfig configuration) {
-                return configuration.getSwagger();
-            }
-        });
-    }
-
-    GuiceBundle<AppConfig> guiceBundle(DBShardingBundle<AppConfig> dbShardingBundle) {
-        return GuiceBundle.<AppConfig>builder()
-                .enableAutoConfig(getClass().getPackage().getName())
-                .modules(new DBModule(dbShardingBundle))
-                .build(Stage.PRODUCTION);
+        bootstrap.addBundle(hystrixBundle());
+        bootstrap.addBundle(riemannBundle());
+        bootstrap.addBundle(swaggerBundle());
     }
 
 
@@ -88,13 +65,49 @@ public class StatesmanApp extends Application<AppConfig> {
         app.run();
     }
 
-    private HystrixBundle initHystrixBundle() {
+
+    private DBShardingBundle<AppConfig> dbShardingBundle() {
+        return new DBShardingBundle<AppConfig>("io.appform.statesman.server") {
+            @Override
+            protected ShardedHibernateFactory getConfig(AppConfig appConfig) {
+                return appConfig.getShards();
+            }
+        };
+    }
+
+    private GuiceBundle<AppConfig> guiceBundle(DBShardingBundle<AppConfig> dbShardingBundle) {
+        return GuiceBundle.<AppConfig>builder()
+                .enableAutoConfig(getClass().getPackage().getName())
+                .modules(new DBModule(dbShardingBundle))
+                .build(Stage.PRODUCTION);
+    }
+
+    private HystrixBundle hystrixBundle() {
         return HystrixBundle
                 .builder()
                 .disableStreamServletInAdminContext()
                 .withApplicationStreamPath("/hystrix.stream")
                 .build();
     }
+
+    private SwaggerBundle<AppConfig> swaggerBundle() {
+        return new SwaggerBundle<AppConfig>() {
+            @Override
+            protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AppConfig config) {
+                return config.getSwagger();
+            }
+        };
+    }
+
+    private RiemannBundle<AppConfig> riemannBundle() {
+        return new RiemannBundle<AppConfig>() {
+            @Override
+            public RiemannConfig getRiemannConfiguration(AppConfig configuration) {
+                return configuration.getRiemann();
+            }
+        };
+    }
+
     private void setMapperProperties(ObjectMapper mapper) {
         mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);

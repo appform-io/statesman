@@ -29,6 +29,10 @@ public class AppConfig extends Configuration {
     @Valid
     private RiemannConfig riemann;
 
+    @Valid
+    @NotNull
+    private SwaggerBundleConfiguration swagger;
+
     @NotNull
     @Valid
     private SwaggerBundleConfiguration swagger = new SwaggerBundleConfiguration();
