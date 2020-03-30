@@ -87,8 +87,7 @@ public class StateTransitionEngine {
                 .orElse(null);
         Preconditions.checkNotNull(template);
         val transitions = transitionStore.get()
-                .getTransitionFor(template.getId(), currentState.getName())
-                .orElse(null);
+                .getTransitionFor(template.getId(), currentState.getName());
         Preconditions.checkNotNull(transitions);
         val evalNode = mapper.createObjectNode();
         evalNode.putObject("data").setAll((ObjectNode) dataObject.getData());

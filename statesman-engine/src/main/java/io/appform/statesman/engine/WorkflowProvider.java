@@ -12,7 +12,7 @@ import java.util.Optional;
  */
 public interface WorkflowProvider {
     Optional<WorkflowTemplate> createTemplate(String name, List<String> attributes);
-    Optional<WorkflowTemplate> getTemplate(String workflowTmplId);
+    Optional<WorkflowTemplate> getTemplate(String workflowTemplateId);
 
     Optional<Workflow> createWorkflow(String templateId, JsonNode initialData);
     Optional<Workflow> getWorkflow(String workflowId);

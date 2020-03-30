@@ -12,18 +12,10 @@ public abstract class BaseAction<T extends ActionData, J extends ActionTemplate>
 
     public abstract T transformPayload(Workflow workflow, J actionTemplate);
 
-    public void queue(T actionData) {
-        //TODO: Add to queue
-    }
-
     @Override
     public void apply(J actionTemplate, Workflow workflow) {
         T actionData = transformPayload(workflow, actionTemplate);
-        if (actionTemplate.isSync()) {
-            handle(actionData);
-        } else {
-            queue(actionData);
-        }
+        handle(actionData);
     }
 
 }
