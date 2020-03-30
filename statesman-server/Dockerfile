@@ -12,7 +12,7 @@ EXPOSE 8083
 
 VOLUME /var/log/statesman-server
 
-ADD config/docker.yml docker.yml
+ADD config docker.yml
 ADD statesman-server/target/statesman*.jar server.jar
 
 CMD sh -c "java -jar server.jar initialize docker.yml || true ;  java -Dfile.encoding=utf-8 -XX:+${GC_ALGO-UseG1GC} -Xms${JAVA_PROCESS_MIN_HEAP-1g} -Xmx${JAVA_PROCESS_MAX_HEAP-1g} ${JAVA_OPTS} -jar server.jar server docker.yml"

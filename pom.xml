@@ -12,6 +12,7 @@
         <module>statesman-model</module>
         <module>statesman-engine</module>
         <module>statesman-server</module>
+        <module>statesman-publisher</module>
     </modules>
 
     <properties>
