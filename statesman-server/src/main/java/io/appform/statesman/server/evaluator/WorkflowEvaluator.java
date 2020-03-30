@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,12 +53,12 @@ public class WorkflowEvaluator {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        List<String> workflowIds = parsedTemplates
+        Set<String> workflowIds = parsedTemplates
                 .stream()
                 .filter(parsedWorkflowContext -> hopeLangEngine
                         .evaluate(parsedWorkflowContext.getParsedTemplateRule(), translatedPayload))
                 .map(WorkflowContext::getWorkflowId)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         if (workflowIds.isEmpty()) {
             throw new StatesmanError("Could not evaluate workflow ", ResponseCode.OPERATION_NOT_SUPPORTED);
@@ -66,7 +67,7 @@ public class WorkflowEvaluator {
             throw new StatesmanError("More than one workflow evaluated", ResponseCode.INTERNAL_SERVER_ERROR);
         }
 
-        return workflowIds.get(0);
+        return workflowIds.stream().findFirst().get();
 
     }
 
