@@ -6,10 +6,10 @@ import com.google.inject.Singleton;
 import io.appform.dropwizard.sharding.DBShardingBundle;
 import io.appform.dropwizard.sharding.dao.LookupDao;
 import io.appform.dropwizard.sharding.dao.RelationalDao;
-import io.appform.statesman.engine.storage.data.StoredActionTemplate;
-import io.appform.statesman.engine.storage.data.StoredStateTransition;
-import io.appform.statesman.engine.storage.data.StoredWorkflowInstance;
-import io.appform.statesman.engine.storage.data.StoredWorkflowTemplate;
+import io.appform.statesman.server.dao.action.StoredActionTemplate;
+import io.appform.statesman.server.dao.state.StoredStateTransition;
+import io.appform.statesman.server.dao.workflow.StoredWorkflowInstance;
+import io.appform.statesman.server.dao.workflow.StoredWorkflowTemplate;
 import io.appform.statesman.server.dao.providers.StoredProvider;
 
 public class DBModule extends AbstractModule {

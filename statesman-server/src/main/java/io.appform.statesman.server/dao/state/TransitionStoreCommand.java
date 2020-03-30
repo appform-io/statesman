@@ -1,4 +1,4 @@
-package io.appform.statesman.engine.storage;
+package io.appform.statesman.server.dao.state;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -6,8 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.dropwizard.sharding.dao.RelationalDao;
 import io.appform.statesman.engine.TransitionStore;
-import io.appform.statesman.engine.storage.data.StoredStateTransition;
-import io.appform.statesman.engine.util.WorkflowUtils;
+import io.appform.statesman.server.utils.WorkflowUtils;
 import io.appform.statesman.model.StateTransition;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;

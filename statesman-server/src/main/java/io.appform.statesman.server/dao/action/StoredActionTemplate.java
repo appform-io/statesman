@@ -1,4 +1,4 @@
-package io.appform.statesman.engine.storage.data;
+package io.appform.statesman.server.dao.action;
 
 import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
@@ -12,13 +12,13 @@ import javax.persistence.*;
 import java.util.Date;
 
 @Entity
-@Table(name = "state_transitions", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "transition_id")
+@Table(name = "action_templates", uniqueConstraints = {
+        @UniqueConstraint(columnNames = "template_id")
 })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class StoredStateTransition {
+public class StoredActionTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,14 +26,14 @@ public class StoredStateTransition {
     private long id;
 
     @LookupKey
-    @Column(name = "transition_id")
-    private String transitionId;
+    @Column(name = "template_id")
+    private String templateId;
 
-    @Column(name = "workflow_template_id")
-    private String workflowTemplateId;
+    @Column(name = "name")
+    private String name;
 
-    @Column(name = "from_state")
-    private String fromState;
+    @Column(name = "action_type")
+    private String actionType;
 
     //Keeping it as blob to avoid alters
     @Column(name = "data")
@@ -51,14 +51,14 @@ public class StoredStateTransition {
     private Date updated;
 
     @Builder
-    public StoredStateTransition(String transitionId,
-                                 String workflowTemplateId,
-                                 String fromState,
-                                 byte[] data,
-                                 boolean active) {
-        this.transitionId = transitionId;
-        this.workflowTemplateId = workflowTemplateId;
-        this.fromState = fromState;
+    public StoredActionTemplate(String templateId,
+                                  String name,
+                                  String actionType,
+                                  byte[] data,
+                                  boolean active) {
+        this.templateId = templateId;
+        this.name = name;
+        this.actionType = actionType;
         this.data = data;
         this.active = active;
     }

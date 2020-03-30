@@ -1,4 +1,4 @@
-package io.appform.statesman.engine.util;
+package io.appform.statesman.server.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;

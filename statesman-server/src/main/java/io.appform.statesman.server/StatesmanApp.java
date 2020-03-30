@@ -13,7 +13,7 @@ import io.appform.functionmetrics.FunctionMetricsManager;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.impl.HttpEventPublisher;
 import io.appform.statesman.server.exception.GenericExceptionMapper;
-import io.appform.statesman.engine.util.MapperUtils;
+import io.appform.statesman.server.utils.MapperUtils;
 import io.appform.statesman.server.module.DBModule;
 import io.appform.statesman.server.resources.EventResource;
 import io.appform.statesman.server.resources.ProviderResource;
@@ -22,6 +22,8 @@ import io.dropwizard.riemann.RiemannBundle;
 import io.dropwizard.riemann.RiemannConfig;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.zapodot.hystrix.bundle.HystrixBundle;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 
@@ -49,6 +51,12 @@ public class StatesmanApp extends Application<AppConfig> {
             @Override
             public RiemannConfig getRiemannConfiguration(AppConfig configuration) {
                 return configuration.getRiemann();
+            }
+        });
+        bootstrap.addBundle(new SwaggerBundle<AppConfig>() {
+            @Override
+            protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AppConfig configuration) {
+                return configuration.getSwagger();
             }
         });
     }
