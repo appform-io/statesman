@@ -125,6 +125,23 @@ public class TemplateResource {
                 .build();
     }
 
+    @GET
+    @Timed
+    @Path("/all")
+    @ApiOperation("Get all templates")
+    public Response getAll() {
+
+        List<WorkflowTemplate> templates = workflowProvider.getAll();
+        if (templates.isEmpty()) {
+            return Response.noContent()
+                    .build();
+        }
+        return Response.ok()
+                .entity(templates)
+                .build();
+    }
+
+
     @PUT
     @Timed
     @Path("/update/action")
