@@ -42,6 +42,12 @@
             <artifactId>handlebars-jackson2</artifactId>
             <version>${handlebars.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.appform</groupId>
+            <artifactId>statesman-publisher</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
 
     </dependencies>
 
