@@ -1,4 +1,4 @@
-package io.appform.statesman.server.dao.state;
+package io.appform.statesman.server.dao.transition;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;

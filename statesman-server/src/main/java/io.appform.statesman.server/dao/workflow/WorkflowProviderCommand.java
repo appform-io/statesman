@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.dropwizard.sharding.dao.LookupDao;
 import io.appform.statesman.engine.WorkflowProvider;
+import io.appform.statesman.server.utils.MapperUtils;
 import io.appform.statesman.server.utils.WorkflowUtils;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.WorkflowTemplate;
@@ -15,7 +16,6 @@ import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -44,10 +44,27 @@ public class WorkflowProviderCommand implements WorkflowProvider {
     }
 
     @Override
-    public Optional<WorkflowTemplate> createTemplate(String name, List<String> attributes) {
+    public Optional<WorkflowTemplate> createTemplate(WorkflowTemplate workflowTemplate) {
         try {
-            StoredWorkflowTemplate storedWorkflowTemplate = WorkflowUtils.toDao(name, attributes);
+            StoredWorkflowTemplate storedWorkflowTemplate = WorkflowUtils.toDao(workflowTemplate);
             return workflowTemplateLookupDao.save(storedWorkflowTemplate).map(WorkflowUtils::toDto);
+        } catch (Exception e) {
+            throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
+        }
+    }
+
+    @Override
+    public Optional<WorkflowTemplate> updateTemplate(WorkflowTemplate workflowTemplate) {
+        try {
+            boolean updated = workflowTemplateLookupDao.update(workflowTemplate.getId(), storedWorkflowTemplate -> {
+             if(storedWorkflowTemplate.isPresent()) {
+                 storedWorkflowTemplate.get().setActive(workflowTemplate.isActive());
+                 storedWorkflowTemplate.get().setName(workflowTemplate.getName());
+                 storedWorkflowTemplate.get().setAttributes(MapperUtils.serialize(workflowTemplate.getAttributes()));
+             }
+             return storedWorkflowTemplate.orElse(null);
+            });
+            return updated ? getTemplate(workflowTemplate.getId()) : Optional.empty();
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }

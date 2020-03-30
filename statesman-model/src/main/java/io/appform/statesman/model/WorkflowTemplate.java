@@ -14,5 +14,6 @@ import java.util.List;
 public class WorkflowTemplate {
     String id;
     String name;
+    boolean active;
     List<String> attributes;
 }
