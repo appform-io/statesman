@@ -12,7 +12,7 @@
     <artifactId>statesman-engine</artifactId>
 
     <properties>
-        <hope-lang.version>1.0.7</hope-lang.version>
+        <hope.version>1.0.8</hope.version>
         <handlebars.version>4.1.0</handlebars.version>
     </properties>
 
@@ -25,7 +25,7 @@
         <dependency>
             <groupId>io.appform.hope</groupId>
             <artifactId>hope-lang</artifactId>
-            <version>${hope-lang.version}</version>
+            <version>${hope.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

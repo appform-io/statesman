@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import io.appform.statesman.engine.observer.ObservableEvent;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.model.*;
+import io.appform.statesman.model.dataaction.impl.MergeDataAction;
 import io.appform.statesman.model.dataaction.impl.MergeSelectedDataAction;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -110,7 +111,7 @@ public class StateTransitionEngineTest {
                         .put("Q1", 3),
                 new MergeSelectedDataAction(Collections.singletonList("Q1"))));
         Assert.assertFalse(transition.getTransitions().isEmpty());
-        Assert.assertEquals(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(transition), 1, transition.getTransitions().size());
+        Assert.assertEquals(1, transition.getTransitions().size());
         Assert.assertEquals(States.A, transition.getTransitions().get(0).getOldState());
         Assert.assertEquals(States.B, transition.getTransitions().get(0).getNewState());
         transition = engine.handle(new DataUpdate(
@@ -119,7 +120,7 @@ public class StateTransitionEngineTest {
                         .put("Q2", 4),
                 new MergeSelectedDataAction(Collections.singletonList("Q2"))));
         Assert.assertFalse(transition.getTransitions().isEmpty());
-        Assert.assertEquals(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(transition), 1, transition.getTransitions().size());
+        Assert.assertEquals(1, transition.getTransitions().size());
         Assert.assertEquals(States.B, transition.getTransitions().get(0).getOldState());
         Assert.assertEquals(States.C, transition.getTransitions().get(0).getNewState());
         transition = engine.handle(new DataUpdate(
@@ -128,8 +129,28 @@ public class StateTransitionEngineTest {
                         .put("Q3", 1),
                 new MergeSelectedDataAction(Collections.singletonList("Q3"))));
         Assert.assertFalse(transition.getTransitions().isEmpty());
-        Assert.assertEquals(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(transition), 1, transition.getTransitions().size());
+        Assert.assertEquals(1, transition.getTransitions().size());
         Assert.assertEquals(States.C, transition.getTransitions().get(0).getOldState());
         Assert.assertEquals(States.D, transition.getTransitions().get(0).getNewState());
+    }
+
+    @Test
+    @SneakyThrows
+    public void testOneShot() {
+        var transition = engine.handle(new DataUpdate(
+                WF_ID,
+                MAPPER.createObjectNode()
+                        .put("Q1", 3)
+                        .put("Q2", 4)
+                        .put("Q3", 1),
+                new MergeDataAction()));
+        Assert.assertFalse(transition.getTransitions().isEmpty());
+        Assert.assertEquals(3, transition.getTransitions().size());
+        Assert.assertEquals(States.A, transition.getTransitions().get(0).getOldState());
+        Assert.assertEquals(States.B, transition.getTransitions().get(0).getNewState());
+        Assert.assertEquals(States.B, transition.getTransitions().get(1).getOldState());
+        Assert.assertEquals(States.C, transition.getTransitions().get(1).getNewState());
+        Assert.assertEquals(States.C, transition.getTransitions().get(2).getOldState());
+        Assert.assertEquals(States.D, transition.getTransitions().get(2).getNewState());
     }
 }
