@@ -34,6 +34,9 @@ public class StoredProvider {
     @Column(name = "partitions")
     private long partitions;
 
+    @Column(name = "active")
+    private boolean active;
+
     @Column(name = "created", columnDefinition = "timestamp", updatable = false, insertable = false)
     @Generated(value = GenerationTime.INSERT)
     private Date created;

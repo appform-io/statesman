@@ -20,7 +20,4 @@ public class DBModule extends AbstractModule {
     public LookupDao<StoredProvider> provideProvider() {
         return dbShardingBundle.createParentObjectDao(StoredProvider.class);
     }
-
-
-
 }

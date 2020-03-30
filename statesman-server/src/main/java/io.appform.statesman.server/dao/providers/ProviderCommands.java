@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.exception.ConstraintViolationException;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 @Slf4j
 @Singleton
@@ -41,7 +42,12 @@ public class ProviderCommands {
         }
     }
 
-
-
+    public boolean update(String providerId, Function<Optional<StoredProvider>, StoredProvider> modifier) {
+        try {
+            return providerDao.update(providerId, modifier);
+        } catch (Exception e) {
+            throw new StatesmanError(ResponseCode.INTERNAL_SERVER_ERROR);
+        }
+    }
 
 }
