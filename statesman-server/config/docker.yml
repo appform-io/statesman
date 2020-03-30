@@ -46,10 +46,31 @@ shards:
       removeAbandoned: true
       evictionInterval: 30s
       minIdleTime: 1m
+    - driverClass: org.mariadb.jdbc.Driver
+      user: ${DB_USER}
+      password: ${DB_PASSWORD}
+      url: ${SHARD1_CONNECTION_STRING}
+      properties:
+        charSet: UTF-8
+        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        #hibernate.hbm2ddl.auto: create
+      maxWaitForConnection: 1s
+      validationQuery: "/* MyApplication Health Check */ SELECT 1"
+      minSize: 8
+      maxSize: 8
+      initialSize: 8
+      logAbandonedConnections: true
+      logValidationErrors: true
+      checkConnectionWhileIdle: true
+      checkConnectionOnConnect: true
+      validationQueryTimeout: 1s
+      removeAbandoned: true
+      evictionInterval: 30s
+      minIdleTime: 1m
 
 riemann:
   host: ${RIEMANN_HOST}
-  port: ${RIEMANN_PORT}
+  port: 5555
   prefix: covid.${CONFIG_ENV}.statesman
   pollingInterval: 30
   tags:

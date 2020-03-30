@@ -14,7 +14,7 @@
     <properties>
         <hystrix.version>1.5.3</hystrix.version>
         <hystrix.configurator.version>0.0.6</hystrix.configurator.version>
-        <hystrix.function.wrapper.version>1.0-SNAPSHOT</hystrix.function.wrapper.version>
+        <hystrix.function.wrapper.version>1.1.5</hystrix.function.wrapper.version>
         <hystrix.dropwizard.version>0.4</hystrix.dropwizard.version>
     </properties>
 

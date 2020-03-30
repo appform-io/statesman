@@ -25,8 +25,7 @@ public class WorkflowProviderCommand implements WorkflowProvider {
 
     private final LookupDao<StoredWorkflowTemplate> workflowTemplateLookupDao;
     private final LookupDao<StoredWorkflowInstance> workflowInstanceLookupDao;
-    private final LoadingCache<String, Optional<WorkflowTemplate>> WORKFLOW_TEMPLATE_CACHE;
-
+    private final LoadingCache<String, Optional<WorkflowTemplate>> workflowTemplateCache;
 
     @Inject
     public WorkflowProviderCommand(LookupDao<StoredWorkflowTemplate> workflowTemplateLookupDao,
@@ -34,7 +33,7 @@ public class WorkflowProviderCommand implements WorkflowProvider {
         this.workflowTemplateLookupDao = workflowTemplateLookupDao;
         this.workflowInstanceLookupDao = workflowInstanceLookupDao;
         log.info("Initializing cache WORKFLOW_TEMPLATE_CACHE");
-        WORKFLOW_TEMPLATE_CACHE = Caffeine.newBuilder()
+        workflowTemplateCache = Caffeine.newBuilder()
                 .maximumSize(1_000)
                 .expireAfterWrite(300, TimeUnit.SECONDS)
                 .refreshAfterWrite(60, TimeUnit.SECONDS)
@@ -74,7 +73,7 @@ public class WorkflowProviderCommand implements WorkflowProvider {
     @Override
     public Optional<WorkflowTemplate> getTemplate(String workflowTemplateId) {
         try {
-            return WORKFLOW_TEMPLATE_CACHE.get(workflowTemplateId);
+            return workflowTemplateCache.get(workflowTemplateId);
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }

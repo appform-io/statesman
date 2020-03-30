@@ -27,13 +27,13 @@ public class TransitionStoreCommand implements TransitionStore {
 
 
     private final RelationalDao<StoredStateTransition> stateTransitionRelationalDao;
-    private final LoadingCache<StateTransitionCacheKey, List<StateTransition>> TRANSITION_CACHE;
+    private final LoadingCache<StateTransitionCacheKey, List<StateTransition>> transitionCache;
 
     @Inject
     public TransitionStoreCommand(RelationalDao<StoredStateTransition> storedWorkflowTemplateRelationalDao) {
         this.stateTransitionRelationalDao = storedWorkflowTemplateRelationalDao;
         log.info("Initializing cache TRANSITION_CACHE");
-        TRANSITION_CACHE = Caffeine.newBuilder()
+        transitionCache = Caffeine.newBuilder()
                 .maximumSize(1_000)
                 .expireAfterWrite(300, TimeUnit.SECONDS)
                 .refreshAfterWrite(60, TimeUnit.SECONDS)
@@ -56,7 +56,7 @@ public class TransitionStoreCommand implements TransitionStore {
 
     @Override
     public List<StateTransition> getTransitionFor(String workflowTemplateId, String fromState) {
-        return TRANSITION_CACHE.get(stateTransitionCacheKey(workflowTemplateId, fromState));
+        return transitionCache.get(stateTransitionCacheKey(workflowTemplateId, fromState));
     }
 
     @Override

@@ -1,20 +1,36 @@
 version: '2'
 services:
-   mariadb:
-    image: mariadb
+   mariadb_1:
+    image: mariadb:10.0.38
     environment:
       MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: statesman_db_1
+      MYSQL_USER: suser@%
+      MYSQL_PASSWORD: password
+   mariadb_2:
+    image: mariadb:10.0.38
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: statesman_db_2
+      MYSQL_USER: suser@%
+      MYSQL_PASSWORD: password
    statesman-server:
     container_name: statesman-server
-    build: ..
+    build: .
     ports:
     - "8080:8080"
     - "8081:8081"
     volumes:
     - /var/log/statesman-server
     environment:
-      SHARD1_CONNECTION_STRING: jdbc:mariadb://localhost:1234?createDatabaseIfNotExist=true
-      DB_USER: ppdb
-      HARDS: 2
+      SHARD1_CONNECTION_STRING: jdbc:mariadb://mariadb_1/statesman_db_1?createDatabaseIfNotExist=true
+      SHARD2_CONNECTION_STRING: jdbc:mariadb://mariadb_2statesman_db_2?createDatabaseIfNotExist=true
+      DB_USER: root
+      DB_PASSWORD: password
+      SHARDS: 2
       RIEMANN_HOST: riemann.stage
       RIEMANN_PORT: 5555
+      CONFIG_ENV: local
+    depends_on:
+      - mariadb_1
+      - mariadb_2

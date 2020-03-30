@@ -15,6 +15,8 @@ import io.appform.statesman.server.module.DBModule;
 import io.appform.statesman.server.module.StatesmanModule;
 import io.appform.statesman.server.utils.MapperUtils;
 import io.dropwizard.Application;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.riemann.RiemannBundle;
 import io.dropwizard.riemann.RiemannConfig;
 import io.dropwizard.setup.Bootstrap;
@@ -30,6 +32,9 @@ public class StatesmanApp extends Application<AppConfig> {
 
     @Override
     public void initialize(Bootstrap<AppConfig> bootstrap) {
+        bootstrap.setConfigurationSourceProvider(
+                new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
+                                               new EnvironmentVariableSubstitutor(false)));
         final ObjectMapper mapper = bootstrap.getObjectMapper();
         setMapperProperties(mapper);
         MapperUtils.initialize(mapper);

@@ -21,14 +21,13 @@ import java.util.concurrent.TimeUnit;
 public class ActionTemplateStoreCommand implements ActionTemplateStore {
 
     private final LookupDao<StoredActionTemplate> actionTemplateLookupDao;
-    private final LoadingCache<String, Optional<ActionTemplate>> ACTION_TEMPLATE_CACHE;
-
+    private final LoadingCache<String, Optional<ActionTemplate>> actionTemplateCache;
 
     @Inject
     public ActionTemplateStoreCommand(LookupDao<StoredActionTemplate> actionTemplateLookupDao) {
         this.actionTemplateLookupDao = actionTemplateLookupDao;
         log.info("Initializing cache ACTION_TEMPLATE_CACHE");
-        ACTION_TEMPLATE_CACHE = Caffeine.newBuilder()
+        actionTemplateCache = Caffeine.newBuilder()
                 .maximumSize(1_000)
                 .expireAfterWrite(300, TimeUnit.SECONDS)
                 .refreshAfterWrite(60, TimeUnit.SECONDS)
@@ -62,7 +61,7 @@ public class ActionTemplateStoreCommand implements ActionTemplateStore {
     @Override
     public Optional<ActionTemplate> get(String actionTemplateId) {
         try {
-            return ACTION_TEMPLATE_CACHE.get(actionTemplateId);
+            return actionTemplateCache.get(actionTemplateId);
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
