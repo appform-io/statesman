@@ -34,6 +34,7 @@ shards:
       removeAbandoned: true
       evictionInterval: 30s
       minIdleTime: 1m
+
 riemann:
   host: ${RIEMANN_HOST}
   port: ${RIEMANN_PORT}
@@ -41,3 +42,13 @@ riemann:
   pollingInterval: 30
   tags:
     - statesman
+
+eventPublisherConfig:
+  connections: 10
+  idleTimeOutSeconds: 30
+  connectTimeoutMs: 10000
+  opTimeoutMs: 10000
+  endpoint: "http://localhost:8080/events"
+  eventTopics:
+    REPORTING: reporting
+    APP: app

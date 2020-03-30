@@ -6,7 +6,7 @@ services:
       MYSQL_ROOT_PASSWORD: password
    statesman-server:
     container_name: statesman-server
-    build: .
+    build: ..
     ports:
     - "8080:8080"
     - "8081:8081"

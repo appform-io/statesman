@@ -1,6 +1,7 @@
 package io.appform.statesman.server;
 
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
+import io.appform.statesman.publisher.impl.EventPublisherConfig;
 import io.dropwizard.Configuration;
 import io.dropwizard.riemann.RiemannConfig;
 import lombok.Data;
@@ -26,4 +27,8 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private RiemannConfig riemann;
+
+    @NotNull
+    @Valid
+    private EventPublisherConfig eventPublisherConfig;
 }

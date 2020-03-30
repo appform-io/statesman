@@ -2,7 +2,7 @@ package io.appform.statesman.publisher.util;
 
 import com.codahale.metrics.MetricRegistry;
 import com.raskasa.metrics.okhttp.InstrumentedOkHttpClients;
-import io.appform.statesman.publisher.datapublisher.DataPublisherConfig;
+import io.appform.statesman.publisher.impl.EventPublisherConfig;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
@@ -14,9 +14,10 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpUtil {
 
+
     public static OkHttpClient defaultClient(final String clientName,
                                              final MetricRegistry registry,
-                                             final DataPublisherConfig configuration) {
+                                             final EventPublisherConfig configuration) {
 
         int connections = configuration.getConnections();
         connections = connections == 0 ? 10 : connections;

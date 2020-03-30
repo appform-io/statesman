@@ -65,6 +65,12 @@
             <artifactId>metrics-okhttp</artifactId>
             <version>0.4.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.appform.functionmetrics</groupId>
+            <artifactId>function-metrics</artifactId>
+            <version>1.0.1</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

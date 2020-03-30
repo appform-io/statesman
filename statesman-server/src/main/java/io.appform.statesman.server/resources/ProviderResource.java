@@ -1,5 +1,6 @@
 package io.appform.statesman.server.resources;
 
+import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.statesman.model.request.CreateProvider;
@@ -31,6 +32,7 @@ public class ProviderResource {
 
 
     @GET
+    @Timed
     @Path("/{providerId}")
     @ApiOperation("Get provider")
     public Response get(@PathParam("providerId") final String providerId) {
@@ -44,6 +46,7 @@ public class ProviderResource {
     }
 
     @POST
+    @Timed
     @Path("/create")
     @ApiOperation("Create provider")
     public Response save(@Valid CreateProvider request) {
@@ -52,6 +55,7 @@ public class ProviderResource {
     }
 
     @POST
+    @Timed
     @Path("/deactivate/{providerId}")
     @ApiOperation("Deactivate provider")
     public Response deactivate(@PathParam("providerId") final String providerId) {

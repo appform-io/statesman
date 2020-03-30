@@ -1,9 +1,11 @@
-package io.appform.statesman.publisher.datapublisher;
+package io.appform.statesman.publisher.impl;
 
+import com.google.common.collect.Maps;
 import lombok.*;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
+import java.util.Map;
 
 /**
  * @author shashank.g
@@ -14,7 +16,7 @@ import javax.validation.constraints.Min;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class DataPublisherConfig {
+public class EventPublisherConfig {
     @Min(10L)
     @Max(1024L)
     private int connections = 10;
@@ -27,4 +29,5 @@ public class DataPublisherConfig {
 
     //serviceLevel
     private String endpoint = "http://localhost:8080/events";
+    private Map<String, String> eventTopics = Maps.newHashMap();
 }
