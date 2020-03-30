@@ -11,6 +11,18 @@ server:
     - type: console
       timeZone: IST
 
+logging:
+  level: INFO
+  loggers:
+    deprecation: ERROR
+    org.hibernate: ERROR
+    QueuedSender: WARN
+  appenders:
+    - type: console
+      threshold: TRACE
+      timeZone: IST
+      logFormat: "%(%-5level) [%date] %X{TRACE-ID} [%thread] [%logger{0}]: %message%n"
+
 shards:
   shards:
     - driverClass: org.mariadb.jdbc.Driver
@@ -42,6 +54,11 @@ riemann:
   pollingInterval: 30
   tags:
     - statesman
+
+swagger:
+  resourcePackage: io.appform.statesman.server.resources
+  title: Statesman
+  description: Statesman Backend
 
 eventPublisherConfig:
   connections: 10

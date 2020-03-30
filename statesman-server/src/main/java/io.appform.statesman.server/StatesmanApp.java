@@ -10,13 +10,10 @@ import com.google.inject.Stage;
 import io.appform.dropwizard.sharding.DBShardingBundle;
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.appform.functionmetrics.FunctionMetricsManager;
-import io.appform.statesman.publisher.EventPublisher;
-import io.appform.statesman.publisher.impl.HttpEventPublisher;
 import io.appform.statesman.server.exception.GenericExceptionMapper;
-import io.appform.statesman.server.utils.MapperUtils;
 import io.appform.statesman.server.module.DBModule;
-import io.appform.statesman.server.resources.EventResource;
-import io.appform.statesman.server.resources.ProviderResource;
+import io.appform.statesman.server.module.StatesmanModule;
+import io.appform.statesman.server.utils.MapperUtils;
 import io.dropwizard.Application;
 import io.dropwizard.riemann.RiemannBundle;
 import io.dropwizard.riemann.RiemannConfig;
@@ -30,7 +27,6 @@ import ru.vyarus.dropwizard.guice.GuiceBundle;
 public class StatesmanApp extends Application<AppConfig> {
 
     private DBShardingBundle<AppConfig> dbShardingBundle;
-    private EventPublisher eventPublisher;
 
     @Override
     public void initialize(Bootstrap<AppConfig> bootstrap) {
@@ -49,20 +45,12 @@ public class StatesmanApp extends Application<AppConfig> {
     @Override
     public void run(AppConfig appConfig, Environment environment) throws Exception {
         FunctionMetricsManager.initialize("commands", environment.metrics());
-
-        //TODO: move to guice -  testing this for now
-        this.eventPublisher = new HttpEventPublisher(appConfig.getEventPublisherConfig(),
-                environment.metrics(),
-                environment.getObjectMapper());
-
-        environment.jersey().register(ProviderResource.class);
-        environment.jersey().register(new EventResource(eventPublisher));
         environment.jersey().register(GenericExceptionMapper.class);
     }
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String[] args) throws Exception {
         StatesmanApp app = new StatesmanApp();
-        app.run();
+        app.run(args);
     }
 
 
@@ -79,6 +67,7 @@ public class StatesmanApp extends Application<AppConfig> {
         return GuiceBundle.<AppConfig>builder()
                 .enableAutoConfig(getClass().getPackage().getName())
                 .modules(new DBModule(dbShardingBundle))
+                .modules(new StatesmanModule())
                 .build(Stage.PRODUCTION);
     }
 

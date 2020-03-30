@@ -23,6 +23,8 @@ logging:
       timeZone: IST
       logFormat: "%(%-5level) [%date] %X{TRACE-ID} [%thread] [%logger{0}]: %message%n"
 
+shards:
+  shards:
   - driverClass: org.mariadb.jdbc.Driver
     user: root
     password: root
@@ -53,7 +55,7 @@ logging:
     checkConnectionWhileIdle: false
 
 swagger:
-  resourcePackage:
+  resourcePackage: io.appform.statesman.server.resources
   title: Statesman
   description: Statesman Backend
 

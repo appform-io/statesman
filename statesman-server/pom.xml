@@ -16,6 +16,7 @@
         <dropwizard.swagger.version>1.3.7-1</dropwizard.swagger.version>
         <dropwizard.riemann.version>1.3.12-1</dropwizard.riemann.version>
         <dropwizard.sharding.version>1.3.13-6</dropwizard.sharding.version>
+        <mariadb.driver.version>2.2.0</mariadb.driver.version>
     </properties>
 
     <dependencies>
@@ -58,6 +59,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.mariadb.jdbc</groupId>
+            <artifactId>mariadb-java-client</artifactId>
+            <version>${mariadb.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>io.dropwizard</groupId>
