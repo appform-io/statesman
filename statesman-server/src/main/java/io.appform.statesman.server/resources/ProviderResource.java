@@ -43,12 +43,12 @@ public class ProviderResource {
                 .build();
     }
 
-
     @POST
     @Path("/create")
     @ApiOperation("Create provider")
-    public void save(@Valid CreateProvider request) {
+    public Response save(@Valid CreateProvider request) {
         providerCommands.save(ProviderUtils.toDto(request));
+        return Response.ok().build();
     }
 
     @POST
@@ -66,6 +66,4 @@ public class ProviderResource {
                 .entity(success)
                 .build();
     }
-
-
 }

@@ -14,9 +14,9 @@ server:
 shards:
   shards:
     - driverClass: org.mariadb.jdbc.Driver
-      user: root
-      password: password
-      url: "test"
+      user: ${DB_USER}
+      password: ${DB_PASSWORD}
+      url: ${SHARD1_CONNECTION_STRING}
       properties:
         charSet: UTF-8
         hibernate.dialect: org.hibernate.dialect.MySQLDialect
@@ -34,4 +34,10 @@ shards:
       removeAbandoned: true
       evictionInterval: 30s
       minIdleTime: 1m
-
+riemann:
+  host: ${RIEMANN_HOST}
+  port: ${RIEMANN_PORT}
+  prefix: phonepe.${CONFIG_ENV}.statesman
+  pollingInterval: 30
+  tags:
+    - statesman
