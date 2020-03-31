@@ -15,11 +15,9 @@ import lombok.val;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 
 @Slf4j
@@ -311,23 +309,31 @@ public class HandleBarsHelperRegistry {
                     return null;
                 }
                 val keyNode = node.at(key);
-                if (null == keyNode || keyNode.isNull() || keyNode.isMissingNode() || !keyNode.isTextual()) {
+                if (null == keyNode || keyNode.isNull() || keyNode.isMissingNode()) {
                     return null;
                 }
-                int value = Integer.parseInt(keyNode.asText());
-                if (value < 10) {
-                    return MAPPER.writeValueAsString(options.hash("op_" + value));
-                }
-                List<Integer> selectedOptions = new ArrayList<>();
-                while (value > 0) {
-                    selectedOptions.add(value % 10);
-                    value = value / 10;
-                }
-                if (keyNode.isArray()) {
+                if (keyNode.isTextual()) {
+                    int value = Integer.parseInt(keyNode.asText());
+                    if (value < 10) {
+                        return MAPPER.writeValueAsString(options.hash("op_" + value));
+                    }
+                    List<Integer> selectedOptions = new ArrayList<>();
+                    while (value > 0) {
+                        selectedOptions.add(value % 10);
+                        value = value / 10;
+                    }
                     return MAPPER.writeValueAsString(
                             selectedOptions
                                     .stream()
                                     .map(option -> options.hash("op_" + option))
+                                    .collect(Collectors.toList()));
+                }
+                if (keyNode.isArray()) {
+                    return MAPPER.writeValueAsString(
+                            StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+                                    keyNode.elements(), Spliterator.ORDERED), false)
+                                    .filter(JsonNode::isTextual)
+                                    .map(jsonNode -> options.hash("op_" + jsonNode.asText()))
                                     .collect(Collectors.toList()));
                 }
                 return null;
