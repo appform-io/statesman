@@ -28,6 +28,7 @@ import java.util.UUID;
 public class KafkaEventClient extends HttpClient implements EventPublisher {
 
     private final Map<String, String> eventTopics;
+    private String endpoint;
 
     /**
      * Constructor
@@ -35,7 +36,8 @@ public class KafkaEventClient extends HttpClient implements EventPublisher {
     public KafkaEventClient(final EventPublisherConfig config,
                             final MetricRegistry registry,
                             final ObjectMapper mapper) {
-        super(mapper, config.getEndpoint(), HttpUtil.defaultClient(KafkaEventClient.class.getSimpleName(), registry, config));
+        super(mapper, HttpUtil.defaultClient(KafkaEventClient.class.getSimpleName(), registry, config.getHttpClientConfiguration()));
+        this.endpoint = config.getEndpoint();
         this.eventTopics = config.getEventTopics();
     }
 
@@ -47,7 +49,8 @@ public class KafkaEventClient extends HttpClient implements EventPublisher {
                             final OkHttpClient client,
                             final String endpoint,
                             final Map<String, String> eventTopics) {
-        super(mapper, endpoint, client);
+        super(mapper, client);
+        this.endpoint = endpoint;
         this.eventTopics = eventTopics;
     }
 

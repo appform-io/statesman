@@ -1,10 +1,11 @@
 package io.appform.statesman.publisher.impl;
 
 import com.google.common.collect.Maps;
+import io.appform.statesman.model.HttpClientConfiguration;
 import lombok.*;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.util.Map;
 
 /**
@@ -17,15 +18,11 @@ import java.util.Map;
 @NoArgsConstructor
 @Builder
 public class EventPublisherConfig {
-    @Min(10L)
-    @Max(1024L)
-    private int connections = 10;
-    @Max(86400L)
-    private int idleTimeOutSeconds = 30;
-    @Max(86400000L)
-    private int connectTimeoutMs = 10000;
-    @Max(86400000L)
-    private int opTimeoutMs = 10000;
+
+
+    @NotNull
+    @Valid
+    private HttpClientConfiguration httpClientConfiguration;
 
     //serviceLevel
     private String endpoint = "http://localhost:8080/events";

@@ -1,6 +1,7 @@
 package io.appform.statesman.server;
 
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
+import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.publisher.impl.EventPublisherConfig;
 import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.dropwizard.Configuration;
@@ -42,5 +43,9 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private CallbackTransformationTemplates callbackTransformationTemplates;
+
+    @NotNull
+    @Valid
+    private HttpClientConfiguration httpActionDefaultConfig;
 
 }

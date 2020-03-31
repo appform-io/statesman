@@ -18,7 +18,6 @@ public class HttpClient {
     static final MediaType APPLICATION_JSON = MediaType.parse("application/json");
 
     public final ObjectMapper mapper;
-    public final String endpoint;
     public final OkHttpClient client;
 
     public Response post(String url,

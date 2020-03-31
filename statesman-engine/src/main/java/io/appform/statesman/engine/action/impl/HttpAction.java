@@ -1,22 +1,30 @@
 package io.appform.statesman.engine.action.impl;
 
+import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import io.appform.statesman.engine.action.BaseAction;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.model.ActionImplementation;
+import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.Workflow;
+import io.appform.statesman.model.action.ActionType;
 import io.appform.statesman.model.action.data.impl.HttpActionData;
 import io.appform.statesman.model.action.data.impl.HttpMethod;
 import io.appform.statesman.model.action.template.HttpActionTemplate;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.http.HttpClient;
+import io.appform.statesman.publisher.http.HttpUtil;
+import io.appform.statesman.publisher.impl.KafkaEventClient;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Collections;
 import java.util.Map;
 
 @Slf4j
@@ -31,10 +39,11 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
 
     @Inject
     public HttpAction(HandleBarsService handleBarsService,
-                      HttpClient client,
+                      MetricRegistry registry,
+                      @Named("httpActionDefaultConfig") HttpClientConfiguration config,
                       ObjectMapper mapper) {
+        this.client = new HttpClient(mapper, HttpUtil.defaultClient(KafkaEventClient.class.getSimpleName(), registry, config));
         this.handleBarsService = handleBarsService;
-        this.client = client;
         this.mapper = mapper;
     }
 
@@ -85,9 +94,16 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
     //assuming the header string in below format
     //headerStr = "key1:value1,key2:value2"
     private Map<String, String> getheaders(Workflow workflow, String headers) {
+        if(Strings.isNullOrEmpty(headers)) {
+            return Collections.emptyMap();
+        }
         return Splitter.on(",")
                 .withKeyValueSeparator(":")
                 .split(handleBarsService.transform(headers, workflow));
     }
 
+    @Override
+    public ActionType getType() {
+        return ActionType.HTTP;
+    }
 }
