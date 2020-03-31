@@ -16,6 +16,7 @@ import io.appform.statesman.server.utils.MapperUtils;
 import io.appform.statesman.server.utils.WorkflowUtils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.hibernate.criterion.DetachedCriteria;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +30,7 @@ public class WorkflowProviderCommand implements WorkflowProvider {
     private final LookupDao<StoredWorkflowTemplate> workflowTemplateLookupDao;
     private final LookupDao<StoredWorkflowInstance> workflowInstanceLookupDao;
     private final LoadingCache<String, Optional<WorkflowTemplate>> workflowTemplateCache;
+    private final LoadingCache<String, List<WorkflowTemplate>> allActiveWorkflow;
 
     @Inject
     public WorkflowProviderCommand(LookupDao<StoredWorkflowTemplate> workflowTemplateLookupDao,
@@ -43,6 +45,14 @@ public class WorkflowProviderCommand implements WorkflowProvider {
                 .build(key -> {
                     log.debug("Loading data for workflow for key: {}", key);
                     return getTemplateFromDb(key);
+                });
+        allActiveWorkflow = Caffeine.newBuilder()
+                .maximumSize(1_000)
+                .expireAfterWrite(300, TimeUnit.SECONDS)
+                .refreshAfterWrite(60, TimeUnit.SECONDS)
+                .build(key -> {
+                    log.debug("Loading data for workflow for key: {}", key);
+                    return getAllFromDb();
                 });
     }
 
@@ -86,14 +96,20 @@ public class WorkflowProviderCommand implements WorkflowProvider {
 
     @Override
     public List<WorkflowTemplate> getAll() {
-        return workflowTemplateCache.
-                asMap().values()
-                .stream()
-                .map(Optional::get)
-                .collect(Collectors.toList());
+        return allActiveWorkflow.get("all");
     }
 
 
+    public List<WorkflowTemplate> getAllFromDb() {
+        try {
+            return workflowTemplateLookupDao.scatterGather(DetachedCriteria.forClass(StoredWorkflowTemplate.class))
+                    .stream()
+                    .map(WorkflowUtils::toDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
+        }
+    }
     public Optional<WorkflowTemplate> getTemplateFromDb(String workflowTemplateId) {
         try {
             return workflowTemplateLookupDao.get(workflowTemplateId).map(WorkflowUtils::toDto);

@@ -13,6 +13,7 @@ import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -32,6 +33,7 @@ import java.util.UUID;
  *
  */
 @Path("/callbacks/ivr")
+@Api("IVR callbacks")
 @Slf4j
 public class IVRCallbacks {
     private final CallbackTransformationTemplates transformationTemplates;
@@ -58,7 +60,7 @@ public class IVRCallbacks {
     }
 
     @GET
-    @Path("/final/${ivrProvider}")
+    @Path("/final/{ivrProvider}")
     public Response finalIVRCallback(
             @PathParam("ivrProvider") final String ivrProvider,
             @Context final UriInfo uriInfo) throws IOException {

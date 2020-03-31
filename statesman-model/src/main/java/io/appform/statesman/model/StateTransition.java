@@ -1,7 +1,6 @@
 package io.appform.statesman.model;
 
 import lombok.*;
-import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.Valid;
 
@@ -25,6 +24,5 @@ public class StateTransition {
     @Valid
     State toState;
 
-    @NotEmpty
     String action;
 }
