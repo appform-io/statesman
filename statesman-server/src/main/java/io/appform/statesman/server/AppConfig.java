@@ -40,9 +40,6 @@ public class AppConfig extends Configuration {
     @Valid
     private EventPublisherConfig eventPublisherConfig;
 
-    @NotNull
-    @Valid
-    private CallbackTransformationTemplates callbackTransformationTemplates;
 
     @NotNull
     @Valid

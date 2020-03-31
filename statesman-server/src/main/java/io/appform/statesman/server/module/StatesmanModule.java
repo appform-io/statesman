@@ -60,13 +60,6 @@ public class StatesmanModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public CallbackTransformationTemplates callbackTransformationTemplates(AppConfig config) {
-        return config.getCallbackTransformationTemplates();
-    }
-
-
-    @Singleton
-    @Provides
     @Named("httpActionDefaultConfig")
     public HttpClientConfiguration provideHttpActionDefaultConfig(AppConfig config) {
         return config.getHttpActionDefaultConfig();

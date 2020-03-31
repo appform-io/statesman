@@ -32,7 +32,7 @@ public class CallbackTemplateResource {
 
     @POST
     @Timed
-    @Path("/{provider}/create")
+    @Path("/create")
     @ApiOperation("Create Callback Template")
     public Response createCallbackTemplate(@Valid TransformationTemplate transformationTemplate) {
         Optional<TransformationTemplate> transformationTemplateOptional =
@@ -64,8 +64,8 @@ public class CallbackTemplateResource {
 
     @GET
     @Timed
-    @Path("/{templateId}")
-    @ApiOperation("Get Workflow Template")
+    @Path("/{provider}")
+    @ApiOperation("Get Callback Template")
     public Response getCallbackTemplate(@PathParam("provider") String provider) {
         Optional<TransformationTemplate> callbackTemplateOptional =
                 callbackTemplateProvider.getTemplate(provider);
@@ -81,8 +81,8 @@ public class CallbackTemplateResource {
 
     @PUT
     @Timed
-    @Path("/workflow")
-    @ApiOperation("Update Workflow Template")
+    @Path("/update")
+    @ApiOperation("Update Callback Template")
     public Response updateCallbackTemplate(@Valid TransformationTemplate transformationTemplate) {
         Optional<TransformationTemplate> transformationTemplateOptional =
                 callbackTemplateProvider.updateTemplate(transformationTemplate);
