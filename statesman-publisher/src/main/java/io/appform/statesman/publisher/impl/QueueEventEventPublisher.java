@@ -7,7 +7,6 @@ import com.google.common.collect.Maps;
 import com.leansoft.bigqueue.BigQueueImpl;
 import com.leansoft.bigqueue.IBigQueue;
 import io.appform.statesman.publisher.model.Event;
-import io.appform.statesman.publisher.model.EventType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -126,7 +125,6 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
         private int batchSize;
         private String path;
         private final SyncEventPublisher publisher;
-        private String topicName;
         private AtomicBoolean running = new AtomicBoolean(false);
 
         public MessageSenderThread(QueueEventEventPublisher queueEventPublisher,
@@ -177,8 +175,8 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
                         do {
                             retryCount++;
                             try {
-                                final Map<EventType, List<Event>> topicEventsMap = getEventTypeListMap(entries);
-                                topicEventsMap.forEach((type, events) -> publisher.publish(entries, type.name()));
+                                final Map<String, List<Event>> topicEventsMap = getEventTypeListMap(entries);
+                                topicEventsMap.forEach((topic, events) -> publisher.publish(topic, entries));
 
                                 log.info("queue={} statesman_messages_sent count={}", new Object[]{path, entries.size()});
                                 break;
@@ -207,16 +205,15 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
     }
 
     //move to lambda
-    private static Map<EventType, List<Event>> getEventTypeListMap(List<Event> entries) {
-        final Map<EventType, List<Event>> topicEventsMap = Maps.newHashMap();
+    private static Map<String, List<Event>> getEventTypeListMap(List<Event> entries) {
+        final Map<String, List<Event>> topicEventsMap = Maps.newHashMap();
         entries.forEach(entry -> {
-            if (topicEventsMap.get(entry.getEventType()) != null) {
-                topicEventsMap.get(entry.getEventType()).add(entry);
-            }else {
+            if (topicEventsMap.get(entry.getTopic()) != null) {
+                topicEventsMap.get(entry.getTopic()).add(entry);
+            } else {
                 List<Event> events = Lists.newArrayList();
                 events.add(entry);
-                topicEventsMap.put(entry.getEventType(), events);
-
+                topicEventsMap.put(entry.getTopic(), events);
             }
         });
         return topicEventsMap;

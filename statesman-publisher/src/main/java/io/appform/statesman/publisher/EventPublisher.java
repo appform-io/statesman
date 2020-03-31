@@ -1,7 +1,6 @@
 package io.appform.statesman.publisher;
 
 import io.appform.statesman.publisher.model.Event;
-import io.appform.statesman.publisher.model.EventType;
 
 import java.util.List;
 
@@ -10,11 +9,7 @@ import java.util.List;
  */
 public interface EventPublisher {
 
-    void publish(final Event event, final EventType type);
+    void publish(final Event event);
 
-    void publish(final List<Event> events, final EventType type);
-
-    void publish(final Event event, final String topic);
-
-    void publish(final List<Event> events, final String topic);
+    void publish(final String topic, final List<Event> events);
 }

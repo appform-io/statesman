@@ -2,7 +2,6 @@ package io.appform.statesman.publisher.impl;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Strings;
 import io.appform.core.hystrix.CommandFactory;
 import io.appform.functionmetrics.MonitoredFunction;
 import io.appform.statesman.model.exception.StatesmanError;
@@ -10,14 +9,12 @@ import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.model.Event;
-import io.appform.statesman.publisher.model.EventType;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -43,36 +40,19 @@ public class SyncEventPublisher extends HttpClient implements EventPublisher {
      */
     public SyncEventPublisher(final ObjectMapper mapper,
                               final OkHttpClient client,
-                              final String endpoint,
-                              final Map<String, String> eventTopics) {
+                              final String endpoint) {
         super(mapper, client);
         this.endpoint = endpoint;
     }
 
     @Override
     @MonitoredFunction
-    public void publish(final Event event, final EventType type) {
-        if (event != null && !Strings.isNullOrEmpty(type.name())) {
-            publish(Collections.singletonList(event), type);
-        }
+    public void publish(final Event event) {
+        publish(event.getTopic(), Collections.singletonList(event));
     }
 
     @Override
-    public void publish(final List<Event> events, final EventType type) {
-        if (events == null || events.isEmpty()) {
-            return;
-        }
-
-        ingest(type.name(), events);
-    }
-
-    @Override
-    public void publish(final Event event, final String topic) {
-        publish(Collections.singletonList(event), topic);
-    }
-
-    @Override
-    public void publish(final List<Event> events, final String topic) {
+    public void publish(final String topic, final List<Event> events) {
         if (events == null || events.isEmpty()) {
             return;
         }
@@ -80,13 +60,13 @@ public class SyncEventPublisher extends HttpClient implements EventPublisher {
     }
 
     //ingest via http
-    private void ingest(final String topic, final List<Event> messages) {
+    private void ingest(final String topic, final List<Event> events) {
         try {
             final String url = String.format("%s/%s", this.endpoint, topic);
             CommandFactory.<Void>
-                    create(SyncEventPublisher.class.getSimpleName(), "kafka-publisher", UUID.randomUUID().toString())
+                    create(SyncEventPublisher.class.getSimpleName(), "sync-publisher", UUID.randomUUID().toString())
                     .executor(() -> {
-                        final Response response = post(url, mapper.writeValueAsBytes(messages), null);
+                        final Response response = post(url, mapper.writeValueAsBytes(events), null);
                         if (!response.isSuccessful()) {
                             log.error("unable to make ingest the data");
                             throw new StatesmanError();

@@ -15,7 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class HttpClient {
 
-    static final MediaType APPLICATION_JSON = MediaType.parse("application/json");
+    private static final MediaType APPLICATION_JSON = MediaType.parse("application/json");
 
     public final ObjectMapper mapper;
     public final OkHttpClient client;

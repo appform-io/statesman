@@ -19,10 +19,14 @@ public class Event {
 
     @NotNull
     @NotEmpty
+    private String topic;
+
+    @NotNull
+    @NotEmpty
     private String app;
     @NotNull
     @NotEmpty
-    private EventType eventType;
+    private String eventType;
     @NotNull
     @NotEmpty
     private String id;

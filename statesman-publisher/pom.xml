@@ -18,6 +18,13 @@
         <hystrix.dropwizard.version>0.4</hystrix.dropwizard.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>github.release.repo</id>
+            <url>https://raw.github.com/bulldog2011/bulldog-repo/master/repo/releases/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>com.leansoft</groupId>
