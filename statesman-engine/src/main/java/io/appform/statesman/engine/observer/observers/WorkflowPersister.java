@@ -31,7 +31,7 @@ public class WorkflowPersister extends ObservableEventBusSubscriber {
         event.accept(new ObservableEventVisitor<Void>() {
             @Override
             public Void visit(StateTransitionEvent stateTransitionEvent) {
-                workflowProvider.get().saveWorkflow(stateTransitionEvent.getWorkflow());
+                workflowProvider.get().updateWorkflow(stateTransitionEvent.getWorkflow());
                 return null;
             }
         });

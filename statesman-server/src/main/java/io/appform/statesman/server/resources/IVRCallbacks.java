@@ -1,6 +1,7 @@
 package io.appform.statesman.server.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
@@ -22,7 +23,9 @@ import javax.inject.Provider;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
@@ -34,6 +37,7 @@ import java.util.UUID;
  */
 @Path("/callbacks/ivr")
 @Api("IVR callbacks")
+@Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 public class IVRCallbacks {
     private final CallbackTransformationTemplates transformationTemplates;
@@ -81,23 +85,30 @@ public class IVRCallbacks {
                                      ResponseCode.INVALID_OPERATION);
         }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
-        val wfId = wfIdNode.isMissingNode()
-                   ? UUID.randomUUID().toString()
-                   : wfIdNode.asText();
+        boolean workflowExists = !Strings.isNullOrEmpty(transformationTemplate.getIdPath())
+                && wfIdNode.isMissingNode();
+        val wfId = workflowExists
+                   ? wfIdNode.asText()
+                : UUID.randomUUID().toString();
         val date = new Date();
-        workflowProvider.get()
-                .saveWorkflow(new Workflow(wfId,
-                                           wfTemplate.getId(),
-                                           new DataObject(mapper.createObjectNode(),
-                                                          wfTemplate.getStartState(),
-                                                          date,
-                                                          date)));
+        Workflow workflow = new Workflow(wfId,
+                wfTemplate.getId(),
+                new DataObject(mapper.createObjectNode(),
+                        wfTemplate.getStartState(),
+                        date,
+                        date));
+        if (workflowExists) {
+            workflowProvider.get().updateWorkflow(workflow);
+        } else {
+            workflowProvider.get()
+                    .saveWorkflow(workflow);
+        }
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, node, new MergeDataAction()));
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                     wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
-        return Response.ok()
+        return Response.accepted()
                 .build();
     }
 

@@ -146,4 +146,22 @@ public class WorkflowProviderCommand implements WorkflowProvider {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
     }
+
+    @Override
+    public void updateWorkflow(Workflow workflow) {
+        try {
+            StoredWorkflowInstance storedWorkflowInstance = WorkflowUtils.toInstanceDao(workflow);
+            workflowInstanceLookupDao.update(storedWorkflowInstance.getWorkflowId(), workflowInstanceOptional -> {
+                if(workflowInstanceOptional.isPresent()) {
+                    workflowInstanceOptional.get().setCompleted(storedWorkflowInstance.isCompleted());
+                    workflowInstanceOptional.get().setCurrentState(storedWorkflowInstance.getCurrentState());
+                    workflowInstanceOptional.get().setData(storedWorkflowInstance.getData());
+
+                }
+                return workflowInstanceOptional.orElse(null);
+            });
+        } catch (Exception e) {
+            throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
+        }
+    }
 }

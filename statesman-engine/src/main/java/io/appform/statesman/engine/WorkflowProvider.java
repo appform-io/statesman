@@ -25,4 +25,6 @@ public interface WorkflowProvider {
 
     void saveWorkflow(final Workflow workflow);
 
+    void updateWorkflow(final Workflow workflow);
+
 }
