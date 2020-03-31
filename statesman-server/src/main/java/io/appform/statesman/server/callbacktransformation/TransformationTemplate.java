@@ -21,10 +21,12 @@ import lombok.Data;
 @Data
 public abstract class TransformationTemplate {
 
+    private final String provider;
     private final TransformationTemplateType type;
     private final String idPath;
 
-    protected TransformationTemplate(TransformationTemplateType type, String idPath) {
+    protected TransformationTemplate(TransformationTemplateType type, String idPath, String provider) {
+        this.provider = provider;
         this.type = type;
         this.idPath = idPath;
     }

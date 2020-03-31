@@ -21,12 +21,11 @@ import io.appform.statesman.publisher.impl.KafkaEventClient;
 import io.appform.statesman.server.AppConfig;
 import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.appform.statesman.server.dao.action.ActionTemplateStoreCommand;
+import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
+import io.appform.statesman.server.dao.callback.CallbackTemplateProviderCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
 import io.dropwizard.setup.Environment;
-
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 public class StatesmanModule extends AbstractModule {
 
@@ -35,6 +34,7 @@ public class StatesmanModule extends AbstractModule {
         bind(ActionTemplateStore.class).to(ActionTemplateStoreCommand.class);
         bind(TransitionStore.class).to(TransitionStoreCommand.class);
         bind(WorkflowProvider.class).to(WorkflowProviderCommand.class);
+        bind(CallbackTemplateProvider.class).to(CallbackTemplateProviderCommand.class);
         bind(ActionRegistry.class).to(MapBasedActionRegistry.class);
         bind(ObservableEventBus.class).to(ObservableGuavaEventBus.class);
         bind(ObservableEventBusSubscriber.class)
@@ -70,12 +70,5 @@ public class StatesmanModule extends AbstractModule {
     @Named("httpActionDefaultConfig")
     public HttpClientConfiguration provideHttpActionDefaultConfig(AppConfig config) {
         return config.getHttpActionDefaultConfig();
-    }
-
-    @Provides
-    @Singleton
-    @Named("workflowTemplateScheduledExecutorService")
-    public ScheduledExecutorService workflowTemplateScheduledExecutorService() {
-        return Executors.newSingleThreadScheduledExecutor();
     }
 }

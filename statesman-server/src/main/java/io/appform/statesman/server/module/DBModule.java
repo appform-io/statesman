@@ -7,6 +7,7 @@ import io.appform.dropwizard.sharding.DBShardingBundle;
 import io.appform.dropwizard.sharding.dao.LookupDao;
 import io.appform.dropwizard.sharding.dao.RelationalDao;
 import io.appform.statesman.server.dao.action.StoredActionTemplate;
+import io.appform.statesman.server.dao.callback.StoredCallbackTransformationTemplate;
 import io.appform.statesman.server.dao.providers.StoredProvider;
 import io.appform.statesman.server.dao.transition.StoredStateTransition;
 import io.appform.statesman.server.dao.workflow.StoredWorkflowInstance;
@@ -49,5 +50,11 @@ public class DBModule extends AbstractModule {
     @Provides
     public RelationalDao<StoredStateTransition> provideStateTransitionRelationalDao() {
         return dbShardingBundle.createRelatedObjectDao(StoredStateTransition.class);
+    }
+
+    @Singleton
+    @Provides
+    public LookupDao<StoredCallbackTransformationTemplate> provideCallbackTransformationTemplateLookupDao() {
+        return dbShardingBundle.createParentObjectDao(StoredCallbackTransformationTemplate.class);
     }
 }
