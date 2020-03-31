@@ -18,9 +18,7 @@ import lombok.var;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  *
@@ -59,17 +57,19 @@ public class StateTransitionEngine {
     public AppliedTransitions handle(DataUpdate dataUpdate) {
         val transitions = new ArrayList<AppliedTransition>();
         AppliedTransition transition = null;
+        Set<Integer> evaluatedRuleSet = new HashSet<>();
         do {
-            transition = handleSingleTransition(dataUpdate).orElse(null);
+            transition = handleSingleTransition(dataUpdate, evaluatedRuleSet).orElse(null);
             if(null != transition) {
                 transitions.add(transition);
+                evaluatedRuleSet.add(transition.getTransitionId());
             }
         } while (null != transition);
         log.debug("workflowId:{},transitions:{}", dataUpdate.getWorkflowId(), transition);
         return new AppliedTransitions(dataUpdate.getWorkflowId(), transitions);
     }
 
-    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate) {
+    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate, Set<Integer> alreadyVisited) {
         val workflowId = dataUpdate.getWorkflowId();
         val workflow = workflowProvider.get()
                 .getWorkflow(workflowId)
@@ -102,6 +102,7 @@ public class StateTransitionEngine {
                     }
                     return hopeLangEngine.evaluate(rule, evalNode);
                 })
+                .filter(stateTransition -> !alreadyVisited.contains(stateTransition.hashCode()))
                 .findFirst()
                 .orElse(defaultTransition(transitions));
         if (null == selectedTransition) {
@@ -112,7 +113,7 @@ public class StateTransitionEngine {
         dataObject.setCurrentState(selectedTransition.getToState());
 
         eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
-        return Optional.of(new AppliedTransition(currentState, selectedTransition.getToState()));
+        return Optional.of(new AppliedTransition(currentState, selectedTransition.getToState(), selectedTransition.hashCode()));
     }
 
     private StateTransition defaultTransition(List<StateTransition> transitions) {

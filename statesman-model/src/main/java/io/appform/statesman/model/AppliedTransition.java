@@ -9,4 +9,5 @@ import lombok.Value;
 public class AppliedTransition {
     State oldState;
     State newState;
+    int transitionId;
 }
