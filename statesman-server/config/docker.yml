@@ -104,7 +104,7 @@ callbackTransformationTemplates:
       type: ONE_SHOT
       template: >-
         {
-         "type" : "mh_exotel",
+         "type" : "punjab_ozonetel",
          "language": {{{ map_lookup op_1='MH' op_2='HI' op_3='EN' pointer='/payload[question1]/0'}}},
          "covidTest": {{{ map_lookup op_1=true op_2=false pointer='/payload[question2]/0'}}},
          "ageGreaterThanSixty": {{{ map_lookup op_1=true op_2=false pointer='/payload[question3]/0'}}},
