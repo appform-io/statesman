@@ -2,6 +2,7 @@ package io.appform.statesman.server.resources;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jknack.handlebars.JsonNodeValueResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -88,7 +89,7 @@ public class IVRCallbacks {
                 .findAny();
         if (!transformationTemplateOptional.isPresent()) {
             throw new StatesmanError("No matching translation template found for context: " + node,
-                    ResponseCode.INVALID_OPERATION);
+                                     ResponseCode.INVALID_OPERATION);
         }
         val transformationTemplate = transformationTemplateOptional.get();
         val tmpl = transformationTemplate.accept(new TransformationTemplateVisitor<OneShotTransformationTemplate>() {
@@ -103,14 +104,14 @@ public class IVRCallbacks {
             }
         });
         Preconditions.checkNotNull(tmpl);
-        val stdPayload = handleBarsService.transform(tmpl.getTemplate(), node);
+        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), node);
         val context = mapper.readTree(stdPayload);
         val wfTemplate = templateSelector.get()
                 .determineTemplate(context)
                 .orElse(null);
         if (null == wfTemplate) {
             throw new StatesmanError("No matching workflow template found for context: " + stdPayload,
-                    ResponseCode.INVALID_OPERATION);
+                                     ResponseCode.INVALID_OPERATION);
         }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         boolean workflowExists = !Strings.isNullOrEmpty(transformationTemplate.getIdPath())
@@ -118,14 +119,15 @@ public class IVRCallbacks {
         val wfId = extractWorkflowId(node, transformationTemplate);
         val date = new Date();
         Workflow workflow = new Workflow(wfId,
-                wfTemplate.getId(),
-                new DataObject(mapper.createObjectNode(),
-                        wfTemplate.getStartState(),
-                        date,
-                        date));
+                                         wfTemplate.getId(),
+                                         new DataObject(mapper.createObjectNode(),
+                                                        wfTemplate.getStartState(),
+                                                        date,
+                                                        date));
         if (workflowExists) {
             workflowProvider.get().updateWorkflow(workflow);
-        } else {
+        }
+        else {
             workflowProvider.get()
                     .saveWorkflow(workflow);
         }
@@ -152,7 +154,7 @@ public class IVRCallbacks {
                 .findAny();
         if (!transformationTemplateOptional.isPresent()) {
             throw new StatesmanError("No matching translation template found for context: " + node,
-                    ResponseCode.INVALID_OPERATION);
+                                     ResponseCode.INVALID_OPERATION);
         }
         val transformationTemplate = transformationTemplateOptional.get();
         val tmpl = transformationTemplate.accept(new TransformationTemplateVisitor<StepByStepTransformationTemplate>() {
@@ -170,7 +172,7 @@ public class IVRCallbacks {
         val date = new Date();
         val selectedStep = selectStep(node, tmpl);
         Preconditions.checkNotNull(selectedStep);
-        val stdPayload = handleBarsService.transform(selectedStep.getTemplate(), node);
+        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, selectedStep.getTemplate(), node);
         val context = mapper.readTree(stdPayload);
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         String wfId = UUID.randomUUID().toString();
@@ -182,14 +184,14 @@ public class IVRCallbacks {
             wf = workflowProvider.get()
                     .getWorkflow(wfId)
                     .orElse(null);
-            if(wf != null) {
+            if (wf != null) {
                 wfTemplate = workflowProvider.get()
                         .getTemplate(wf.getTemplateId())
                         .orElse(null);
                 Preconditions.checkNotNull(wfTemplate);
             }
         }
-        if(wf == null) {
+        if (wf == null) {
             //First time .. create workflow
             wfTemplate = templateSelector.get()
                     .determineTemplate(context)

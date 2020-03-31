@@ -2,6 +2,7 @@ package io.appform.statesman.engine.handlebars;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jknack.handlebars.JsonNodeValueResolver;
 import io.dropwizard.jackson.Jackson;
 import lombok.SneakyThrows;
 import org.junit.Assert;
@@ -20,12 +21,14 @@ public class HandleBarsServiceTest {
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("KA",
                             objectMapper.readTree(
-                                    handleBarsService.transform(template,
-                                                                objectMapper.createObjectNode()
-                                                                        .set("payload[question1]",
-                                                                             objectMapper.createArrayNode().add("2"))))
-                           .get("language")
-                           .asText());
+                                    handleBarsService.transform(
+                                            JsonNodeValueResolver.INSTANCE,
+                                            template,
+                                            objectMapper.createObjectNode()
+                                                    .set("payload[question1]",
+                                                         objectMapper.createArrayNode().add("2"))))
+                                    .get("language")
+                                    .asText());
     }
 
     @Test
@@ -36,12 +39,14 @@ public class HandleBarsServiceTest {
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals(true,
                             objectMapper.readTree(
-                                    handleBarsService.transform(template,
-                                                                objectMapper.createObjectNode()
-                                                                        .set("payload[question2]",
-                                                                             objectMapper.createArrayNode().add("1"))))
-                           .get("language")
-                           .asBoolean());
+                                    handleBarsService.transform(
+                                            JsonNodeValueResolver.INSTANCE,
+                                            template,
+                                            objectMapper.createObjectNode()
+                                                    .set("payload[question2]",
+                                                         objectMapper.createArrayNode().add("1"))))
+                                    .get("language")
+                                    .asBoolean());
     }
 
     @Test
@@ -51,12 +56,14 @@ public class HandleBarsServiceTest {
         final String template = "{\"language\" : {{{ map_lookup op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
-                handleBarsService.transform(template,
-                                            objectMapper.createObjectNode()
-                                                    .set("payload[question1]",
-                                                         objectMapper.createArrayNode()
-                                                                 .add("1")
-                                                                 .add("2"))))
+                handleBarsService.transform(
+                        JsonNodeValueResolver.INSTANCE,
+                        template,
+                        objectMapper.createObjectNode()
+                                .set("payload[question1]",
+                                     objectMapper.createArrayNode()
+                                             .add("1")
+                                             .add("2"))))
                 .get("language");
         Assert.assertTrue(jsonNode.isArray());
         Assert.assertEquals("EN", jsonNode.get(0).asText());

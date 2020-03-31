@@ -54,6 +54,22 @@ public class HandleBarsService {
         }
     }
 
+    public String transform(ValueResolver resolver, String template, Object data) {
+        try {
+            if(Strings.isNullOrEmpty(template)) {
+                return null;
+            }
+            if (!compiledTemplates.containsKey(template)) {
+                addTemplate(template);
+            }
+            return compiledTemplates.get(template).apply(Context.newBuilder(data)
+                    .resolver(resolver)
+                    .build());
+        } catch (Exception e) {
+            throw StatesmanError.propagate(e, ResponseCode.TRANSFORMATION_ERROR);
+        }
+    }
+
     private void registerHelpers(Handlebars handlebars) {
         HandleBarsHelperRegistry.newInstance(handlebars).register();
     }
