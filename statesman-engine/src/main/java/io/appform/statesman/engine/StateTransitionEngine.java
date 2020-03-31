@@ -10,10 +10,7 @@ import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStr
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
-import io.appform.statesman.model.AppliedTransition;
-import io.appform.statesman.model.AppliedTransitions;
-import io.appform.statesman.model.DataObject;
-import io.appform.statesman.model.DataUpdate;
+import io.appform.statesman.model.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
@@ -22,6 +19,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -93,19 +91,21 @@ public class StateTransitionEngine {
         val evalNode = mapper.createObjectNode();
         evalNode.putObject("data").setAll((ObjectNode) dataObject.getData());
         evalNode.putObject("update").setAll((ObjectNode) dataUpdate.getData());
-        val selectedTransition = transitions.stream()
+        var selectedTransition = transitions.stream()
+                .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.EVALUATED))
                 .filter(stateTransition -> {
                     val transitionRule = stateTransition.getRule();
-                    var rule = evalCache.getIfPresent(transitionRule.getRule());
+                    var rule = evalCache.getIfPresent(transitionRule);
                     if (null == rule) {
-                        rule = hopeLangEngine.parse(transitionRule.getRule());
-                        evalCache.put(transitionRule.getRule(), rule);
+                        rule = hopeLangEngine.parse(transitionRule);
+                        evalCache.put(transitionRule, rule);
                     }
                     return hopeLangEngine.evaluate(rule, evalNode);
                 })
                 .findFirst()
-                .orElse(null);
+                .orElse(defaultTransition(transitions));
         if (null == selectedTransition) {
+
             return Optional.empty();
         }
         dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
@@ -113,5 +113,12 @@ public class StateTransitionEngine {
 
         eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
         return Optional.of(new AppliedTransition(currentState, selectedTransition.getToState()));
+    }
+
+    private StateTransition defaultTransition(List<StateTransition> transitions) {
+        return transitions.stream()
+                .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.DEFAULT))
+                .findFirst()
+                .orElse(null);
     }
 }

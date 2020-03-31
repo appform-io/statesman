@@ -44,27 +44,31 @@ public class StateTransitionEngineTest {
 
     private interface StateTransitions {
         StateTransition a2b = new StateTransition("T1",
+                                                  StateTransition.Type.EVALUATED,
                                                   States.A.getName(),
                                                   false,
-                                                  new EvalRule("a2b", "\"$.update.Q1\" == 3"),
+                                                  "\"$.update.Q1\" == 3",
                                                   States.B,
                                                   null);
         StateTransition b2c = new StateTransition("T2",
+                                                  StateTransition.Type.EVALUATED,
                                                   States.B.getName(),
                                                   false,
-                                                  new EvalRule("b2c", "\"$.update.Q2\" == 4"),
+                                                  "\"$.update.Q2\" == 4",
                                                   States.C,
                                                   null);
         StateTransition c2d = new StateTransition("T3",
+                                                  StateTransition.Type.EVALUATED,
                                                   States.C.getName(),
                                                   false,
-                                                  new EvalRule("c2d", "\"$.update.Q3\" == 1"),
+                                                  "\"$.update.Q3\" == 1",
                                                   States.D,
                                                   null);
         StateTransition c2e = new StateTransition("T4",
+                                                  StateTransition.Type.EVALUATED,
                                                   States.D.getName(),
                                                   false,
-                                                  new EvalRule("c2e", "\"$.update.Q3\" == 2"),
+                                                  "\"$.update.Q3\" == 2",
                                                   States.E,
                                                   null);
     }
