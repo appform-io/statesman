@@ -114,10 +114,8 @@ public class IVRCallbacks {
         }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         boolean workflowExists = !Strings.isNullOrEmpty(transformationTemplate.getIdPath())
-                && wfIdNode.isMissingNode();
-        val wfId = workflowExists
-                ? wfIdNode.asText()
-                : UUID.randomUUID().toString();
+                && isValid(wfIdNode);
+        val wfId = extractWorkflowId(node, transformationTemplate);
         val date = new Date();
         Workflow workflow = new Workflow(wfId,
                 wfTemplate.getId(),
@@ -174,23 +172,24 @@ public class IVRCallbacks {
         Preconditions.checkNotNull(selectedStep);
         val stdPayload = handleBarsService.transform(selectedStep.getTemplate(), node);
         val context = mapper.readTree(stdPayload);
-        final WorkflowTemplate wfTemplate;
         val wfIdNode = node.at(transformationTemplate.getIdPath());
-        final String wfId;
-        final Workflow wf;
+        String wfId = UUID.randomUUID().toString();
+        Workflow wf = null;
+        WorkflowTemplate wfTemplate = null;
         if (isValid(wfIdNode)) {
             //We found ID node .. so we have to reuse
             wfId = extractWorkflowId(node, transformationTemplate);
             wf = workflowProvider.get()
                     .getWorkflow(wfId)
                     .orElse(null);
-            Preconditions.checkNotNull(wf);
-            wfTemplate = workflowProvider.get()
-                    .getTemplate(wf.getTemplateId())
-                    .orElse(null);
-            Preconditions.checkNotNull(wfTemplate);
+            if(wf != null) {
+                wfTemplate = workflowProvider.get()
+                        .getTemplate(wf.getTemplateId())
+                        .orElse(null);
+                Preconditions.checkNotNull(wfTemplate);
+            }
         }
-        else {
+        if(wf == null) {
             //First time .. create workflow
             wfTemplate = templateSelector.get()
                     .determineTemplate(context)
@@ -199,7 +198,6 @@ public class IVRCallbacks {
                 throw new StatesmanError("No matching workflow template found for context: " + stdPayload,
                                          ResponseCode.INVALID_OPERATION);
             }
-            wfId = UUID.randomUUID().toString();
             workflowProvider.get()
                     .saveWorkflow(new Workflow(wfId, wfTemplate.getId(),
                                                new DataObject(mapper.createObjectNode(),
@@ -213,7 +211,7 @@ public class IVRCallbacks {
         }
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, node, new MergeDataAction()));
+                .handle(new DataUpdate(wfId, context, new MergeDataAction()));
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
@@ -223,7 +221,7 @@ public class IVRCallbacks {
 
     private String extractWorkflowId(JsonNode node, TransformationTemplate transformationTemplate) {
         val wfIdNode = node.at(transformationTemplate.getIdPath());
-        return !isValid(node)
+        return Strings.isNullOrEmpty(transformationTemplate.getIdPath()) || !isValid(node)
                ? UUID.randomUUID().toString()
                : wfIdNode.asText();
     }
