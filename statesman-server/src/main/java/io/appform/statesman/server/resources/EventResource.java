@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.model.Event;
-import io.appform.statesman.publisher.model.EventType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
