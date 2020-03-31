@@ -16,7 +16,7 @@ import io.appform.statesman.model.action.template.HttpActionTemplate;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
-import io.appform.statesman.publisher.impl.KafkaEventClient;
+import io.appform.statesman.publisher.impl.SyncEventPublisher;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
@@ -42,7 +42,7 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
                       MetricRegistry registry,
                       @Named("httpActionDefaultConfig") HttpClientConfiguration config,
                       ObjectMapper mapper) {
-        this.client = new HttpClient(mapper, HttpUtil.defaultClient(KafkaEventClient.class.getSimpleName(), registry, config));
+        this.client = new HttpClient(mapper, HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(), registry, config));
         this.handleBarsService = handleBarsService;
         this.mapper = mapper;
     }

@@ -17,15 +17,20 @@ import io.appform.statesman.engine.observer.observers.ActionInvoker;
 import io.appform.statesman.engine.observer.observers.FoxtrotEventSender;
 import io.appform.statesman.engine.observer.observers.WorkflowPersister;
 import io.appform.statesman.model.HttpClientConfiguration;
-import io.appform.statesman.publisher.impl.KafkaEventClient;
+import io.appform.statesman.model.exception.StatesmanError;
+import io.appform.statesman.publisher.EventPublisher;
+import io.appform.statesman.publisher.impl.EventPublisherConfig;
+import io.appform.statesman.publisher.impl.QueueEventEventPublisher;
+import io.appform.statesman.publisher.impl.SyncEventPublisher;
 import io.appform.statesman.server.AppConfig;
-import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.appform.statesman.server.dao.action.ActionTemplateStoreCommand;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProviderCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
 import io.dropwizard.setup.Environment;
+
+import java.io.IOException;
 
 public class StatesmanModule extends AbstractModule {
 
@@ -50,12 +55,31 @@ public class StatesmanModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public io.appform.statesman.publisher.EventPublisher provideEventPublisher(
+    public EventPublisher provideEventPublisher(
             AppConfig appConfig,
             Environment environment) {
-        return new KafkaEventClient(appConfig.getEventPublisherConfig(),
-                environment.metrics(),
-                environment.getObjectMapper());
+
+        return appConfig.getEventPublisherConfig().getType().visit(
+                new EventPublisherConfig.PublisherType.PublisherTypeVisitor<EventPublisher>() {
+                    @Override
+                    public EventPublisher visitSync() {
+                        return new SyncEventPublisher(appConfig.getEventPublisherConfig(),
+                                environment.metrics(),
+                                environment.getObjectMapper());
+                    }
+
+                    @Override
+                    public EventPublisher visitQueued() {
+                        try {
+                            return new QueueEventEventPublisher(
+                                    environment.getObjectMapper(),
+                                    appConfig.getEventPublisherConfig(),
+                                    environment.metrics());
+                        } catch (IOException e) {
+                            throw StatesmanError.propagate(e);
+                        }
+                    }
+                });
     }
 
     @Singleton

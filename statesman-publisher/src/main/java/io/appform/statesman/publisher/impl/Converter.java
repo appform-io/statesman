@@ -14,12 +14,12 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Converter {
 
-    public static List<KMessage> toMessages(final List<Event> events){
-        return events.stream()
-                .map(event -> KMessage.builder()
-                        .partitionKey(event.getGroupingKey())
-                        .message(event.getData())
-                        .build())
-                .collect(Collectors.toList());
-    }
+//    public static List<Event> toMessages(final List<Event> events){
+//        return events.stream()
+//                .map(event -> KMessage.builder()
+//                        .partitionKey(event.getGroupingKey())
+//                        .message(event.getEventData())
+//                        .build())
+//                .collect(Collectors.toList());
+//    }
 }

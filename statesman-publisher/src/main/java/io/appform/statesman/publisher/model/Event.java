@@ -1,7 +1,10 @@
 package io.appform.statesman.publisher.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.*;
+import org.hibernate.validator.constraints.NotEmpty;
+
+import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 /**
  * @author shashank.g
@@ -13,6 +16,22 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class Event {
-    private String groupingKey;
-    private JsonNode data;
+
+    @NotNull
+    @NotEmpty
+    private String app;
+    @NotNull
+    @NotEmpty
+    private EventType eventType;
+    @NotNull
+    @NotEmpty
+    private String id;
+    @NotEmpty
+    @NotNull
+    private String groupingKey = "";
+    private String partitionKey;
+    private String eventSchemaVersion = "v1";
+    private Date time = new Date();
+    @NotNull
+    private Object eventData;
 }

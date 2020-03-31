@@ -48,7 +48,7 @@ public class StatesmanApp extends Application<AppConfig> {
 
 
     @Override
-    public void run(AppConfig appConfig, Environment environment) throws Exception {
+    public void run(AppConfig appConfig, Environment environment) {
         FunctionMetricsManager.initialize("commands", environment.metrics());
         environment.jersey().register(GenericExceptionMapper.class);
     }

@@ -84,7 +84,6 @@ eventPublisherConfig:
     connectTimeoutMs: 10000
     opTimeoutMs: 10000
   endpoint: "http://localhost:8080/events"
-  eventTopics:
-    REPORTING: reporting
-    APP: app
+  batchSize: 50
+  queuePath: /tmp/statesman
 

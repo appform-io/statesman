@@ -19,12 +19,46 @@ import java.util.Map;
 @Builder
 public class EventPublisherConfig {
 
-
     @NotNull
     @Valid
     private HttpClientConfiguration httpClientConfiguration;
 
     //serviceLevel
     private String endpoint = "http://localhost:8080/events";
-    private Map<String, String> eventTopics = Maps.newHashMap();
+    private PublisherType type = PublisherType.sync;
+    private String queuePath = "/tmp";
+    private int batchSize = 50;
+
+
+
+
+
+    //move it out
+    public enum PublisherType {
+        sync {
+            @Override
+            public <T> T visit(PublisherTypeVisitor<T> visitor) {
+                return visitor.visitSync();
+            }
+        },
+        queued {
+            @Override
+            public <T> T visit(PublisherTypeVisitor<T> visitor) {
+                return visitor.visitQueued();
+            }
+        };
+
+        public abstract <T> T visit(final PublisherTypeVisitor<T> visitor);
+
+        /**
+         * Visitor
+         *
+         * @param <T>
+         */
+        public interface PublisherTypeVisitor<T> {
+            T visitSync();
+
+            T visitQueued();
+        }
+    }
 }

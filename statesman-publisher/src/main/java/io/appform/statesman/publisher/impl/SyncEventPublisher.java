@@ -8,10 +8,9 @@ import io.appform.functionmetrics.MonitoredFunction;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.http.HttpClient;
+import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.model.Event;
 import io.appform.statesman.publisher.model.EventType;
-import io.appform.statesman.publisher.model.KMessage;
-import io.appform.statesman.publisher.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Response;
@@ -25,39 +24,35 @@ import java.util.UUID;
  * @author shashank.g
  */
 @Slf4j
-public class KafkaEventClient extends HttpClient implements EventPublisher {
+public class SyncEventPublisher extends HttpClient implements EventPublisher {
 
-    private final Map<String, String> eventTopics;
-    private String endpoint;
+    private final String endpoint;
 
     /**
      * Constructor
      */
-    public KafkaEventClient(final EventPublisherConfig config,
-                            final MetricRegistry registry,
-                            final ObjectMapper mapper) {
-        super(mapper, HttpUtil.defaultClient(KafkaEventClient.class.getSimpleName(), registry, config.getHttpClientConfiguration()));
+    public SyncEventPublisher(final EventPublisherConfig config,
+                              final MetricRegistry registry,
+                              final ObjectMapper mapper) {
+        super(mapper, HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(), registry, config.getHttpClientConfiguration()));
         this.endpoint = config.getEndpoint();
-        this.eventTopics = config.getEventTopics();
     }
 
-
     /**
      * Constructor
      */
-    public KafkaEventClient(final ObjectMapper mapper,
-                            final OkHttpClient client,
-                            final String endpoint,
-                            final Map<String, String> eventTopics) {
+    public SyncEventPublisher(final ObjectMapper mapper,
+                              final OkHttpClient client,
+                              final String endpoint,
+                              final Map<String, String> eventTopics) {
         super(mapper, client);
         this.endpoint = endpoint;
-        this.eventTopics = eventTopics;
     }
 
     @Override
     @MonitoredFunction
     public void publish(final Event event, final EventType type) {
-        if (event != null && !Strings.isNullOrEmpty(eventTopics.get(type.name()))) {
+        if (event != null && !Strings.isNullOrEmpty(type.name())) {
             publish(Collections.singletonList(event), type);
         }
     }
@@ -68,7 +63,7 @@ public class KafkaEventClient extends HttpClient implements EventPublisher {
             return;
         }
 
-        ingest(eventTopics.get(type.name()), Converter.toMessages(events));
+        ingest(type.name(), events);
     }
 
     @Override
@@ -81,15 +76,15 @@ public class KafkaEventClient extends HttpClient implements EventPublisher {
         if (events == null || events.isEmpty()) {
             return;
         }
-        ingest(eventTopics.get(topic), Converter.toMessages(events));
+        ingest(topic, events);
     }
 
     //ingest via http
-    private void ingest(final String topic, final List<KMessage> messages) {
+    private void ingest(final String topic, final List<Event> messages) {
         try {
-            final String url = String.format("%s/%s", endpoint, topic);
+            final String url = String.format("%s/%s", this.endpoint, topic);
             CommandFactory.<Void>
-                    create(KafkaEventClient.class.getSimpleName(), "kafka-publisher", UUID.randomUUID().toString())
+                    create(SyncEventPublisher.class.getSimpleName(), "kafka-publisher", UUID.randomUUID().toString())
                     .executor(() -> {
                         final Response response = post(url, mapper.writeValueAsBytes(messages), null);
                         if (!response.isSuccessful()) {

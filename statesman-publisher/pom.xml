@@ -19,6 +19,12 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.leansoft</groupId>
+            <artifactId>bigqueue</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+
         <!-- okhttp3 -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>

@@ -39,7 +39,7 @@ public class EventResource {
     @Path("/reporting/publish")
     @ApiOperation("publish event")
     public Response save(@Valid final Event event) {
-        publisher.publish(event, EventType.REPORTING);
+        publisher.publish(event, EventType.reporting);
         return Response.ok().build();
     }
 }
