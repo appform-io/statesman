@@ -21,16 +21,16 @@ import io.appform.statesman.server.callbacktransformation.impl.OneShotTransforma
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
+import io.appform.statesman.server.requests.IVROneShot;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
+import org.glassfish.jersey.uri.UriComponent;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -75,13 +75,19 @@ public class IVRCallbacks {
                 .build();
     }
 
-    @GET
+/*    @GET
     @Path("/final/{ivrProvider}")
     public Response finalIVRCallback(
             @PathParam("ivrProvider") final String ivrProvider,
-            @Context final UriInfo uriInfo) throws IOException {
+            @Context final UriInfo uriInfo) throws IOException {*/
+    @POST
+    @Path("/final/{ivrProvider}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response finalIVRCallback(
+            @PathParam("ivrProvider") final String ivrProvider,
+            final IVROneShot ivrOneShot) throws IOException {
 
-        val queryParams = uriInfo.getQueryParameters();
+        val queryParams = new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(ivrOneShot.getQueryString(), false));
         val node = mapper.valueToTree(queryParams);
         Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
                 .stream()

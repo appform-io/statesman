@@ -21,8 +21,18 @@
         <junit.version>4.13</junit.version>
         <hibernate-validator.version>5.2.4.Final</hibernate-validator.version>
         <mockito.version>1.10.19</mockito.version>
+        <guava.version>24.1.1-jre</guava.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
