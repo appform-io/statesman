@@ -87,7 +87,7 @@ public class IVRCallbacks {
             @PathParam("ivrProvider") final String ivrProvider,
             final IVROneShot ivrOneShot) throws IOException {
 
-        val queryParams = new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(ivrOneShot.getQueryString(), false));
+        val queryParams = new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(ivrOneShot.getQueryString(), true));
         val node = mapper.valueToTree(queryParams);
         Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
                 .stream()
