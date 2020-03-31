@@ -2,6 +2,7 @@ package io.appform.statesman.engine;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.appform.statesman.model.DataObject;
 import io.appform.statesman.model.DataUpdate;
@@ -12,6 +13,9 @@ import lombok.val;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.stream.StreamSupport;
 
 /**
  *
@@ -31,7 +35,19 @@ public class DataActionExecutor {
             public JsonNode visit(MergeDataAction mergeDataAction) {
                 ObjectNode objectNode = mapper.createObjectNode();
                 objectNode.setAll((ObjectNode)dataObject.getData());
-                objectNode.setAll((ObjectNode)dataUpdate.getData());
+                final ObjectNode updateData = (ObjectNode) dataUpdate.getData();
+                StreamSupport.stream(Spliterators.spliteratorUnknownSize(updateData.fields(), Spliterator.ORDERED), false)
+                        .forEach(e -> {
+                            if(objectNode.has(e.getKey())) {
+                                val existingNode = objectNode.get(e.getKey());
+                                if(existingNode.isArray()) {
+                                    ((ArrayNode)existingNode).add(existingNode);
+                                }
+                                else {
+                                    objectNode.set(e.getKey(), e.getValue());
+                                }
+                            }
+                        });
                 return objectNode;
             }
 

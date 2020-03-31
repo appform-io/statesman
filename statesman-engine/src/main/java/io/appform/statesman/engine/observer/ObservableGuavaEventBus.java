@@ -19,6 +19,7 @@ public class ObservableGuavaEventBus implements ObservableEventBus {
     public ObservableGuavaEventBus(@Named("workflowPersister") final ObservableEventBusSubscriber subscriber) {
         this.subscriber = subscriber;
         this.syncEventBus = new EventBus("events");
+        this.syncEventBus.register(this);
     }
 
     @Override
