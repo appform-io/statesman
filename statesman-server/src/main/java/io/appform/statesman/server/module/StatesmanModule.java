@@ -19,7 +19,6 @@ import io.appform.statesman.engine.observer.observers.WorkflowPersister;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
-import io.appform.statesman.publisher.impl.EventPublisherConfig;
 import io.appform.statesman.publisher.impl.QueueEventPublisher;
 import io.appform.statesman.publisher.impl.SyncEventPublisher;
 import io.appform.statesman.publisher.model.PublisherType;
@@ -68,7 +67,7 @@ public class StatesmanModule extends AbstractModule {
                                 environment.getObjectMapper(),
                                 appConfig.getEventPublisherConfig(),
                                 environment.metrics()
-                                );
+                        );
                     }
 
                     @Override
