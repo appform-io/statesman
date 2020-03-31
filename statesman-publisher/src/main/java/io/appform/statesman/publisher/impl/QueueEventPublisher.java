@@ -2,10 +2,13 @@ package io.appform.statesman.publisher.impl;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.leansoft.bigqueue.BigQueueImpl;
 import com.leansoft.bigqueue.IBigQueue;
+import io.appform.statesman.model.exception.ResponseCode;
+import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.model.Event;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +73,7 @@ public class QueueEventPublisher implements EventPublisher {
 
     @Override
     public void publish(final Event event) throws Exception {
+        validateTopic(event);
         this.messageQueue.enqueue(mapper.writeValueAsBytes(event));
     }
 
@@ -228,6 +232,12 @@ public class QueueEventPublisher implements EventPublisher {
             } catch (Exception e) {
                 log.error("queue={} gc_failed_on_statesman_message_queue", new Object[]{path}, e);
             }
+        }
+    }
+
+    private void validateTopic(Event event) {
+        if (Strings.isNullOrEmpty(event.getTopic())){
+            throw new StatesmanError("event.topic must be not null", ResponseCode.INTERNAL_SERVER_ERROR);
         }
     }
 

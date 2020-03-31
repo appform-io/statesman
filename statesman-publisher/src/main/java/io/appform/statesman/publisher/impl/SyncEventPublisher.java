@@ -2,8 +2,10 @@ package io.appform.statesman.publisher.impl;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import io.appform.core.hystrix.CommandFactory;
 import io.appform.functionmetrics.MonitoredFunction;
+import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.http.HttpClient;
@@ -53,6 +55,7 @@ public class SyncEventPublisher implements EventPublisher {
     @Override
     @MonitoredFunction
     public void publish(final Event event) {
+        validateTopic(event);
         publish(event.getTopic(), Collections.singletonList(event));
     }
 
@@ -84,6 +87,12 @@ public class SyncEventPublisher implements EventPublisher {
         } catch (final Exception e) {
             log.error("exception_during_ingestion", e);
             throw StatesmanError.propagate(e);
+        }
+    }
+
+    private void validateTopic(Event event) {
+        if (Strings.isNullOrEmpty(event.getTopic())){
+            throw new StatesmanError("event.topic must be not null", ResponseCode.INTERNAL_SERVER_ERROR);
         }
     }
 }
