@@ -7,8 +7,6 @@ import com.google.common.collect.Maps;
 import com.leansoft.bigqueue.BigQueueImpl;
 import com.leansoft.bigqueue.IBigQueue;
 import io.appform.statesman.publisher.EventPublisher;
-import io.appform.statesman.publisher.http.HttpClient;
-import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.model.Event;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,15 +29,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author shashank.g
  */
 @Slf4j
-public class QueueEventPublisher extends HttpClient implements EventPublisher {
+public class QueueEventPublisher implements EventPublisher {
 
     private static final int RETRIES = 5;
     private static final int MAX_PAYLOAD_SIZE = 2000000; //2MB
     private final String path;
     private final MessageSenderThread messageSenderThread;
     private final ScheduledExecutorService scheduler;
+    private final ObjectMapper mapper;
     private IBigQueue messageQueue;
-
 
     /**
      * Instantiates a new Queued queueEventPublisher.
@@ -47,8 +45,8 @@ public class QueueEventPublisher extends HttpClient implements EventPublisher {
     public QueueEventPublisher(final ObjectMapper mapper,
                                final EventPublisherConfig config,
                                final MetricRegistry registry) throws IOException {
-        super(mapper, HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(), registry, config.getHttpClientConfiguration()));
         this.path = config.getQueuePath();
+        this.mapper = mapper;
 
         final SyncEventPublisher syncEventPublisher = new SyncEventPublisher(
                 mapper,
@@ -60,7 +58,7 @@ public class QueueEventPublisher extends HttpClient implements EventPublisher {
         try {
             Files.createDirectories(Paths.get(path), attr);
         } catch (final FileAlreadyExistsException e) {
-            log.warn("queue path already exists");
+            log.warn("queue path {} already exists, hence skipping creation", path);
         }
 
         this.messageQueue = new BigQueueImpl(path, "statesman-messages");
@@ -71,19 +69,19 @@ public class QueueEventPublisher extends HttpClient implements EventPublisher {
     }
 
     @Override
-    public void publish(Event event) throws Exception {
+    public void publish(final Event event) throws Exception {
         this.messageQueue.enqueue(mapper.writeValueAsBytes(event));
     }
 
     @Override
-    public void publish(String topic, List<Event> events) throws Exception {
+    public void publish(final String topic, final List<Event> events) throws Exception {
         for (Event event : events) {
             event.setTopic(topic);
             this.messageQueue.enqueue(mapper.writeValueAsBytes(event));
         }
     }
 
-    private void enqueue(List<Event> events) throws IOException {
+    private void enqueue(final List<Event> events) throws IOException {
         for (Event event : events) {
             this.messageQueue.enqueue(mapper.writeValueAsBytes(event));
         }
@@ -169,7 +167,7 @@ public class QueueEventPublisher extends HttpClient implements EventPublisher {
                             retryCount++;
                             try {
                                 final Map<String, List<Event>> topicEventsMap = getEventTypeListMap(entries);
-                                topicEventsMap.forEach((topic, events) -> publisher.publish(topic, entries));
+                                topicEventsMap.forEach((topic, events) -> publisher.publish(topic, topicEventsMap.get(topic)));
 
                                 log.info("queue={} statesman_messages_sent count={}", new Object[]{path, entries.size()});
                                 break;
@@ -183,7 +181,7 @@ public class QueueEventPublisher extends HttpClient implements EventPublisher {
                             break;
                         }
                     } else {
-                        log.info("queue={} nothing_to_send_to_statesman", new Object[]{path});
+                        log.info("queue={} nothing_to_send", new Object[]{path});
                     }
                 }
             } catch (Exception e) {
@@ -192,24 +190,24 @@ public class QueueEventPublisher extends HttpClient implements EventPublisher {
             running.set(false);
         }
 
+        //move to lambda
+        private static Map<String, List<Event>> getEventTypeListMap(final List<Event> entries) {
+            final Map<String, List<Event>> topicEventsMap = Maps.newHashMap();
+            entries.forEach(entry -> {
+                if (topicEventsMap.get(entry.getTopic()) != null) {
+                    topicEventsMap.get(entry.getTopic()).add(entry);
+                } else {
+                    final List<Event> events = Lists.newArrayList();
+                    events.add(entry);
+                    topicEventsMap.put(entry.getTopic(), events);
+                }
+            });
+            return topicEventsMap;
+        }
+
         private boolean isRunning() {
             return running.get();
         }
-    }
-
-    //move to lambda
-    private static Map<String, List<Event>> getEventTypeListMap(List<Event> entries) {
-        final Map<String, List<Event>> topicEventsMap = Maps.newHashMap();
-        entries.forEach(entry -> {
-            if (topicEventsMap.get(entry.getTopic()) != null) {
-                topicEventsMap.get(entry.getTopic()).add(entry);
-            } else {
-                List<Event> events = Lists.newArrayList();
-                events.add(entry);
-                topicEventsMap.put(entry.getTopic(), events);
-            }
-        });
-        return topicEventsMap;
     }
 
     private static final class QueueCleaner implements Runnable {
