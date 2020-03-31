@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateType;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-import lombok.Value;
+import lombok.*;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -19,7 +17,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class StepByStepTransformationTemplate extends TransformationTemplate  {
-    @Value
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static final class StepSelection {
         String selectionRule;
         String template;
