@@ -2,6 +2,7 @@ package io.appform.statesman.server.resources;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
@@ -68,12 +69,13 @@ public class IVRCallbacks {
     public Response finalIVRCallback(
             @PathParam("ivrProvider") final String ivrProvider,
             @Context final UriInfo uriInfo) throws IOException {
+
         val queryParams = uriInfo.getQueryParameters();
         val node = mapper.valueToTree(queryParams);
         val transformationTemplate = transformationTemplates.getTemplates().get(ivrProvider);
         if (null == transformationTemplate) {
             throw new StatesmanError("No matching translation template found for context: " + node,
-                                     ResponseCode.INVALID_OPERATION);
+                    ResponseCode.INVALID_OPERATION);
         }
         val stdPayload = handleBarsService.transform(transformationTemplate.getTemplate(), node);
         val context = mapper.readTree(stdPayload);
@@ -82,13 +84,13 @@ public class IVRCallbacks {
                 .orElse(null);
         if (null == wfTemplate) {
             throw new StatesmanError("No matching workflow template found for context: " + stdPayload,
-                                     ResponseCode.INVALID_OPERATION);
+                    ResponseCode.INVALID_OPERATION);
         }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         boolean workflowExists = !Strings.isNullOrEmpty(transformationTemplate.getIdPath())
                 && wfIdNode.isMissingNode();
         val wfId = workflowExists
-                   ? wfIdNode.asText()
+                ? wfIdNode.asText()
                 : UUID.randomUUID().toString();
         val date = new Date();
         Workflow workflow = new Workflow(wfId,
@@ -107,8 +109,9 @@ public class IVRCallbacks {
                 = engine.get()
                 .handle(new DataUpdate(wfId, node, new MergeDataAction()));
         log.debug("Workflow: {} with template: {} went through transitions: {}",
-                    wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
-        return Response.accepted()
+                wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        return Response.ok()
+                .entity(ImmutableMap.of("success", true))
                 .build();
     }
 

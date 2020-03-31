@@ -80,3 +80,18 @@ eventPublisherConfig:
   eventTopics:
     REPORTING: reporting
     APP: app
+
+callbackTransformationTemplates:
+  templates:
+    mh_exotel:
+      template: >-
+        {
+         "type" : "mh_exotel",
+         "language": {{{ map_lookup op_1='MH' op_2='HI' op_3='EN' pointer='/payload[question1]/0'}}},
+         "covidTest": {{{ map_lookup op_1=true op_2=false pointer='/payload[question2]/0'}}},
+         "ageGreaterThanSixty": {{{ map_lookup op_1=true op_2=false pointer='/payload[question3]/0'}}},
+         "travelled": {{{ map_lookup op_1=true op_2=false pointer='/payload[question4]/0'}}},
+         "contact": {{{ map_lookup op_1=true op_2=false pointer='/payload[question5]/0'}}},
+         "existingDiseases": {{{ map_lookup op_1='heart' op_2='diabetes' op_3='none' pointer='/payload[question6]/0'}}},
+         "symptoms": {{{ map_lookup op_1='vomit' op_2='fever' op_3='wheezing' op_4='headache' op_5='none' pointer='/payload[question7]/0'}}}
+        }
