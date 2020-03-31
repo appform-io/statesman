@@ -44,6 +44,7 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
             actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Void>() {
                 @Override
                 public Void visitPost() throws Exception {
+                    log.info("HTTP_ACTION POST Call url:{}", actionData.getUrl());
                     final Response response = client.post(actionData.getUrl(),
                             actionData.getPayload(),
                             actionData.getHeaders());
@@ -56,6 +57,7 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
 
                 @Override
                 public Void visitGet() throws Exception {
+                    log.info("HTTP_ACTION GET Call url:{}", actionData.getUrl());
                     final Response response = client.get(actionData.getUrl(),
                             actionData.getHeaders());
                     if (!response.isSuccessful()) {
