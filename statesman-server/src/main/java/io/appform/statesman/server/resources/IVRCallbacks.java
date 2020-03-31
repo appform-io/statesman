@@ -3,6 +3,8 @@ package io.appform.statesman.server.resources;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.StateTransitionEngine;
@@ -18,6 +20,7 @@ import io.appform.statesman.server.callbacktransformation.TransformationTemplate
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -26,7 +29,9 @@ import javax.inject.Provider;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
@@ -37,6 +42,8 @@ import java.util.UUID;
  *
  */
 @Path("/callbacks/ivr")
+@Api("IVR callbacks")
+@Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 public class IVRCallbacks {
     private final CallbackTransformationTemplates transformationTemplates;
@@ -67,16 +74,17 @@ public class IVRCallbacks {
     }
 
     @GET
-    @Path("/final/${ivrProvider}")
+    @Path("/final/{ivrProvider}")
     public Response finalIVRCallback(
             @PathParam("ivrProvider") final String ivrProvider,
             @Context final UriInfo uriInfo) throws IOException {
+
         val queryParams = uriInfo.getQueryParameters();
         val node = mapper.valueToTree(queryParams);
         val transformationTemplate = transformationTemplates.getTemplates().get(ivrProvider);
         if (null == transformationTemplate) {
             throw new StatesmanError("No matching translation template found for context: " + node,
-                                     ResponseCode.INVALID_OPERATION);
+                    ResponseCode.INVALID_OPERATION);
         }
         val tmpl = transformationTemplate.accept(new TransformationTemplateVisitor<OneShotTransformationTemplate>() {
             @Override
@@ -97,20 +105,30 @@ public class IVRCallbacks {
                 .orElse(null);
         if (null == wfTemplate) {
             throw new StatesmanError("No matching workflow template found for context: " + stdPayload,
-                                     ResponseCode.INVALID_OPERATION);
+                    ResponseCode.INVALID_OPERATION);
         }
-        val wfId = extractWorkflowId(node, transformationTemplate);
+        val wfIdNode = node.at(transformationTemplate.getIdPath());
+        boolean workflowExists = !Strings.isNullOrEmpty(transformationTemplate.getIdPath())
+                && wfIdNode.isMissingNode();
+        val wfId = workflowExists
+                ? wfIdNode.asText()
+                : UUID.randomUUID().toString();
         val date = new Date();
-        workflowProvider.get()
-                .saveWorkflow(new Workflow(wfId,
-                                           wfTemplate.getId(),
-                                           new DataObject(mapper.createObjectNode(),
-                                                          wfTemplate.getStartState(),
-                                                          date,
-                                                          date)));
+        Workflow workflow = new Workflow(wfId,
+                wfTemplate.getId(),
+                new DataObject(mapper.createObjectNode(),
+                        wfTemplate.getStartState(),
+                        date,
+                        date));
+        if (workflowExists) {
+            workflowProvider.get().updateWorkflow(workflow);
+        } else {
+            workflowProvider.get()
+                    .saveWorkflow(workflow);
+        }
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, node, new MergeDataAction()));
+                .handle(new DataUpdate(wfId, context, new MergeDataAction()));
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
@@ -189,6 +207,7 @@ public class IVRCallbacks {
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
+                .entity(ImmutableMap.of("success", true))
                 .build();
     }
 

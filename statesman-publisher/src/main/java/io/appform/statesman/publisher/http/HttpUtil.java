@@ -2,7 +2,7 @@ package io.appform.statesman.publisher.http;
 
 import com.codahale.metrics.MetricRegistry;
 import com.raskasa.metrics.okhttp.InstrumentedOkHttpClients;
-import io.appform.statesman.publisher.impl.EventPublisherConfig;
+import io.appform.statesman.model.HttpClientConfiguration;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import okhttp3.ConnectionPool;
@@ -19,7 +19,7 @@ public class HttpUtil {
 
     public static OkHttpClient defaultClient(final String clientName,
                                              final MetricRegistry registry,
-                                             final EventPublisherConfig configuration) {
+                                             final HttpClientConfiguration configuration) {
 
         int connections = configuration.getConnections();
         connections = connections == 0 ? 10 : connections;

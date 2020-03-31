@@ -5,11 +5,13 @@ import com.github.jknack.handlebars.context.FieldValueResolver;
 import com.github.jknack.handlebars.context.JavaBeanValueResolver;
 import com.github.jknack.handlebars.context.MapValueResolver;
 import com.github.jknack.handlebars.context.MethodValueResolver;
+import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,8 +37,12 @@ public class HandleBarsService {
         compiledTemplates = new ConcurrentHashMap<String, Template>();
     }
 
+    @Nullable
     public String transform(String template, Object data) {
         try {
+            if(Strings.isNullOrEmpty(template)) {
+                return null;
+            }
             if (!compiledTemplates.containsKey(template)) {
                 addTemplate(template);
             }

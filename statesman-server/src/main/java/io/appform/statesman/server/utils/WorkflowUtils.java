@@ -22,6 +22,7 @@ public class WorkflowUtils {
 
     public static StoredWorkflowTemplate toDao(WorkflowTemplate workflowTemplate) {
         String templateId = Strings.isNullOrEmpty(workflowTemplate.getId()) ? UUID.randomUUID().toString() : workflowTemplate.getId();
+        workflowTemplate.setId(templateId);
         return StoredWorkflowTemplate.builder()
                 .active(workflowTemplate.isActive())
                 .name(workflowTemplate.getName())
