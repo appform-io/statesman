@@ -13,6 +13,9 @@ import org.junit.Test;
 
 import javax.inject.Provider;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +48,8 @@ public class WorkflowEvaluatorTest {
             return provider;
         };
 
-        workflowEvaluator = new WorkflowTemplateSelector(workflowProviderCommandProvider.get());
+        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+        workflowEvaluator = new WorkflowTemplateSelector(executorService, workflowProviderCommandProvider.get());
         mapper = new ObjectMapper();
     }
 
