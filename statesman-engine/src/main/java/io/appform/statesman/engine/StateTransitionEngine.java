@@ -57,7 +57,7 @@ public class StateTransitionEngine {
     public AppliedTransitions handle(DataUpdate dataUpdate) {
         val transitions = new ArrayList<AppliedTransition>();
         AppliedTransition transition = null;
-        Set<Integer> evaluatedRuleSet = new HashSet<>();
+        Set<String> evaluatedRuleSet = new HashSet<>();
         do {
             transition = handleSingleTransition(dataUpdate, evaluatedRuleSet).orElse(null);
             if (null != transition) {
@@ -69,7 +69,7 @@ public class StateTransitionEngine {
         return new AppliedTransitions(dataUpdate.getWorkflowId(), transitions);
     }
 
-    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate, Set<Integer> alreadyVisited) {
+    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate, Set<String> alreadyVisited) {
         val workflowId = dataUpdate.getWorkflowId();
         val workflow = workflowProvider.get()
                 .getWorkflow(workflowId)
@@ -103,12 +103,10 @@ public class StateTransitionEngine {
                     }
                     return hopeLangEngine.evaluate(rule, evalNode);
                 })
-                .filter(stateTransition -> !alreadyVisited.contains(
-                        (dataObject.getCurrentState().getName() + stateTransition.getRule()).hashCode()))
+                .filter(stateTransition -> !alreadyVisited.contains(stateTransition.getId()))
                 .findFirst()
-                .orElse(defaultTransition(dataObject, transitions, alreadyVisited));
+                .orElse(defaultTransition(transitions, alreadyVisited));
         if (null == selectedTransition) {
-
             return Optional.empty();
         }
         dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
@@ -117,18 +115,16 @@ public class StateTransitionEngine {
         eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
         return Optional.of(new AppliedTransition(currentState,
                                                  selectedTransition.getToState(),
-                                                 selectedTransition.hashCode()));
+                                                 selectedTransition.getId()));
     }
 
     private StateTransition defaultTransition(
-            DataObject dataObject,
             List<StateTransition> transitions,
-            Set<Integer> alreadyVisited) {
+            Set<String> alreadyVisited) {
         return transitions.stream()
                 .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.DEFAULT))
                 .filter(StateTransition::isActive)
-                .filter(stateTransition -> !alreadyVisited.contains(
-                        (dataObject.getCurrentState().getName() + stateTransition.getRule()).hashCode()))
+                .filter(stateTransition -> !alreadyVisited.contains(stateTransition.getId()))
                 .findFirst()
                 .orElse(null);
     }
