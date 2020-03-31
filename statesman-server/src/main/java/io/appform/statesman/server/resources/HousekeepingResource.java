@@ -11,12 +11,15 @@ import lombok.extern.slf4j.Slf4j;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/v1/housekeeping")
 @Slf4j
 @Api("Housekeeping APIs")
 @Singleton
+@Produces(MediaType.APPLICATION_JSON)
 public class HousekeepingResource {
 
 
