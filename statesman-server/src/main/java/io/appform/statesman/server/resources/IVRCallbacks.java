@@ -107,7 +107,7 @@ public class IVRCallbacks {
         }
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, node, new MergeDataAction()));
+                .handle(new DataUpdate(wfId, context, new MergeDataAction()));
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                 wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
