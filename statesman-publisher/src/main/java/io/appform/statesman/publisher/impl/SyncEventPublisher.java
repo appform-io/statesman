@@ -28,9 +28,9 @@ public class SyncEventPublisher extends HttpClient implements EventPublisher {
     /**
      * Constructor
      */
-    public SyncEventPublisher(final EventPublisherConfig config,
-                              final MetricRegistry registry,
-                              final ObjectMapper mapper) {
+    public SyncEventPublisher(final ObjectMapper mapper,
+                              final EventPublisherConfig config,
+                              final MetricRegistry registry) {
         super(mapper, HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(), registry, config.getHttpClientConfiguration()));
         this.endpoint = config.getEndpoint();
     }
@@ -43,6 +43,16 @@ public class SyncEventPublisher extends HttpClient implements EventPublisher {
                               final String endpoint) {
         super(mapper, client);
         this.endpoint = endpoint;
+    }
+
+    @Override
+    public void start() throws Exception {
+        //do nothing
+    }
+
+    @Override
+    public void stop() throws Exception {
+        //do nothing
     }
 
     @Override

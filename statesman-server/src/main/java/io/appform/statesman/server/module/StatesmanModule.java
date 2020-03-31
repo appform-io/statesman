@@ -20,8 +20,9 @@ import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.impl.EventPublisherConfig;
-import io.appform.statesman.publisher.impl.QueueEventEventPublisher;
+import io.appform.statesman.publisher.impl.QueueEventPublisher;
 import io.appform.statesman.publisher.impl.SyncEventPublisher;
+import io.appform.statesman.publisher.model.PublisherType;
 import io.appform.statesman.server.AppConfig;
 import io.appform.statesman.server.dao.action.ActionTemplateStoreCommand;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
@@ -60,18 +61,20 @@ public class StatesmanModule extends AbstractModule {
             Environment environment) {
 
         return appConfig.getEventPublisherConfig().getType().visit(
-                new EventPublisherConfig.PublisherType.PublisherTypeVisitor<EventPublisher>() {
+                new PublisherType.PublisherTypeVisitor<EventPublisher>() {
                     @Override
                     public EventPublisher visitSync() {
-                        return new SyncEventPublisher(appConfig.getEventPublisherConfig(),
-                                environment.metrics(),
-                                environment.getObjectMapper());
+                        return new SyncEventPublisher(
+                                environment.getObjectMapper(),
+                                appConfig.getEventPublisherConfig(),
+                                environment.metrics()
+                                );
                     }
 
                     @Override
                     public EventPublisher visitQueued() {
                         try {
-                            return new QueueEventEventPublisher(
+                            return new QueueEventPublisher(
                                     environment.getObjectMapper(),
                                     appConfig.getEventPublisherConfig(),
                                     environment.metrics());

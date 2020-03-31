@@ -6,10 +6,14 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.leansoft.bigqueue.BigQueueImpl;
 import com.leansoft.bigqueue.IBigQueue;
+import io.appform.statesman.publisher.EventPublisher;
+import io.appform.statesman.publisher.http.HttpClient;
+import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.model.Event;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
@@ -27,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author shashank.g
  */
 @Slf4j
-public class QueueEventEventPublisher extends SyncEventPublisher {
+public class QueueEventPublisher extends HttpClient implements EventPublisher {
 
     private static final int RETRIES = 5;
     private static final int MAX_PAYLOAD_SIZE = 2000000; //2MB
@@ -40,19 +44,24 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
     /**
      * Instantiates a new Queued queueEventPublisher.
      */
-    public QueueEventEventPublisher(final ObjectMapper mapper,
-                                    final EventPublisherConfig config,
-                                    final MetricRegistry registry) throws IOException {
-        super(config, registry, mapper);
+    public QueueEventPublisher(final ObjectMapper mapper,
+                               final EventPublisherConfig config,
+                               final MetricRegistry registry) throws IOException {
+        super(mapper, HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(), registry, config.getHttpClientConfiguration()));
         this.path = config.getQueuePath();
 
-        final SyncEventPublisher syncEventPublisher = new SyncEventPublisher(config,
-                registry,
-                mapper);
+        final SyncEventPublisher syncEventPublisher = new SyncEventPublisher(
+                mapper,
+                config,
+                registry);
 
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwxrwx");
         FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
-        Files.createDirectories(Paths.get(path), attr);
+        try {
+            Files.createDirectories(Paths.get(path), attr);
+        } catch (final FileAlreadyExistsException e) {
+            log.warn("queue path already exists");
+        }
 
         this.messageQueue = new BigQueueImpl(path, "statesman-messages");
         this.messageSenderThread = new MessageSenderThread(this, syncEventPublisher, messageQueue, path, mapper, config.getBatchSize());
@@ -61,44 +70,27 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
         this.scheduler.scheduleWithFixedDelay(new QueueCleaner(messageQueue, path), 0, 15, TimeUnit.SECONDS);
     }
 
-    /**
-     * Instantiates a new Queued queueEventPublisher.
-     */
-    public QueueEventEventPublisher(final ObjectMapper mapper,
-                                    final EventPublisherConfig config,
-                                    final MetricRegistry registry,
-                                    final SyncEventPublisher syncEventPublisher) throws IOException {
-        super(config, registry, mapper);
-        this.path = config.getQueuePath();
-
-        Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwxrwx");
-        FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
-        Files.createDirectories(Paths.get(path), attr);
-
-        this.messageQueue = new BigQueueImpl(path, "statesman-messages");
-        this.messageSenderThread = new MessageSenderThread(this, syncEventPublisher, messageQueue, path, mapper, config.getBatchSize());
-        this.scheduler = Executors.newScheduledThreadPool(2);
-        this.scheduler.scheduleWithFixedDelay(messageSenderThread, 0, 1, TimeUnit.SECONDS);
-        this.scheduler.scheduleWithFixedDelay(new QueueCleaner(messageQueue, path), 0, 15, TimeUnit.SECONDS);
-    }
-
-    /**
-     * Send
-     */
-    public void send(Event event) throws Exception {
+    @Override
+    public void publish(Event event) throws Exception {
         this.messageQueue.enqueue(mapper.writeValueAsBytes(event));
     }
 
-    /**
-     * Send in bulk
-     */
-    public void send(List<Event> events) throws Exception {
+    @Override
+    public void publish(String topic, List<Event> events) throws Exception {
+        for (Event event : events) {
+            event.setTopic(topic);
+            this.messageQueue.enqueue(mapper.writeValueAsBytes(event));
+        }
+    }
+
+    private void enqueue(List<Event> events) throws IOException {
         for (Event event : events) {
             this.messageQueue.enqueue(mapper.writeValueAsBytes(event));
         }
     }
 
-    public void close() throws Exception {
+    @Override
+    public void stop() throws Exception {
         log.info("queue={} closing_queued_sender", new Object[]{path});
         while (!messageQueue.isEmpty()) {
             Thread.sleep(500);
@@ -114,12 +106,13 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
         log.info("queue={} shutdown_completed_for_message_sender_thread", new Object[]{path});
     }
 
+    @Override
     public void start() throws Exception {
         log.info("starting queue sender");
     }
 
     private static final class MessageSenderThread implements Runnable {
-        private final QueueEventEventPublisher queueEventPublisher;
+        private final QueueEventPublisher queueEventPublisher;
         private final ObjectMapper mapper;
         private IBigQueue messageQueue;
         private int batchSize;
@@ -127,7 +120,7 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
         private final SyncEventPublisher publisher;
         private AtomicBoolean running = new AtomicBoolean(false);
 
-        public MessageSenderThread(QueueEventEventPublisher queueEventPublisher,
+        public MessageSenderThread(QueueEventPublisher queueEventPublisher,
                                    SyncEventPublisher publisher,
                                    IBigQueue messageQueue,
                                    String path,
@@ -186,7 +179,7 @@ public class QueueEventEventPublisher extends SyncEventPublisher {
                         } while (retryCount <= RETRIES);
                         if (retryCount > RETRIES) {
                             log.error("queue={} message_send_failed probably_api_down  re-queuing_messages", new Object[]{path});
-                            queueEventPublisher.send(entries);
+                            queueEventPublisher.enqueue(entries);
                             break;
                         }
                     } else {

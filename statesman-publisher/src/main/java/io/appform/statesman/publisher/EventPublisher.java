@@ -9,7 +9,11 @@ import java.util.List;
  */
 public interface EventPublisher {
 
-    void publish(final Event event);
+    void start() throws Exception;
 
-    void publish(final String topic, final List<Event> events);
+    void stop() throws Exception;
+
+    void publish(final Event event) throws Exception;
+
+    void publish(final String topic, final List<Event> events) throws Exception;
 }
