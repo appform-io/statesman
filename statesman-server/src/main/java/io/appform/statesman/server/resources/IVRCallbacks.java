@@ -87,6 +87,7 @@ public class IVRCallbacks {
             @PathParam("ivrProvider") final String ivrProvider,
             final IVROneShot ivrOneShot) throws IOException {
 
+        log.info("Request:{}", ivrOneShot);
         val queryParams = new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(ivrOneShot.getQueryString(), true));
         val node = mapper.valueToTree(queryParams);
         Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
@@ -111,6 +112,7 @@ public class IVRCallbacks {
         });
         Preconditions.checkNotNull(tmpl);
         val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), node);
+        log.info("stdPayload:{}", stdPayload);
         val context = mapper.readTree(stdPayload);
         val wfTemplate = templateSelector.get()
                 .determineTemplate(context)
@@ -140,7 +142,7 @@ public class IVRCallbacks {
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, context, new MergeDataAction()));
-        log.debug("Workflow: {} with template: {} went through transitions: {}",
+        log.info("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
                 .entity(ImmutableMap.of("success", true))
