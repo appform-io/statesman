@@ -34,6 +34,7 @@ public class WorkflowUtils {
 
     public static WorkflowTemplate toDto(StoredWorkflowTemplate workflowTemplate) {
         return WorkflowTemplate.builder()
+                .active(workflowTemplate.isActive())
                 .id(workflowTemplate.getTemplateId())
                 .name(workflowTemplate.getName())
                 .rules(MapperUtils.deserialize(workflowTemplate.getRules(), new TypeReference<List<String>>() {}))

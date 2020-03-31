@@ -10,10 +10,7 @@ import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStr
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
-import io.appform.statesman.model.AppliedTransition;
-import io.appform.statesman.model.AppliedTransitions;
-import io.appform.statesman.model.DataObject;
-import io.appform.statesman.model.DataUpdate;
+import io.appform.statesman.model.*;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import lombok.var;
@@ -21,8 +18,7 @@ import lombok.var;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.*;
 
 /**
  *
@@ -61,17 +57,19 @@ public class StateTransitionEngine {
     public AppliedTransitions handle(DataUpdate dataUpdate) {
         val transitions = new ArrayList<AppliedTransition>();
         AppliedTransition transition = null;
+        Set<String> evaluatedRuleSet = new HashSet<>();
         do {
-            transition = handleSingleTransition(dataUpdate).orElse(null);
-            if(null != transition) {
+            transition = handleSingleTransition(dataUpdate, evaluatedRuleSet).orElse(null);
+            if (null != transition) {
                 transitions.add(transition);
+                evaluatedRuleSet.add(transition.getTransitionId());
             }
         } while (null != transition);
-        log.debug("workflowId:{},transitions:{}", dataUpdate.getWorkflowId(), transition);
+        log.debug("workflowId:{},transitions:{}", dataUpdate.getWorkflowId(), transitions);
         return new AppliedTransitions(dataUpdate.getWorkflowId(), transitions);
     }
 
-    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate) {
+    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate, Set<String> alreadyVisited) {
         val workflowId = dataUpdate.getWorkflowId();
         val workflow = workflowProvider.get()
                 .getWorkflow(workflowId)
@@ -93,18 +91,21 @@ public class StateTransitionEngine {
         val evalNode = mapper.createObjectNode();
         evalNode.putObject("data").setAll((ObjectNode) dataObject.getData());
         evalNode.putObject("update").setAll((ObjectNode) dataUpdate.getData());
-        val selectedTransition = transitions.stream()
+        var selectedTransition = transitions.stream()
+                .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.EVALUATED))
+                .filter(StateTransition::isActive)
                 .filter(stateTransition -> {
                     val transitionRule = stateTransition.getRule();
-                    var rule = evalCache.getIfPresent(transitionRule.getRule());
+                    var rule = evalCache.getIfPresent(transitionRule);
                     if (null == rule) {
-                        rule = hopeLangEngine.parse(transitionRule.getRule());
-                        evalCache.put(transitionRule.getRule(), rule);
+                        rule = hopeLangEngine.parse(transitionRule);
+                        evalCache.put(transitionRule, rule);
                     }
                     return hopeLangEngine.evaluate(rule, evalNode);
                 })
+                .filter(stateTransition -> !alreadyVisited.contains(stateTransition.getId()))
                 .findFirst()
-                .orElse(null);
+                .orElse(defaultTransition(transitions, alreadyVisited));
         if (null == selectedTransition) {
             return Optional.empty();
         }
@@ -112,6 +113,19 @@ public class StateTransitionEngine {
         dataObject.setCurrentState(selectedTransition.getToState());
 
         eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
-        return Optional.of(new AppliedTransition(currentState, selectedTransition.getToState()));
+        return Optional.of(new AppliedTransition(currentState,
+                                                 selectedTransition.getToState(),
+                                                 selectedTransition.getId()));
+    }
+
+    private StateTransition defaultTransition(
+            List<StateTransition> transitions,
+            Set<String> alreadyVisited) {
+        return transitions.stream()
+                .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.DEFAULT))
+                .filter(StateTransition::isActive)
+                .filter(stateTransition -> !alreadyVisited.contains(stateTransition.getId()))
+                .findFirst()
+                .orElse(null);
     }
 }
