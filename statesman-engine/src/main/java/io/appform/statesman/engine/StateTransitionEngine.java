@@ -60,7 +60,7 @@ public class StateTransitionEngine {
         Set<Integer> evaluatedRuleSet = new HashSet<>();
         do {
             transition = handleSingleTransition(dataUpdate, evaluatedRuleSet).orElse(null);
-            if(null != transition) {
+            if (null != transition) {
                 transitions.add(transition);
                 evaluatedRuleSet.add(transition.getTransitionId());
             }
@@ -93,6 +93,7 @@ public class StateTransitionEngine {
         evalNode.putObject("update").setAll((ObjectNode) dataUpdate.getData());
         var selectedTransition = transitions.stream()
                 .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.EVALUATED))
+                .filter(StateTransition::isActive)
                 .filter(stateTransition -> {
                     val transitionRule = stateTransition.getRule();
                     var rule = evalCache.getIfPresent(transitionRule);
@@ -102,9 +103,10 @@ public class StateTransitionEngine {
                     }
                     return hopeLangEngine.evaluate(rule, evalNode);
                 })
-                .filter(stateTransition -> !alreadyVisited.contains(stateTransition.hashCode()))
+                .filter(stateTransition -> !alreadyVisited.contains(
+                        (dataObject.getCurrentState().getName() + stateTransition.getRule()).hashCode()))
                 .findFirst()
-                .orElse(defaultTransition(transitions));
+                .orElse(defaultTransition(dataObject, transitions, alreadyVisited));
         if (null == selectedTransition) {
 
             return Optional.empty();
@@ -113,12 +115,20 @@ public class StateTransitionEngine {
         dataObject.setCurrentState(selectedTransition.getToState());
 
         eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
-        return Optional.of(new AppliedTransition(currentState, selectedTransition.getToState(), selectedTransition.hashCode()));
+        return Optional.of(new AppliedTransition(currentState,
+                                                 selectedTransition.getToState(),
+                                                 selectedTransition.hashCode()));
     }
 
-    private StateTransition defaultTransition(List<StateTransition> transitions) {
+    private StateTransition defaultTransition(
+            DataObject dataObject,
+            List<StateTransition> transitions,
+            Set<Integer> alreadyVisited) {
         return transitions.stream()
                 .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.DEFAULT))
+                .filter(StateTransition::isActive)
+                .filter(stateTransition -> !alreadyVisited.contains(
+                        (dataObject.getCurrentState().getName() + stateTransition.getRule()).hashCode()))
                 .findFirst()
                 .orElse(null);
     }
