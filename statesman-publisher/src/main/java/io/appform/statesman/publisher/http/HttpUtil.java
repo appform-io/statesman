@@ -44,6 +44,6 @@ public class HttpUtil {
                 .writeTimeout((long) opTimeout, TimeUnit.MILLISECONDS)
                 .dispatcher(dispatcher);
 
-        return registry != null ? InstrumentedOkHttpClients.create(registry, clientBuilder.build(), clientName) : clientBuilder.build();
+        return registry != null ? InstrumentedOkHttpClients.create(registry, clientBuilder.build(), clientName + System.currentTimeMillis()) : clientBuilder.build();
     }
 }
