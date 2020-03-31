@@ -21,7 +21,7 @@ public class StoredStateTransition {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "grouping_key")
+    @Column(name = "id")
     private long id;
 
     @Column(name = "transition_id", unique = true)
