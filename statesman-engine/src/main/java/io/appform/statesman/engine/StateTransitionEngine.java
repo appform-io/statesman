@@ -67,6 +67,7 @@ public class StateTransitionEngine {
                 transitions.add(transition);
             }
         } while (null != transition);
+        log.debug("workflowId:{},transitions:{}", dataUpdate.getWorkflowId(), transition);
         return new AppliedTransitions(dataUpdate.getWorkflowId(), transitions);
     }
 

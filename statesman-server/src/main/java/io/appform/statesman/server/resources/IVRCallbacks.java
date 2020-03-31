@@ -137,6 +137,7 @@ public class IVRCallbacks {
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
+                .entity(ImmutableMap.of("success", true))
                 .build();
     }
 

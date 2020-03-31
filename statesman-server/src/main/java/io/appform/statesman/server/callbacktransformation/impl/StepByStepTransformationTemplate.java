@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
+import lombok.*;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -20,7 +21,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class StepByStepTransformationTemplate extends TransformationTemplate  {
-    @Value
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static final class StepSelection {
         String selectionRule;
         String template;
