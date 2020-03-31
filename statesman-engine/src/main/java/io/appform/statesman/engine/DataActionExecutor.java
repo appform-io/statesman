@@ -41,11 +41,13 @@ public class DataActionExecutor {
                             if(objectNode.has(e.getKey())) {
                                 val existingNode = objectNode.get(e.getKey());
                                 if(existingNode.isArray()) {
-                                    ((ArrayNode)existingNode).add(existingNode);
+                                    ((ArrayNode)existingNode).add(e.getValue());
                                 }
                                 else {
                                     objectNode.set(e.getKey(), e.getValue());
                                 }
+                            } else {
+                                objectNode.set(e.getKey(), e.getValue());
                             }
                         });
                 return objectNode;

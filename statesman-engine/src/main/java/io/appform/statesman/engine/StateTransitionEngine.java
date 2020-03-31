@@ -65,7 +65,7 @@ public class StateTransitionEngine {
                 evaluatedRuleSet.add(transition.getTransitionId());
             }
         } while (null != transition);
-        log.debug("workflowId:{},transitions:{}", dataUpdate.getWorkflowId(), transition);
+        log.debug("workflowId:{},transitions:{}", dataUpdate.getWorkflowId(), transitions);
         return new AppliedTransitions(dataUpdate.getWorkflowId(), transitions);
     }
 
