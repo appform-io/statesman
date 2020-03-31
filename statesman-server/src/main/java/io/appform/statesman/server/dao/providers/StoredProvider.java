@@ -23,7 +23,7 @@ public class StoredProvider {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "grouping_key")
+    @Column(name = "id")
     private long id;
 
     @LookupKey

@@ -95,10 +95,10 @@ public class StateTransitionEngine {
         val selectedTransition = transitions.stream()
                 .filter(stateTransition -> {
                     val transitionRule = stateTransition.getRule();
-                    var rule = evalCache.getIfPresent(transitionRule.getId());
+                    var rule = evalCache.getIfPresent(transitionRule.getRule());
                     if (null == rule) {
                         rule = hopeLangEngine.parse(transitionRule.getRule());
-                        evalCache.put(transitionRule.getId(), rule);
+                        evalCache.put(transitionRule.getRule(), rule);
                     }
                     return hopeLangEngine.evaluate(rule, evalNode);
                 })
