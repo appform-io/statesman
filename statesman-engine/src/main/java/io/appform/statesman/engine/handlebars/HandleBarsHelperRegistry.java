@@ -313,7 +313,9 @@ public class HandleBarsHelperRegistry {
                     return null;
                 }
                 if (keyNode.isTextual()) {
-                    int value = Integer.parseInt(keyNode.asText());
+                    int value = Strings.isNullOrEmpty(keyNode.asText())
+                                ? (options.hash.size() - 1)
+                                : Integer.parseInt(keyNode.asText());
                     if (value < 10) {
                         return MAPPER.writeValueAsString(options.hash("op_" + value));
                     }
