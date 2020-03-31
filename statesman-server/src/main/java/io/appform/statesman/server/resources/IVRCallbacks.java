@@ -14,11 +14,11 @@ import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
-import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
+import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +36,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -46,7 +47,7 @@ import java.util.UUID;
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
 public class IVRCallbacks {
-    private final CallbackTransformationTemplates transformationTemplates;
+    private final CallbackTemplateProvider callbackTemplateProvider;
     private final ObjectMapper mapper;
     private final HandleBarsService handleBarsService;
     private final Provider<StateTransitionEngine> engine;
@@ -56,13 +57,13 @@ public class IVRCallbacks {
 
     @Inject
     public IVRCallbacks(
-            CallbackTransformationTemplates transformationTemplates,
+            CallbackTemplateProvider callbackTemplateProvider,
             final ObjectMapper mapper,
             HandleBarsService handleBarsService,
             Provider<StateTransitionEngine> engine,
             Provider<WorkflowProvider> workflowProvider,
             Provider<WorkflowTemplateSelector> templateSelector) {
-        this.transformationTemplates = transformationTemplates;
+        this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
         this.handleBarsService = handleBarsService;
         this.engine = engine;
@@ -81,11 +82,15 @@ public class IVRCallbacks {
 
         val queryParams = uriInfo.getQueryParameters();
         val node = mapper.valueToTree(queryParams);
-        val transformationTemplate = transformationTemplates.getTemplates().get(ivrProvider);
-        if (null == transformationTemplate) {
+        Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
+                .stream()
+                .filter(template -> template.getProvider().equals(ivrProvider))
+                .findAny();
+        if (!transformationTemplateOptional.isPresent()) {
             throw new StatesmanError("No matching translation template found for context: " + node,
                     ResponseCode.INVALID_OPERATION);
         }
+        val transformationTemplate = transformationTemplateOptional.get();
         val tmpl = transformationTemplate.accept(new TransformationTemplateVisitor<OneShotTransformationTemplate>() {
             @Override
             public OneShotTransformationTemplate visit(OneShotTransformationTemplate oneShotTransformationTemplate) {
@@ -132,6 +137,7 @@ public class IVRCallbacks {
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
+                .entity(ImmutableMap.of("success", true))
                 .build();
     }
 
@@ -142,11 +148,15 @@ public class IVRCallbacks {
             @Context final UriInfo uriInfo) throws IOException {
         val queryParams = uriInfo.getQueryParameters();
         val node = mapper.valueToTree(queryParams);
-        val transformationTemplate = transformationTemplates.getTemplates().get(ivrProvider);
-        if (null == transformationTemplate) {
+        Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
+                .stream()
+                .filter(template -> template.getProvider().equals(ivrProvider))
+                .findAny();
+        if (!transformationTemplateOptional.isPresent()) {
             throw new StatesmanError("No matching translation template found for context: " + node,
-                                     ResponseCode.INVALID_OPERATION);
+                    ResponseCode.INVALID_OPERATION);
         }
+        val transformationTemplate = transformationTemplateOptional.get();
         val tmpl = transformationTemplate.accept(new TransformationTemplateVisitor<StepByStepTransformationTemplate>() {
             @Override
             public StepByStepTransformationTemplate visit(OneShotTransformationTemplate oneShotTransformationTemplate) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateType;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
@@ -22,10 +23,12 @@ public class OneShotTransformationTemplate extends TransformationTemplate  {
     @NotEmpty
     String template;
 
+    @Builder
     public OneShotTransformationTemplate(
+            @JsonProperty("provider") String provider,
             @JsonProperty("idPath") String idPath,
             @JsonProperty("template") String template) {
-        super(TransformationTemplateType.ONE_SHOT, idPath);
+        super(TransformationTemplateType.ONE_SHOT, idPath, provider);
         this.template = template;
     }
 

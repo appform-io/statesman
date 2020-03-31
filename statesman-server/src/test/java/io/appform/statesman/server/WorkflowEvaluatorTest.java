@@ -48,8 +48,7 @@ public class WorkflowEvaluatorTest {
             return provider;
         };
 
-        ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-        workflowEvaluator = new WorkflowTemplateSelector(executorService, workflowProviderCommandProvider.get());
+        workflowEvaluator = new WorkflowTemplateSelector(workflowProviderCommandProvider.get());
         mapper = new ObjectMapper();
     }
 

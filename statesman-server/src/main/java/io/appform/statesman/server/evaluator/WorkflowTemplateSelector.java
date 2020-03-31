@@ -2,6 +2,7 @@ package io.appform.statesman.server.evaluator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
+import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.appform.hope.core.Evaluatable;
@@ -9,44 +10,44 @@ import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStr
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.model.WorkflowTemplate;
+import io.dropwizard.lifecycle.Managed;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
-public class WorkflowTemplateSelector {
+public class WorkflowTemplateSelector implements Managed {
 
     private WorkflowProvider workflowProvider;
     private HopeLangEngine hopeLangEngine;
-    private final ConcurrentHashMap<String, List<WorkflowTemplateContext>> parsedWorkflowTemplateCache;
+    private final AtomicReference<List<WorkflowTemplateContext>> parsedWorkflowTemplates;
+    private final ScheduledExecutorService executorService;
 
     @Inject
-    @Builder
-    public WorkflowTemplateSelector(
-            @Named("workflowTemplateScheduledExecutorService") final ScheduledExecutorService executorService,
-            WorkflowProvider workflowProvider) {
+    public WorkflowTemplateSelector(WorkflowProvider workflowProvider) {
         this.workflowProvider = workflowProvider;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
-        this.parsedWorkflowTemplateCache = new ConcurrentHashMap<>();
+        this.parsedWorkflowTemplates = new AtomicReference<>(new ArrayList<>());
+        this.executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleWithFixedDelay(this::loadParsedWorkflowTemplates, 0, 600, TimeUnit.SECONDS);
+
     }
 
     public Optional<WorkflowTemplate> determineTemplate(JsonNode translatedPayload) {
 
-        List<WorkflowTemplateContext> parsedWorkflowTemplates = parsedWorkflowTemplateCache.values().
-                stream()
-                .flatMap(List::stream)
-                .collect(Collectors.toList());
-
-        return parsedWorkflowTemplates
+        return parsedWorkflowTemplates.get()
                 .stream()
                 .filter(parsedWorkflowContext -> hopeLangEngine
                         .evaluate(parsedWorkflowContext.getParsedRule(), translatedPayload))
@@ -55,8 +56,8 @@ public class WorkflowTemplateSelector {
     }
 
 
-    private void loadParsedWorkflowTemplates(){
-        Map<String,List<WorkflowTemplateContext>> parsedTemplates = workflowProvider.getAll()
+    private void loadParsedWorkflowTemplates() {
+        List<WorkflowTemplateContext> parsedTemplates = workflowProvider.getAll()
                 .stream()
                 .flatMap(template -> template.getRules().stream().map(rule -> {
                     Evaluatable parsedTemplateRule;
@@ -69,10 +70,19 @@ public class WorkflowTemplateSelector {
                     return new WorkflowTemplateContext(template, parsedTemplateRule);
                 }))
                 .filter(Objects::nonNull)
-                .collect(Collectors.groupingBy(templateContext -> {
-                    return templateContext.getTemplate().getId();
-                }));
-        parsedWorkflowTemplateCache.putAll(parsedTemplates);
+                .collect(Collectors.toList());
+        parsedWorkflowTemplates.set(parsedTemplates);
     }
+
+    @Override
+    public void start(){
+
+    }
+
+    @Override
+    public void stop() {
+        executorService.shutdown();
+    }
+
 
 }
