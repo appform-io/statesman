@@ -7,17 +7,17 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class CompoundHttpActionTemplate extends ActionTemplate {
+public class CompoundActionTemplate extends ActionTemplate {
 
     private List<String> actionTemplates;
 
-    public CompoundHttpActionTemplate() {
-        super(ActionType.COMPOUND_HTTP);
+    public CompoundActionTemplate() {
+        super(ActionType.COMPOUND);
     }
 
     @Builder
-    public CompoundHttpActionTemplate(String templateId, String name, boolean active, List<String> actionTemplates) {
-        super(ActionType.COMPOUND_HTTP, templateId, name, active);
+    public CompoundActionTemplate(String templateId, String name, boolean active, List<String> actionTemplates) {
+        super(ActionType.COMPOUND, templateId, name, active);
         this.actionTemplates = actionTemplates;
     }
 

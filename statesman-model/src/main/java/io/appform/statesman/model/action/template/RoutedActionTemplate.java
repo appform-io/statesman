@@ -7,18 +7,18 @@ import lombok.Data;
 import java.util.Map;
 
 @Data
-public class RoutedHttpActionTemplate extends ActionTemplate {
+public class RoutedActionTemplate extends ActionTemplate {
 
     private String useCase;
     private Map<String, String> providerTemplates;
 
-    public RoutedHttpActionTemplate() {
-        super(ActionType.ROUTED_HTTP);
+    public RoutedActionTemplate() {
+        super(ActionType.ROUTED);
     }
 
     @Builder
-    public RoutedHttpActionTemplate(String templateId, String name, boolean active, String useCase, Map<String, String> providerTemplates) {
-        super(ActionType.ROUTED_HTTP, templateId, name, active);
+    public RoutedActionTemplate(String templateId, String name, boolean active, String useCase, Map<String, String> providerTemplates) {
+        super(ActionType.ROUTED, templateId, name, active);
         this.providerTemplates = providerTemplates;
         this.useCase = useCase;
     }

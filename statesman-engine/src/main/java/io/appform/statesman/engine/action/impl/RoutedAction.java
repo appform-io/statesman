@@ -9,7 +9,7 @@ import io.appform.statesman.engine.action.BaseAction;
 import io.appform.statesman.model.ActionImplementation;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.action.ActionType;
-import io.appform.statesman.model.action.template.RoutedHttpActionTemplate;
+import io.appform.statesman.model.action.template.RoutedActionTemplate;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
@@ -24,17 +24,17 @@ import javax.inject.Singleton;
 @Slf4j
 @Data
 @Singleton
-@ActionImplementation(name = "ROUTED_HTTP")
-public class RoutedHttpAction extends BaseAction<RoutedHttpActionTemplate> {
+@ActionImplementation(name = "ROUTED")
+public class RoutedAction extends BaseAction<RoutedActionTemplate> {
 
     private final ProviderSelector providerSelector;
     private Provider<ActionExecutor> actionExecutor;
 
     @Inject
-    public RoutedHttpAction(Provider<ActionExecutor> actionExecutor,
-                            @Named("eventPublisher") final EventPublisher publisher,
-                            ProviderSelector providerSelector,
-                            ObjectMapper mapper) {
+    public RoutedAction(Provider<ActionExecutor> actionExecutor,
+                        @Named("eventPublisher") final EventPublisher publisher,
+                        ProviderSelector providerSelector,
+                        ObjectMapper mapper) {
         super(publisher, mapper);
         this.providerSelector = providerSelector;
         this.actionExecutor = actionExecutor;
@@ -43,17 +43,17 @@ public class RoutedHttpAction extends BaseAction<RoutedHttpActionTemplate> {
 
     @Override
     public ActionType getType() {
-        return ActionType.ROUTED_HTTP;
+        return ActionType.ROUTED;
     }
 
 
     @Override
-    public void execute(RoutedHttpActionTemplate routedHttpActionTemplate, Workflow workflow) {
-        String provider = providerSelector.provider(routedHttpActionTemplate.getUseCase(), routedHttpActionTemplate.getProviderTemplates().keySet(), workflow);
+    public void execute(RoutedActionTemplate routedActionTemplate, Workflow workflow) {
+        String provider = providerSelector.provider(routedActionTemplate.getUseCase(), routedActionTemplate.getProviderTemplates().keySet(), workflow);
         if (Strings.isNullOrEmpty(provider)) {
-            throw new StatesmanError("No provider found for action:" + routedHttpActionTemplate.getTemplateId(),
+            throw new StatesmanError("No provider found for action:" + routedActionTemplate.getTemplateId(),
                     ResponseCode.NO_PROVIDER_FOUND);
         }
-        actionExecutor.get().execute(routedHttpActionTemplate.getProviderTemplates().get(provider), workflow);
+        actionExecutor.get().execute(routedActionTemplate.getProviderTemplates().get(provider), workflow);
     }
 }
