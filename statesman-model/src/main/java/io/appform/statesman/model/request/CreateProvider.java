@@ -27,7 +27,7 @@ public class CreateProvider {
 
     @NotNull
     @NotEmpty
-    private String providerType;
+    private String useCase;
 
     @Min(1)
     @Max(64)

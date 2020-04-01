@@ -25,10 +25,10 @@ public class ProviderSelectorImpl implements ProviderSelector {
     }
 
     @Override
-    public String provider(String providerType, Set<String> configuredProviders, Workflow workflow) {
+    public String provider(String useCase, Set<String> configuredProviders, Workflow workflow) {
         List<String> activeProviders =
                 configuredProviders.stream()
-                        .map(providerId -> providerCommands.get(providerId, providerType))
+                        .map(providerId -> providerCommands.get(providerId, useCase))
                         .filter(storedProvider -> storedProvider.isPresent() && storedProvider.get().isActive())
                         .map(storedProvider -> storedProvider.get().getProviderId())
                         .collect(Collectors.toList());

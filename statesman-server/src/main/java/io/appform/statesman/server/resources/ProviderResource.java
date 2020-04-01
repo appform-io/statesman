@@ -69,11 +69,11 @@ public class ProviderResource {
     public Response deactivate(@Valid CreateProvider request) {
         DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredProvider.class)
                 .add(Restrictions.eq("providerId", request.getProviderId()))
-                .add(Restrictions.eq("providerType", request.getProviderType()));
+                .add(Restrictions.eq("useCase", request.getUseCase()));
         boolean success = providerCommands.update(request.getProviderId(), detachedCriteria,
                 provider -> {
                     provider.setProviderName(request.getProviderName());
-                    provider.setProviderType(request.getProviderType());
+                    provider.setUseCase(request.getUseCase());
                     provider.setPartitions(request.getPartitions());
                     return provider;
                 });
@@ -84,14 +84,14 @@ public class ProviderResource {
 
     @POST
     @Timed
-    @Path("/update/{providerId}/{providerType}/status/{active}")
+    @Path("/update/{providerId}/{useCase}/status/{active}")
     @ApiOperation("Update Active status")
     public Response deactivate(@PathParam("providerId") final String providerId,
-                               @PathParam("providerType") final String providerType,
+                               @PathParam("useCase") final String useCase,
                                @PathParam("active") final boolean active) {
         DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredProvider.class)
                 .add(Restrictions.eq("providerId", providerId))
-                .add(Restrictions.eq("providerType", providerType));
+                .add(Restrictions.eq("useCase", useCase));
         boolean success = providerCommands.update(providerId, detachedCriteria, storedProvider -> {
             storedProvider.setActive(active);
             return storedProvider;

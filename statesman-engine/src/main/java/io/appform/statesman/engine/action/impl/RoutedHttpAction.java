@@ -47,7 +47,7 @@ public class RoutedHttpAction extends BaseAction<RoutedHttpActionTemplate> {
 
     @Override
     public void execute(RoutedHttpActionTemplate routedHttpActionTemplate, Workflow workflow) {
-        String provider = providerSelector.provider(routedHttpActionTemplate.getProviderType(), routedHttpActionTemplate.getProviderTemplates().keySet(), workflow);
+        String provider = providerSelector.provider(routedHttpActionTemplate.getUseCase(), routedHttpActionTemplate.getProviderTemplates().keySet(), workflow);
         if (Strings.isNullOrEmpty(provider)) {
             throw new StatesmanError("No provider found for action:" + routedHttpActionTemplate.getTemplateId(),
                     ResponseCode.NO_PROVIDER_FOUND);

@@ -38,7 +38,7 @@ public class ProviderCommands {
                 .refreshAfterWrite(60, TimeUnit.SECONDS)
                 .build(key -> {
                     log.debug("Loading data for transition for key: {}", key);
-                    return getFromDb(key.getProviderId(), key.getProviderType());
+                    return getFromDb(key.getProviderId(), key.getUseCase());
                 });
     }
 
@@ -54,11 +54,11 @@ public class ProviderCommands {
     }
 
     @MonitoredFunction
-    public Optional<StoredProvider> get(String providerId, String providerType) {
+    public Optional<StoredProvider> get(String providerId, String useCase) {
         try {
             return cache.get(ProviderCacheKey.builder()
                     .providerId(providerId)
-                    .providerType(providerType)
+                    .useCase(useCase)
                     .build());
         } catch (Exception e) {
             throw new StatesmanError(ResponseCode.STORAGE_ERROR);
@@ -66,11 +66,11 @@ public class ProviderCommands {
     }
 
     @MonitoredFunction
-    public Optional<StoredProvider> getFromDb(String providerId, String providerType) {
+    public Optional<StoredProvider> getFromDb(String providerId, String useCase) {
         try {
             DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredProvider.class)
                     .add(Restrictions.eq("providerId", providerId))
-                    .add(Restrictions.eq("providerType", providerType));
+                    .add(Restrictions.eq("useCase", useCase));
             return providerDao.select(providerId, detachedCriteria, 0, 1)
                     .stream()
                     .findFirst();
@@ -84,7 +84,7 @@ public class ProviderCommands {
         try {
             return providerDao.save(storedProvider.getProviderId(), storedProvider);
         } catch (ConstraintViolationException e) {
-            return getFromDb(storedProvider.getProviderId(), storedProvider.getProviderType());
+            return getFromDb(storedProvider.getProviderId(), storedProvider.getUseCase());
         } catch (Exception e) {
             throw new StatesmanError(ResponseCode.STORAGE_ERROR);
         }
@@ -104,7 +104,7 @@ public class ProviderCommands {
     @Builder
     private static class ProviderCacheKey {
         String providerId;
-        String providerType;
+        String useCase;
 
     }
 
