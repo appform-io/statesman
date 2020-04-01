@@ -17,6 +17,7 @@ import javax.inject.Singleton;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 /**
  *
@@ -71,6 +72,7 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
             return Collections.singletonList(
                     Event.builder()
                             .topic(REPORTING)
+                            .id(UUID.randomUUID().toString())
                             .app(APP_NAME)
                             .eventType(EngineEventType.STATE_CHANGED.name())
                             .groupingKey(stateTransitionEvent.getWorkflow().getId())
