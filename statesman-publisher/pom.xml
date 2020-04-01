@@ -11,13 +11,6 @@
 
     <artifactId>statesman-publisher</artifactId>
 
-    <properties>
-        <hystrix.version>1.5.3</hystrix.version>
-        <hystrix.configurator.version>0.0.6</hystrix.configurator.version>
-        <hystrix.function.wrapper.version>1.1.5</hystrix.function.wrapper.version>
-        <hystrix.dropwizard.version>0.4</hystrix.dropwizard.version>
-    </properties>
-
     <repositories>
         <repository>
             <id>github.release.repo</id>
@@ -56,33 +49,6 @@
             <version>3.14.2</version>
         </dependency>
 
-        <!-- Hystrix -->
-        <dependency>
-            <groupId>com.netflix.hystrix</groupId>
-            <artifactId>hystrix-core</artifactId>
-            <version>${hystrix.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hystrix</groupId>
-            <artifactId>hystrix-configurator</artifactId>
-            <version>${hystrix.configurator.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>io.appform.core</groupId>
-            <artifactId>hystrix-function-wrapper</artifactId>
-            <version>${hystrix.function.wrapper.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.zapodot</groupId>
-            <artifactId>hystrix-dropwizard-bundle</artifactId>
-            <version>${hystrix.dropwizard.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.dropwizard</groupId>
-                    <artifactId>dropwizard-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>io.appform</groupId>
             <artifactId>statesman-model</artifactId>

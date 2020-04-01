@@ -1,15 +1,15 @@
 server:
   applicationConnectors:
-  - type: http
-    port: 8080
+    - type: http
+      port: 8080
   adminConnectors:
-  - type: http
-    port: 8081
+    - type: http
+      port: 8081
   applicationContextPath: /
   requestLog:
     appenders:
-    - type: console
-      timeZone: IST
+      - type: console
+        timeZone: IST
 
 logging:
   level: INFO
@@ -25,37 +25,37 @@ logging:
 
 shards:
   shards:
-  - driverClass: org.mariadb.jdbc.Driver
-    user: root
-    password: root
-    url: jdbc:mariadb://127.0.0.1/statesman_shard1?createDatabaseIfNotExist=true
-    properties:
-      charSet: UTF-8
-      hibernate.dialect: org.hibernate.dialect.MariaDBDialect
-      hibernate.hbm2ddl.auto: update
-      hibernate.show_sql: true
-    maxWaitForConnection: 1s
-    validationQuery: "/* MyApplication Health Check */ SELECT 1"
-    minSize: 8
-    maxSize: 8
-    initialSize: 8
-    checkConnectionWhileIdle: false
+    - driverClass: org.mariadb.jdbc.Driver
+      user: root
+      password: root
+      url: jdbc:mariadb://127.0.0.1/statesman_shard1?createDatabaseIfNotExist=true
+      properties:
+        charSet: UTF-8
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
+        hibernate.hbm2ddl.auto: update
+        hibernate.show_sql: true
+      maxWaitForConnection: 1s
+      validationQuery: "/* MyApplication Health Check */ SELECT 1"
+      minSize: 8
+      maxSize: 8
+      initialSize: 8
+      checkConnectionWhileIdle: false
 
-  - driverClass: org.mariadb.jdbc.Driver
-    user: root
-    password: root
-    url: jdbc:mariadb://127.0.0.1/statesman_shard2?createDatabaseIfNotExist=true
-    properties:
-      charSet: UTF-8
-      hibernate.dialect: org.hibernate.dialect.MariaDBDialect
-      hibernate.hbm2ddl.auto: update
-      hibernate.show_sql: true
-    maxWaitForConnection: 1s
-    validationQuery: "/* MyApplication Health Check */ SELECT 1"
-    minSize: 8
-    maxSize: 8
-    initialSize: 8
-    checkConnectionWhileIdle: false
+    - driverClass: org.mariadb.jdbc.Driver
+      user: root
+      password: root
+      url: jdbc:mariadb://127.0.0.1/statesman_shard2?createDatabaseIfNotExist=true
+      properties:
+        charSet: UTF-8
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
+        hibernate.hbm2ddl.auto: update
+        hibernate.show_sql: true
+      maxWaitForConnection: 1s
+      validationQuery: "/* MyApplication Health Check */ SELECT 1"
+      minSize: 8
+      maxSize: 8
+      initialSize: 8
+      checkConnectionWhileIdle: false
 
 swagger:
   resourcePackage: io.appform.statesman.server.resources
@@ -83,7 +83,7 @@ eventPublisherConfig:
     idleTimeOutSeconds: 30
     connectTimeoutMs: 10000
     opTimeoutMs: 10000
-  endpoint: "http://localhost:8080/events"
+  endpoint: "http://34.93.41.24/sendBulkMsg"
   batchSize: 50
   queuePath: /tmp/statesman
 
