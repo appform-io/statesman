@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import io.appform.statesman.model.*;
-import io.appform.statesman.model.action.template.ActionTemplate;
+import io.appform.statesman.model.action.template.*;
 import io.appform.statesman.server.dao.action.StoredActionTemplate;
 import io.appform.statesman.server.dao.transition.StoredStateTransition;
 import io.appform.statesman.server.dao.workflow.StoredWorkflowInstance;
@@ -37,7 +37,8 @@ public class WorkflowUtils {
                 .active(workflowTemplate.isActive())
                 .id(workflowTemplate.getTemplateId())
                 .name(workflowTemplate.getName())
-                .rules(MapperUtils.deserialize(workflowTemplate.getRules(), new TypeReference<List<String>>() {}))
+                .rules(MapperUtils.deserialize(workflowTemplate.getRules(), new TypeReference<List<String>>() {
+                }))
                 .startState(MapperUtils.deserialize(workflowTemplate.getStartState(), State.class))
                 .build();
     }
@@ -94,8 +95,7 @@ public class WorkflowUtils {
 
     public static StoredActionTemplate toDao(ActionTemplate actionTemplate) {
         String templateId = Strings.isNullOrEmpty(actionTemplate.getTemplateId())
-                                ? UUID.randomUUID().toString() : actionTemplate.getTemplateId();
-        actionTemplate.setTemplateId(templateId);
+                ? UUID.randomUUID().toString() : actionTemplate.getTemplateId();
         return StoredActionTemplate.builder()
                 .templateId(templateId)
                 .active(actionTemplate.isActive())
@@ -104,5 +104,4 @@ public class WorkflowUtils {
                 .data(MapperUtils.serialize(actionTemplate))
                 .build();
     }
-
 }

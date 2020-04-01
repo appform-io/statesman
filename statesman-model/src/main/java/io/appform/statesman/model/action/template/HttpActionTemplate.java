@@ -35,4 +35,8 @@ public class HttpActionTemplate extends ActionTemplate {
         this.headers = headers;
     }
 
+    @Override
+    public <T> T visit(ActionTemplateVisitor<T> visitor) {
+        return visitor.visit(this);
+    }
 }

@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class ProviderInfo {
 
     private String providerId;
+    private String useCase;
     private String providerName;
     private long partitions;
     private boolean active;
