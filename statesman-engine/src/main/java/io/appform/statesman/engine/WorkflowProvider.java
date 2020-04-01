@@ -27,4 +27,6 @@ public interface WorkflowProvider {
 
     void updateWorkflow(final Workflow workflow);
 
+    boolean workflowExists(final String workflowId);
+
 }
