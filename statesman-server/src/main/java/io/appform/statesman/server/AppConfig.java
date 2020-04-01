@@ -1,14 +1,15 @@
 package io.appform.statesman.server;
 
-import com.hystrix.configurator.config.HystrixConfig;
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.publisher.impl.EventPublisherConfig;
-import io.appform.statesman.server.callbacktransformation.CallbackTransformationTemplates;
 import io.dropwizard.Configuration;
 import io.dropwizard.riemann.RiemannConfig;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.validation.Valid;
@@ -42,9 +43,5 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private HttpClientConfiguration httpActionDefaultConfig;
-
-    @Getter
-    @NotNull
-    private HystrixConfig hystrix = new HystrixConfig();
 
 }

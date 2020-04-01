@@ -3,7 +3,6 @@ package io.appform.statesman.publisher.impl;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import io.appform.core.hystrix.CommandFactory;
 import io.appform.functionmetrics.MonitoredFunction;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
@@ -16,7 +15,6 @@ import okhttp3.Response;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * @author shashank.g
@@ -69,29 +67,21 @@ public class SyncEventPublisher implements EventPublisher {
 
     //ingest via http
     private void ingest(final String topic, final List<Event> events) {
-        try {
-            final String url = String.format("%s/%s", this.endpoint, topic);
-            CommandFactory.<Void>
-                    create(SyncEventPublisher.class.getSimpleName(), "sync-publisher", UUID.randomUUID().toString())
-                    .executor(() -> {
-                        try (final Response response = client.post(url, events, null)) {
-                            if (!response.isSuccessful()) {
-                                log.error("unable to make ingest the data, responseCode: {}", response.code());
-                                throw new StatesmanError();
-                            }
-                        } catch (final Exception e) {
-                            throw StatesmanError.propagate(e);
-                        }
-                        return null;
-                    }).execute();
+        final String url = String.format("%s/%s", this.endpoint, topic);
+        log.info("url: {}", url);
+        try (final Response response = client.post(url, events, null)) {
+            if (!response.isSuccessful()) {
+                log.error("unable to make ingest the data, responseCode: {}", response.code());
+                throw new StatesmanError();
+            }
         } catch (final Exception e) {
-            log.error("exception_during_ingestion", e);
+            log.error("exception_during_ingestion for topic: " + topic + ", eventSize: {}", events.size(), e);
             throw StatesmanError.propagate(e);
         }
     }
 
     private void validateTopic(Event event) {
-        if (Strings.isNullOrEmpty(event.getTopic())){
+        if (Strings.isNullOrEmpty(event.getTopic())) {
             throw new StatesmanError("event.topic must be not null", ResponseCode.INTERNAL_SERVER_ERROR);
         }
     }
