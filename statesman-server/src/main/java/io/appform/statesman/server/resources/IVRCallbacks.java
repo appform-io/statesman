@@ -2,6 +2,7 @@ package io.appform.statesman.server.resources;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jknack.handlebars.JsonNodeValueResolver;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -20,16 +21,16 @@ import io.appform.statesman.server.callbacktransformation.impl.OneShotTransforma
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
+import io.appform.statesman.server.requests.IVROneShot;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
+import org.glassfish.jersey.uri.UriComponent;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -74,13 +75,20 @@ public class IVRCallbacks {
                 .build();
     }
 
-    @GET
+/*    @GET
     @Path("/final/{ivrProvider}")
     public Response finalIVRCallback(
             @PathParam("ivrProvider") final String ivrProvider,
-            @Context final UriInfo uriInfo) throws IOException {
+            @Context final UriInfo uriInfo) throws IOException {*/
+    @POST
+    @Path("/final/{ivrProvider}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response finalIVRCallback(
+            @PathParam("ivrProvider") final String ivrProvider,
+            final IVROneShot ivrOneShot) throws IOException {
 
-        val queryParams = uriInfo.getQueryParameters();
+        log.info("Request:{}", ivrOneShot);
+        val queryParams = new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(ivrOneShot.getQueryString(), true));
         val node = mapper.valueToTree(queryParams);
         Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
                 .stream()
@@ -88,7 +96,7 @@ public class IVRCallbacks {
                 .findAny();
         if (!transformationTemplateOptional.isPresent()) {
             throw new StatesmanError("No matching translation template found for context: " + node,
-                    ResponseCode.INVALID_OPERATION);
+                                     ResponseCode.INVALID_OPERATION);
         }
         val transformationTemplate = transformationTemplateOptional.get();
         val tmpl = transformationTemplate.accept(new TransformationTemplateVisitor<OneShotTransformationTemplate>() {
@@ -103,14 +111,15 @@ public class IVRCallbacks {
             }
         });
         Preconditions.checkNotNull(tmpl);
-        val stdPayload = handleBarsService.transform(tmpl.getTemplate(), node);
+        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), node);
+        log.info("stdPayload:{}", stdPayload);
         val context = mapper.readTree(stdPayload);
         val wfTemplate = templateSelector.get()
                 .determineTemplate(context)
                 .orElse(null);
         if (null == wfTemplate) {
             throw new StatesmanError("No matching workflow template found for context: " + stdPayload,
-                    ResponseCode.INVALID_OPERATION);
+                                     ResponseCode.INVALID_OPERATION);
         }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         boolean workflowExists = !Strings.isNullOrEmpty(transformationTemplate.getIdPath())
@@ -118,21 +127,22 @@ public class IVRCallbacks {
         val wfId = extractWorkflowId(node, transformationTemplate);
         val date = new Date();
         Workflow workflow = new Workflow(wfId,
-                wfTemplate.getId(),
-                new DataObject(mapper.createObjectNode(),
-                        wfTemplate.getStartState(),
-                        date,
-                        date));
+                                         wfTemplate.getId(),
+                                         new DataObject(mapper.createObjectNode(),
+                                                        wfTemplate.getStartState(),
+                                                        date,
+                                                        date));
         if (workflowExists) {
             workflowProvider.get().updateWorkflow(workflow);
-        } else {
+        }
+        else {
             workflowProvider.get()
                     .saveWorkflow(workflow);
         }
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, context, new MergeDataAction()));
-        log.debug("Workflow: {} with template: {} went through transitions: {}",
+        log.info("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return Response.ok()
                 .entity(ImmutableMap.of("success", true))
@@ -152,7 +162,7 @@ public class IVRCallbacks {
                 .findAny();
         if (!transformationTemplateOptional.isPresent()) {
             throw new StatesmanError("No matching translation template found for context: " + node,
-                    ResponseCode.INVALID_OPERATION);
+                                     ResponseCode.INVALID_OPERATION);
         }
         val transformationTemplate = transformationTemplateOptional.get();
         val tmpl = transformationTemplate.accept(new TransformationTemplateVisitor<StepByStepTransformationTemplate>() {
@@ -170,7 +180,7 @@ public class IVRCallbacks {
         val date = new Date();
         val selectedStep = selectStep(node, tmpl);
         Preconditions.checkNotNull(selectedStep);
-        val stdPayload = handleBarsService.transform(selectedStep.getTemplate(), node);
+        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, selectedStep.getTemplate(), node);
         val context = mapper.readTree(stdPayload);
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         String wfId = UUID.randomUUID().toString();
@@ -182,14 +192,14 @@ public class IVRCallbacks {
             wf = workflowProvider.get()
                     .getWorkflow(wfId)
                     .orElse(null);
-            if(wf != null) {
+            if (wf != null) {
                 wfTemplate = workflowProvider.get()
                         .getTemplate(wf.getTemplateId())
                         .orElse(null);
                 Preconditions.checkNotNull(wfTemplate);
             }
         }
-        if(wf == null) {
+        if (wf == null) {
             //First time .. create workflow
             wfTemplate = templateSelector.get()
                     .determineTemplate(context)
