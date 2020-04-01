@@ -164,4 +164,14 @@ public class WorkflowProviderCommand implements WorkflowProvider {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
     }
+
+    @Override
+    public boolean workflowExists(String workflowId) {
+        try {
+            return workflowInstanceLookupDao.exists(workflowId);
+        }
+        catch (Exception e) {
+            throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
+        }
+    }
 }
