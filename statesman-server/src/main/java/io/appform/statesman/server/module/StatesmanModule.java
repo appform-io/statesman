@@ -55,6 +55,7 @@ public class StatesmanModule extends AbstractModule {
 
     @Singleton
     @Provides
+    @Named("eventPublisher")
     public EventPublisher provideEventPublisher(
             AppConfig appConfig,
             Environment environment) {
