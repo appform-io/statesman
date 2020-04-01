@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "providers", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"provider_id", "provider_type"})
+        @UniqueConstraint(columnNames = {"provider_id", "use_case"})
 })
 @Data
 @AllArgsConstructor
@@ -31,8 +31,8 @@ public class StoredProvider {
     @Column(name = "provider_name")
     private String providerName;
 
-    @Column(name = "provider_type")
-    private String providerType;
+    @Column(name = "use_case")
+    private String useCase;
 
     @Column(name = "partitions")
     private long partitions;
