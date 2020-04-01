@@ -9,8 +9,8 @@ import lombok.Value;
  */
 @Value
 @Builder
-public class StateChangeEvent {
-    String workflowId; //This should be set as grouping key SHASHANK
+public class FoxtrotStateTransitionEvent {
+    String workflowId;
     String workflowTemplateId;
     String oldState;
     String newState;
