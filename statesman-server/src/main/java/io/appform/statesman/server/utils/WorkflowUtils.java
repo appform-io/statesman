@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import io.appform.statesman.model.*;
-import io.appform.statesman.model.action.template.ActionTemplate;
+import io.appform.statesman.model.action.template.*;
 import io.appform.statesman.server.dao.action.StoredActionTemplate;
 import io.appform.statesman.server.dao.transition.StoredStateTransition;
 import io.appform.statesman.server.dao.workflow.StoredWorkflowInstance;
@@ -37,7 +37,8 @@ public class WorkflowUtils {
                 .active(workflowTemplate.isActive())
                 .id(workflowTemplate.getTemplateId())
                 .name(workflowTemplate.getName())
-                .rules(MapperUtils.deserialize(workflowTemplate.getRules(), new TypeReference<List<String>>() {}))
+                .rules(MapperUtils.deserialize(workflowTemplate.getRules(), new TypeReference<List<String>>() {
+                }))
                 .startState(MapperUtils.deserialize(workflowTemplate.getStartState(), State.class))
                 .build();
     }
@@ -92,17 +93,39 @@ public class WorkflowUtils {
         return MapperUtils.deserialize(storedActionTemplate.getData(), ActionTemplate.class);
     }
 
-    public static StoredActionTemplate toDao(ActionTemplate actionTemplate) {
-        String templateId = Strings.isNullOrEmpty(actionTemplate.getTemplateId())
-                                ? UUID.randomUUID().toString() : actionTemplate.getTemplateId();
-        actionTemplate.setTemplateId(templateId);
+    public static StoredActionTemplate toDaoGenereatedIds(ActionTemplate actionTemplate) {
+        setActionTemplateId(actionTemplate);
         return StoredActionTemplate.builder()
-                .templateId(templateId)
+                .templateId(actionTemplate.getTemplateId())
                 .active(actionTemplate.isActive())
                 .actionType(actionTemplate.getType().name())
                 .name(actionTemplate.getName())
                 .data(MapperUtils.serialize(actionTemplate))
                 .build();
+    }
+
+    private static void setActionTemplateId(ActionTemplate actionTemplate) {
+        actionTemplate.visit(new ActionTemplateVisitor<Void>() {
+            @Override
+            public Void visit(HttpActionTemplate httpActionTemplate) {
+                actionTemplate.setTemplateId(UUID.randomUUID().toString());
+                return null;
+            }
+
+            @Override
+            public Void visit(RoutedHttpActionTemplate routedHttpActionTemplate) {
+                actionTemplate.setTemplateId(UUID.randomUUID().toString());
+                routedHttpActionTemplate.getProviderTemplates().values().forEach(WorkflowUtils::setActionTemplateId);
+                return null;
+            }
+
+            @Override
+            public Void visit(CompoundHttpActionTemplate compoundHttpActionTemplate) {
+                actionTemplate.setTemplateId(UUID.randomUUID().toString());
+                compoundHttpActionTemplate.getActionTemplates().forEach(WorkflowUtils::setActionTemplateId);
+                return null;
+            }
+        });
     }
 
 }

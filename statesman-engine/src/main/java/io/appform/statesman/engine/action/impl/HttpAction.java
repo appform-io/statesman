@@ -10,14 +10,15 @@ import io.appform.statesman.model.ActionImplementation;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.action.ActionType;
-import io.appform.statesman.model.action.data.impl.HttpActionData;
-import io.appform.statesman.model.action.data.impl.HttpMethod;
 import io.appform.statesman.model.action.template.HttpActionTemplate;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.impl.SyncEventPublisher;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 
@@ -31,7 +32,7 @@ import java.util.Map;
 @Data
 @Singleton
 @ActionImplementation(name = "HTTP")
-public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
+public class HttpAction extends BaseAction<HttpActionTemplate> {
 
     private HandleBarsService handleBarsService;
     private HttpClient client;
@@ -48,7 +49,22 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
     }
 
     @Override
-    public void handle(HttpActionData actionData) {
+    public ActionType getType() {
+        return ActionType.HTTP;
+    }
+
+    @Override
+    public void execute(HttpActionTemplate actionTemplate, Workflow workflow) {
+        HttpActionData httpActionData = transformPayload(workflow, actionTemplate);
+        handle(httpActionData);
+    }
+
+    @Override
+    protected void fallback(HttpActionTemplate actionTemplate, Workflow workflow) {
+        //TODO
+    }
+
+    private void handle(HttpActionData actionData) {
         try {
             actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Void>() {
                 @Override
@@ -81,8 +97,7 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
         }
     }
 
-    @Override
-    public HttpActionData transformPayload(Workflow workflow, HttpActionTemplate actionTemplate) {
+    private HttpActionData transformPayload(Workflow workflow, HttpActionTemplate actionTemplate) {
         return HttpActionData.builder()
                 .method(HttpMethod.valueOf(actionTemplate.getMethod()))
                 .url(handleBarsService.transform(actionTemplate.getUrl(), workflow))
@@ -94,7 +109,7 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
     //assuming the header string in below format
     //headerStr = "key1:value1,key2:value2"
     private Map<String, String> getheaders(Workflow workflow, String headers) {
-        if(Strings.isNullOrEmpty(headers)) {
+        if (Strings.isNullOrEmpty(headers)) {
             return Collections.emptyMap();
         }
         return Splitter.on(",")
@@ -102,8 +117,50 @@ public class HttpAction extends BaseAction<HttpActionData, HttpActionTemplate> {
                 .split(handleBarsService.transform(headers, workflow));
     }
 
-    @Override
-    public ActionType getType() {
-        return ActionType.HTTP;
+
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    private static class HttpActionData {
+
+        private HttpMethod method;
+        private String url;
+        private String payload;
+        private Map<String, String> headers;
+
     }
+
+
+    private enum HttpMethod {
+
+        POST {
+            @Override
+            public <T> T visit(final MethodTypeVisitor<T> visitor) throws Exception {
+                return visitor.visitPost();
+            }
+        },
+
+        GET {
+            @Override
+            public <T> T visit(final MethodTypeVisitor<T> visitor) throws Exception {
+                return visitor.visitGet();
+            }
+        };
+
+        public abstract <T> T visit(final MethodTypeVisitor<T> visitor) throws Exception;
+
+        /**
+         * Visitor
+         *
+         * @param <T>
+         */
+        public interface MethodTypeVisitor<T> {
+            T visitPost() throws Exception;
+
+            T visitGet() throws Exception;
+        }
+    }
+
+
 }
