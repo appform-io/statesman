@@ -24,7 +24,8 @@ public class StateTransitionEvent extends ObservableEvent {
     public StateTransitionEvent(
             WorkflowTemplate template,
             Workflow workflow,
-            DataUpdate update, State oldState,
+            DataUpdate update,
+            State oldState,
             StateTransition transition) {
         super(ObservableEventType.STATE_TRANSITION);
         this.template = template;
