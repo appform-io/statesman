@@ -1,6 +1,7 @@
 package io.appform.statesman.publisher.impl;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import io.appform.functionmetrics.MonitoredFunction;
@@ -10,11 +11,15 @@ import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.model.Event;
+import io.appform.statesman.publisher.model.KMessage;
+import io.appform.statesman.publisher.model.Msg;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * @author shashank.g
@@ -24,6 +29,7 @@ public class SyncEventPublisher implements EventPublisher {
 
     private final String endpoint;
     private final HttpClient client;
+    private final ObjectMapper mapper;
 
     /**
      * Constructor
@@ -38,6 +44,7 @@ public class SyncEventPublisher implements EventPublisher {
                         config.getHttpClientConfiguration()
                 ));
         this.endpoint = config.getEndpoint();
+        this.mapper = mapper;
     }
 
     @Override
@@ -67,9 +74,18 @@ public class SyncEventPublisher implements EventPublisher {
 
     //ingest via http
     private void ingest(final String topic, final List<Event> events) {
+        final KMessage message = convertToKMessage(events);
         final String url = String.format("%s/%s", this.endpoint, topic);
-        log.info("url: {}", url);
-        try (final Response response = client.post(url, events, null)) {
+        log.info("[KafkaPublisher] url: {}", url);
+
+        //TODO: remove - this is just to test
+        try {
+            log.info("[KafkaPublisher] messageToKafka: {}", mapper.writeValueAsString(message));
+        } catch (JsonProcessingException e) {
+            throw StatesmanError.propagate(e);
+        }
+
+        try (final Response response = client.post(url, message, null)) {
             if (!response.isSuccessful()) {
                 log.error("unable to make ingest the data, responseCode: {}", response.code());
                 throw new StatesmanError();
@@ -80,7 +96,23 @@ public class SyncEventPublisher implements EventPublisher {
         }
     }
 
-    private void validateTopic(Event event) {
+    private KMessage convertToKMessage(final List<Event> events) {
+        return KMessage.builder()
+                .messages(events
+                        .stream()
+                        .map(event -> Msg.builder()
+                                .partitionKey(
+                                        Strings.isNullOrEmpty(event.getPartitionKey())
+                                                ? UUID.randomUUID().toString()
+                                                : event.getPartitionKey()
+                                )
+                                .message(event)
+                                .build()).collect(Collectors.toList()
+                        ))
+                .build();
+    }
+
+    private void validateTopic(final Event event) {
         if (Strings.isNullOrEmpty(event.getTopic())) {
             throw new StatesmanError("event.topic must be not null", ResponseCode.INTERNAL_SERVER_ERROR);
         }

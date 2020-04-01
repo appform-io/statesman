@@ -38,7 +38,7 @@ public class EventResource {
     @Timed
     @Path("/reporting/publish")
     @ApiOperation("publish event")
-    public Response save(@Valid final Event event) throws Exception {
+    public Response publish(@Valid final Event event) throws Exception {
         publisher.publish(event);
         return Response.ok().build();
     }

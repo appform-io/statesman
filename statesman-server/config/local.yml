@@ -83,7 +83,7 @@ eventPublisherConfig:
     idleTimeOutSeconds: 30
     connectTimeoutMs: 10000
     opTimeoutMs: 10000
-  endpoint: "http://localhost:8080/events"
+  endpoint: "http://34.93.41.24/sendBulkMsg"
   batchSize: 50
   queuePath: /tmp/statesman
 
