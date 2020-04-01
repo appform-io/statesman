@@ -3,6 +3,7 @@ package io.appform.statesman.server.resources;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.model.Event;
 import io.swagger.annotations.Api;
@@ -29,7 +30,7 @@ public class EventResource {
     private EventPublisher publisher;
 
     @Inject
-    public EventResource(EventPublisher publisher) {
+    public EventResource(@Named("eventPublisher") EventPublisher publisher) {
         this.publisher = publisher;
     }
 
