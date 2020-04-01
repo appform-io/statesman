@@ -1,5 +1,6 @@
 package io.appform.statesman.engine.handlebars;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.Handlebars;
@@ -55,6 +56,7 @@ public class HandleBarsHelperRegistry {
         registerGt();
         registerGte();
         registerMapLookup();
+        registerMapLookupArray();
     }
 
     private Object compareGte(int lhs) {
@@ -305,45 +307,103 @@ public class HandleBarsHelperRegistry {
             @Override
             public CharSequence apply(JsonNode node, Options options) throws IOException {
                 final String key = options.hash("pointer");
-                if (Strings.isNullOrEmpty(key)) {
-                    return null;
+                final int lastIndex = lastIndex(options);
+                int value = lastIndex;
+                if (!Strings.isNullOrEmpty(key)) {
+                    value = readIndex(node, key, lastIndex);
                 }
-                val keyNode = node.at(key);
-                if (null == keyNode || keyNode.isNull() || keyNode.isMissingNode()) {
-                    return null;
-                }
-                if (keyNode.isTextual()) {
-                    int value = Strings.isNullOrEmpty(keyNode.asText())
-                                ? (options.hash.size() - 1)
-                                : Integer.parseInt(keyNode.asText());
-                    if (value < 10) {
-                        return MAPPER.writeValueAsString(options.hash("op_" + value));
-                    }
-                    List<Integer> selectedOptions = new ArrayList<>();
-                    while (value > 0) {
-                        selectedOptions.add(value % 10);
-                        value = value / 10;
-                    }
-                    return MAPPER.writeValueAsString(
-                            selectedOptions
-                                    .stream()
-                                    .map(option -> options.hash("op_" + option))
-                                    .collect(Collectors.toList()));
-                }
-                if (keyNode.isArray()) {
-                    return MAPPER.writeValueAsString(
-                            StreamSupport.stream(Spliterators.spliteratorUnknownSize(
-                                    keyNode.elements(), Spliterator.ORDERED), false)
-                                    .filter(JsonNode::isTextual)
-                                    .map(jsonNode -> options.hash("op_" + jsonNode.asText()))
-                                    .collect(Collectors.toList()));
-                }
-                return null;
+                return singleElement(options, value);
             }
 
-            private JsonNode toNode(Object object) {
-                return MAPPER.valueToTree(object);
+            private CharSequence singleElement(Options options, int value) throws JsonProcessingException {
+                return MAPPER.writeValueAsString(options.hash("op_" + value));
+            }
+
+        });
+    }
+
+    private int readIndex(JsonNode node, String key, int lastIndex) {
+        int value = lastIndex;
+        val keyNode = node.at(key);
+        if (keyNode.isTextual()) {
+            value = extractOptionValue(keyNode, lastIndex);
+        }
+        if(keyNode.isIntegralNumber()) {
+            value = keyNode.asInt(lastIndex);
+        }
+        return Math.min(value, lastIndex);
+    }
+
+    private void registerMapLookupArray() {
+        handlebars.registerHelper("map_lookup_arr", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+                final String key = options.hash("pointer");
+                final int lastIndex = lastIndex(options);
+                List<Integer> indices = new ArrayList<>();
+                if (Strings.isNullOrEmpty(key)) {
+                    log.warn("Invalid json node. Defaulting to array of last index: {} for empty key", lastIndex);
+                    indices.add(lastIndex);
+                }
+                else {
+                    val keyNode = node.at(key);
+                    if(!keyNode.isArray()) {
+                        readNode(lastIndex, indices, keyNode);
+                    }
+                    else {
+                        StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+                                keyNode.elements(), Spliterator.ORDERED), false)
+                                .forEach(childNode -> readNode(lastIndex, indices, childNode));
+                    }
+                }                //Array of options
+                return MAPPER.writeValueAsString(
+                                indices.stream()
+                                .map(i -> options.hash("op_" + i))
+                                .collect(Collectors.toList()));
+            }
+
+            private void readNode(int lastIndex, List<Integer> indices, JsonNode keyNode) {
+                int value;
+                if (keyNode.isTextual()) {
+                    value = extractOptionValue(keyNode, lastIndex);
+                }
+                else if(keyNode.isIntegralNumber()) {
+                    value = keyNode.asInt(lastIndex);
+                }
+                else {
+                    value = lastIndex;
+                }
+                if (value < 10) {
+                    //Single option -> return one value
+                    indices.add(Math.min(value, lastIndex));
+                }
+                else {
+                    //Multiple concatenated options
+                    List<Integer> revIndices = new ArrayList<>();
+                    while (value > 0) {
+                        revIndices.add(Math.min(value % 10, lastIndex));
+                        value = value / 10;
+                    }
+                    Collections.reverse(revIndices);
+                    indices.addAll(revIndices);
+                }
             }
         });
+    }
+
+    private int extractOptionValue(JsonNode keyNode, int defaultValue) {
+        final String text = keyNode.asText();
+        try {
+            return Strings.isNullOrEmpty(text)
+                   ? defaultValue
+                   : Integer.parseInt(text);
+        } catch (NumberFormatException e) {
+            log.error("Error parsing number text: " + text, e);
+            return defaultValue;
+        }
+    }
+
+    private int lastIndex(Options options) {
+        return options.hash.size() - 1;
     }
 }
