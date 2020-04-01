@@ -1,7 +1,6 @@
 package io.appform.statesman.engine.action;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.rholder.retry.*;
 import io.appform.statesman.engine.Constants;
 import io.appform.statesman.engine.events.ActionExecutedEvent;
 import io.appform.statesman.engine.events.EngineEventType;
@@ -16,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -26,17 +24,17 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
     private static final String SUCCESS = "SUCCESS";
     private final EventPublisher publisher;
     protected final ObjectMapper mapper;
-    private final Retryer<Void> retryer;
+//    private final Retryer<Void> retryer;
 
     public BaseAction(EventPublisher publisher, ObjectMapper mapper) {
         this.publisher = publisher;
         this.mapper = mapper;
-        retryer = RetryerBuilder.<Void>newBuilder()
-                .retryIfException()
-                .withWaitStrategy(WaitStrategies.exponentialWait(100, 5, TimeUnit.SECONDS))
-                .withStopStrategy(StopStrategies.stopAfterDelay(30, TimeUnit.SECONDS))
-                .withAttemptTimeLimiter(AttemptTimeLimiters.<Void>fixedTimeLimit(5, TimeUnit.SECONDS))
-                .build();
+//        retryer = RetryerBuilder.<Void>newBuilder()
+//                .retryIfException()
+//                .withWaitStrategy(WaitStrategies.exponentialWait(100, 5, TimeUnit.SECONDS))
+//                .withStopStrategy(StopStrategies.stopAfterDelay(30, TimeUnit.SECONDS))
+//                .withAttemptTimeLimiter(AttemptTimeLimiters.fixedTimeLimit(5, TimeUnit.SECONDS))
+//                .build();
     }
 
     protected abstract void execute(T actionTemplate, Workflow workflow);
@@ -45,10 +43,10 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
     public void apply(T actionTemplate, Workflow workflow) {
         String status = SUCCESS;
         try {
-            retryer.call(() -> {
+//            retryer.call(() -> {
                 execute(actionTemplate, workflow);
-                return null;
-            });
+//                return null;
+//            });
         } catch (Exception e) {
             status = FAILED;
             log.error("Error while executing action", e);
