@@ -21,7 +21,7 @@ import io.appform.statesman.server.callbacktransformation.impl.OneShotTransforma
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
-import io.appform.statesman.server.requests.IVROneShot;
+import io.appform.statesman.server.requests.IngressCallback;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -31,10 +31,8 @@ import org.glassfish.jersey.uri.UriComponent;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Optional;
@@ -43,11 +41,11 @@ import java.util.UUID;
 /**
  *
  */
-@Path("/callbacks/ivr")
-@Api("IVR callbacks")
+@Path("/callbacks/ingress")
+@Api("Ingress callbacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-public class IVRCallbacks {
+public class IngressCallbacks {
     private final CallbackTemplateProvider callbackTemplateProvider;
     private final ObjectMapper mapper;
     private final HandleBarsService handleBarsService;
@@ -57,7 +55,7 @@ public class IVRCallbacks {
     private final HopeLangEngine hopeLangEngine;
 
     @Inject
-    public IVRCallbacks(
+    public IngressCallbacks(
             CallbackTemplateProvider callbackTemplateProvider,
             final ObjectMapper mapper,
             HandleBarsService handleBarsService,
@@ -75,20 +73,14 @@ public class IVRCallbacks {
                 .build();
     }
 
-/*    @GET
-    @Path("/final/{ivrProvider}")
-    public Response finalIVRCallback(
-            @PathParam("ivrProvider") final String ivrProvider,
-            @Context final UriInfo uriInfo) throws IOException {*/
     @POST
     @Path("/final/{ivrProvider}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response finalIVRCallback(
             @PathParam("ivrProvider") final String ivrProvider,
-            final IVROneShot ivrOneShot) throws IOException {
-
-        log.info("Request:{}", ivrOneShot);
-        val queryParams = new ImmutableMultivaluedMap<>(UriComponent.decodeQuery(ivrOneShot.getQueryString(), true));
+            final IngressCallback ingressCallback) throws IOException {
+        val queryParams = new ImmutableMultivaluedMap<>(
+                UriComponent.decodeQuery(ingressCallback.getQueryString(), true));
         val node = mapper.valueToTree(queryParams);
         Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
                 .stream()
@@ -153,8 +145,9 @@ public class IVRCallbacks {
     @Path("/step/{ivrProvider}")
     public Response stepIVRCallback(
             @PathParam("ivrProvider") final String ivrProvider,
-            @Context final UriInfo uriInfo) throws IOException {
-        val queryParams = uriInfo.getQueryParameters();
+            final IngressCallback ingressCallback) throws IOException {
+        val queryParams = new ImmutableMultivaluedMap<>(
+                UriComponent.decodeQuery(ingressCallback.getQueryString(), true));
         val node = mapper.valueToTree(queryParams);
         Optional<TransformationTemplate> transformationTemplateOptional = callbackTemplateProvider.getAll()
                 .stream()
