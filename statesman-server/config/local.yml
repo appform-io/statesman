@@ -87,3 +87,9 @@ eventPublisherConfig:
   batchSize: 50
   queuePath: /tmp/statesman
 
+hystrix:
+  defaultConfig:
+    threadPool:
+      timeout: 5000
+      concurrency: 1
+

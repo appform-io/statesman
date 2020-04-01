@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Stage;
+import com.hystrix.configurator.core.HystrixConfigurationFactory;
 import io.appform.dropwizard.sharding.DBShardingBundle;
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.appform.functionmetrics.FunctionMetricsManager;
@@ -50,6 +51,7 @@ public class StatesmanApp extends Application<AppConfig> {
     @Override
     public void run(AppConfig appConfig, Environment environment) {
         FunctionMetricsManager.initialize("commands", environment.metrics());
+        HystrixConfigurationFactory.init(appConfig.getHystrix());
         environment.jersey().register(GenericExceptionMapper.class);
     }
 
