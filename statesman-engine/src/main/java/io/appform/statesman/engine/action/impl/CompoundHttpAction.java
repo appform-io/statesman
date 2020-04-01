@@ -20,7 +20,7 @@ import javax.inject.Singleton;
 @Slf4j
 @Data
 @Singleton
-@ActionImplementation(name = "COMPOUNDED_HTTP")
+@ActionImplementation(name = "COMPOUND_HTTP")
 public class CompoundHttpAction extends BaseAction<CompoundHttpActionTemplate> {
 
     private Provider<ActionExecutor> actionExecutor;
@@ -36,7 +36,7 @@ public class CompoundHttpAction extends BaseAction<CompoundHttpActionTemplate> {
 
     @Override
     public ActionType getType() {
-        return ActionType.COMPOUNDED_HTTP;
+        return ActionType.COMPOUND_HTTP;
     }
 
     @Override

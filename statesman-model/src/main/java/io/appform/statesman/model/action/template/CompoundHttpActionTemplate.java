@@ -12,12 +12,12 @@ public class CompoundHttpActionTemplate extends ActionTemplate {
     private List<String> actionTemplates;
 
     public CompoundHttpActionTemplate() {
-        super(ActionType.COMPOUNDED_HTTP);
+        super(ActionType.COMPOUND_HTTP);
     }
 
     @Builder
     public CompoundHttpActionTemplate(String templateId, String name, boolean active, List<String> actionTemplates) {
-        super(ActionType.COMPOUNDED_HTTP, templateId, name, active);
+        super(ActionType.COMPOUND_HTTP, templateId, name, active);
         this.actionTemplates = actionTemplates;
     }
 
