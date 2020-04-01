@@ -35,7 +35,7 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
                 .retryIfException()
                 .withWaitStrategy(WaitStrategies.exponentialWait(100, 5, TimeUnit.SECONDS))
                 .withStopStrategy(StopStrategies.stopAfterDelay(30, TimeUnit.SECONDS))
-                .withAttemptTimeLimiter(AttemptTimeLimiters.fixedTimeLimit(5, TimeUnit.SECONDS))
+                .withAttemptTimeLimiter(AttemptTimeLimiters.<Void>fixedTimeLimit(5, TimeUnit.SECONDS))
                 .build();
     }
 
