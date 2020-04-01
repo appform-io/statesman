@@ -6,15 +6,20 @@ import com.google.inject.Singleton;
 import io.appform.statesman.model.request.CreateProvider;
 import io.appform.statesman.model.response.ProviderInfo;
 import io.appform.statesman.server.dao.providers.ProviderCommands;
+import io.appform.statesman.server.dao.providers.StoredProvider;
 import io.appform.statesman.server.utils.ProviderUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/v1/provider")
@@ -34,12 +39,14 @@ public class ProviderResource {
     @GET
     @Timed
     @Path("/{providerId}")
-    @ApiOperation("Get provider")
+    @ApiOperation("Get provider list")
     public Response get(@PathParam("providerId") final String providerId) {
-        ProviderInfo providerInfo = providerCommands
+        List<ProviderInfo> providerInfo = providerCommands
                 .get(providerId)
+                .stream()
                 .map(ProviderUtils::toDto)
-                .orElse(null);
+                .collect(Collectors.toList());
+
         return Response.ok()
                 .entity(providerInfo)
                 .build();
@@ -54,17 +61,40 @@ public class ProviderResource {
         return Response.ok().build();
     }
 
+
+    @PUT
+    @Timed
+    @Path("/update")
+    @ApiOperation("Update provider")
+    public Response deactivate(@Valid CreateProvider request) {
+        DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredProvider.class)
+                .add(Restrictions.eq("providerId", request.getProviderId()))
+                .add(Restrictions.eq("useCase", request.getUseCase()));
+        boolean success = providerCommands.update(request.getProviderId(), detachedCriteria,
+                provider -> {
+                    provider.setProviderName(request.getProviderName());
+                    provider.setUseCase(request.getUseCase());
+                    provider.setPartitions(request.getPartitions());
+                    return provider;
+                });
+        return Response.ok()
+                .entity(success)
+                .build();
+    }
+
     @POST
     @Timed
-    @Path("/deactivate/{providerId}")
-    @ApiOperation("Deactivate provider")
-    public Response deactivate(@PathParam("providerId") final String providerId) {
-        boolean success = providerCommands.update(providerId, storedProviderOptional -> {
-            if (!storedProviderOptional.isPresent()) {
-                return null;
-            }
-            storedProviderOptional.get().setActive(false);
-            return storedProviderOptional.get();
+    @Path("/update/{providerId}/{useCase}/status/{active}")
+    @ApiOperation("Update Active status")
+    public Response deactivate(@PathParam("providerId") final String providerId,
+                               @PathParam("useCase") final String useCase,
+                               @PathParam("active") final boolean active) {
+        DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredProvider.class)
+                .add(Restrictions.eq("providerId", providerId))
+                .add(Restrictions.eq("useCase", useCase));
+        boolean success = providerCommands.update(providerId, detachedCriteria, storedProvider -> {
+            storedProvider.setActive(active);
+            return storedProvider;
         });
         return Response.ok()
                 .entity(success)

@@ -1,6 +1,5 @@
 package io.appform.statesman.server.dao.providers;
 
-import io.appform.dropwizard.sharding.sharding.LookupKey;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +12,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "providers", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "provider_id")
+        @UniqueConstraint(columnNames = {"provider_id", "use_case"})
 })
 @Data
 @AllArgsConstructor
@@ -26,12 +25,14 @@ public class StoredProvider {
     @Column(name = "id")
     private long id;
 
-    @LookupKey
     @Column(name = "provider_id")
     private String providerId;
 
     @Column(name = "provider_name")
     private String providerName;
+
+    @Column(name = "use_case")
+    private String useCase;
 
     @Column(name = "partitions")
     private long partitions;

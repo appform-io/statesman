@@ -2,6 +2,7 @@ package io.appform.statesman.engine.observer.observers;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import io.appform.statesman.engine.Constants;
 import io.appform.statesman.engine.events.EngineEventType;
 import io.appform.statesman.engine.events.FoxtrotStateTransitionEvent;
 import io.appform.statesman.engine.observer.ObservableEvent;
@@ -26,8 +27,7 @@ import java.util.UUID;
 @Singleton
 public class FoxtrotEventSender extends ObservableEventBusSubscriber {
 
-    private static final String REPORTING = "statesman-reporting";
-    private static final String APP_NAME = "statesman";
+
     private static final EventTranslator EVENT_TRANSLATOR = new EventTranslator();
 
     private EventPublisher publisher;
@@ -55,7 +55,7 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
     private void publish(final List<Event> eventList) {
         try {
             if (null != eventList && !eventList.isEmpty()) {
-                publisher.publish(REPORTING, eventList);
+                publisher.publish(Constants.FOXTROT_REPORTING_TOPIC, eventList);
             }
         }
         catch (final Exception e) {
@@ -71,9 +71,9 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
             log.info("just to know that code is upgraded...attempt_count 1");
             return Collections.singletonList(
                     Event.builder()
-                            .topic(REPORTING)
                             .id(UUID.randomUUID().toString())
-                            .app(APP_NAME)
+                            .topic(Constants.FOXTROT_REPORTING_TOPIC)
+                            .app(Constants.FOXTROT_APP_NAME)
                             .eventType(EngineEventType.STATE_CHANGED.name())
                             .groupingKey(stateTransitionEvent.getWorkflow().getId())
                             .partitionKey(stateTransitionEvent.getWorkflow().getId())
