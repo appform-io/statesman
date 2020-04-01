@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ActionExecutedEvent {
     String status;
+    String workflow;
     String workflowId;
     String workflowTemplateId;
     String actionType;

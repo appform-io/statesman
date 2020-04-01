@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.rholder.retry.*;
 import io.appform.statesman.engine.Constants;
 import io.appform.statesman.engine.events.ActionExecutedEvent;
-import io.appform.statesman.engine.events.ActionFallbackLogEvent;
 import io.appform.statesman.engine.events.EngineEventType;
 import io.appform.statesman.model.Action;
 import io.appform.statesman.model.Workflow;
@@ -44,22 +43,17 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
 
     @Override
     public void apply(T actionTemplate, Workflow workflow) {
+        String status = SUCCESS;
         try {
             retryer.call(() -> {
                 execute(actionTemplate, workflow);
                 return null;
             });
-            publish(actionExecutedEvent(actionTemplate, workflow, SUCCESS));
         } catch (Exception e) {
-            publish(actionExecutedEvent(actionTemplate, workflow, FAILED));
+            status = FAILED;
             log.error("Error while executing action", e);
-            fallback(actionTemplate, workflow);
         }
-    }
-
-
-    protected void fallback(T actionTemplate, Workflow workflow) {
-        publish(actionFallbackLogEvent(actionTemplate, workflow));
+        publish(actionExecutedEvent(actionTemplate, workflow, status));
     }
 
 
@@ -85,35 +79,12 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
                     .time(new Date())
                     .eventSchemaVersion("v1")
                     .eventData(ActionExecutedEvent.builder()
+                            .workflow(status.equalsIgnoreCase(SUCCESS) ? null : mapper.writeValueAsString(workflow))
                             .workflowId(workflow.getId())
                             .workflowTemplateId(workflow.getTemplateId())
                             .actionTemplateId(actionTemplate.getTemplateId())
                             .actionType(actionTemplate.getType().name())
                             .status(status)
-                            .build())
-                    .build());
-        } catch (Exception e) {
-            log.error("Error while generating actionExecutedEvent", e);
-            return Collections.emptyList();
-        }
-    }
-
-    private List<Event> actionFallbackLogEvent(ActionTemplate actionTemplate, Workflow workflow) {
-        try {
-            return Collections.singletonList(Event.builder()
-                    .topic(Constants.FOXTROT_REPORTING_TOPIC)
-                    .app(Constants.FOXTROT_APP_NAME)
-                    .eventType(EngineEventType.ACTION_FALLBACK_LOG.name())
-                    .groupingKey(workflow.getId())
-                    .partitionKey(workflow.getId())
-                    .time(new Date())
-                    .eventSchemaVersion("v1")
-                    .eventData(ActionFallbackLogEvent.builder()
-                            .workflow(mapper.writeValueAsString(workflow))
-                            .workflowId(workflow.getId())
-                            .workflowTemplateId(workflow.getTemplateId())
-                            .actionTemplateId(actionTemplate.getTemplateId())
-                            .actionType(actionTemplate.getType().name())
                             .build())
                     .build());
         } catch (Exception e) {
