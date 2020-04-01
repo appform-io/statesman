@@ -68,7 +68,7 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
 
         @Override
         public List<Event> visit(StateTransitionEvent stateTransitionEvent) {
-
+            log.info("just to know that code is upgraded...attempt_count 1");
             return Collections.singletonList(
                     Event.builder()
                             .topic(REPORTING)
