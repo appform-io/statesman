@@ -6,7 +6,7 @@ import lombok.Value;
  *
  */
 @Value
-public class IVROneShot {
+public class IngressCallback {
     String id;
     String queryString;
     String apiPath;

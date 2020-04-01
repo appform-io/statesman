@@ -23,7 +23,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import org.zapodot.hystrix.bundle.HystrixBundle;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 
 public class StatesmanApp extends Application<AppConfig> {
@@ -34,14 +33,13 @@ public class StatesmanApp extends Application<AppConfig> {
     public void initialize(Bootstrap<AppConfig> bootstrap) {
         bootstrap.setConfigurationSourceProvider(
                 new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
-                                               new EnvironmentVariableSubstitutor(false)));
+                        new EnvironmentVariableSubstitutor(false)));
         final ObjectMapper mapper = bootstrap.getObjectMapper();
         setMapperProperties(mapper);
         MapperUtils.initialize(mapper);
         this.dbShardingBundle = dbShardingBundle();
         bootstrap.addBundle(dbShardingBundle);
         bootstrap.addBundle(guiceBundle(dbShardingBundle));
-        bootstrap.addBundle(hystrixBundle());
         bootstrap.addBundle(riemannBundle());
         bootstrap.addBundle(swaggerBundle());
     }
@@ -74,14 +72,6 @@ public class StatesmanApp extends Application<AppConfig> {
                 .modules(new DBModule(dbShardingBundle))
                 .modules(new StatesmanModule())
                 .build(Stage.PRODUCTION);
-    }
-
-    private HystrixBundle hystrixBundle() {
-        return HystrixBundle
-                .builder()
-                .disableStreamServletInAdminContext()
-                .withApplicationStreamPath("/hystrix.stream")
-                .build();
     }
 
     private SwaggerBundle<AppConfig> swaggerBundle() {
