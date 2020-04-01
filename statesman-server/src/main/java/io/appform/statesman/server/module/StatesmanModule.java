@@ -51,6 +51,8 @@ public class StatesmanModule extends AbstractModule {
         bind(ObservableEventBusSubscriber.class)
                 .annotatedWith(Names.named("foxtrotEventSender"))
                 .to(FoxtrotEventSender.class);
+        bind(EventPublisher.class)
+                .to(QueueEventPublisher.class);
     }
 
     @Singleton
