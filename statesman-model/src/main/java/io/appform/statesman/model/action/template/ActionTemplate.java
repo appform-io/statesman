@@ -14,8 +14,8 @@ import javax.validation.constraints.NotNull;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = HttpActionTemplate.class, name = "HTTP"),
-        @JsonSubTypes.Type(value = RoutedHttpActionTemplate.class, name = "ROUTED_HTTP"),
-        @JsonSubTypes.Type(value = CompoundHttpActionTemplate.class, name = "COMPOUND_HTTP"),
+        @JsonSubTypes.Type(value = RoutedActionTemplate.class, name = "ROUTED"),
+        @JsonSubTypes.Type(value = CompoundActionTemplate.class, name = "COMPOUND"),
 })
 public abstract class ActionTemplate {
 
