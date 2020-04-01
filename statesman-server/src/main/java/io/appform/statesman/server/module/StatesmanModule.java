@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.appform.statesman.engine.ActionTemplateStore;
+import io.appform.statesman.engine.ProviderSelector;
 import io.appform.statesman.engine.TransitionStore;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.engine.action.ActionRegistry;
@@ -28,6 +29,7 @@ import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProviderCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
+import io.appform.statesman.server.provider.ProviderSelectorImpl;
 import io.dropwizard.setup.Environment;
 
 import java.io.IOException;
@@ -41,6 +43,7 @@ public class StatesmanModule extends AbstractModule {
         bind(WorkflowProvider.class).to(WorkflowProviderCommand.class);
         bind(CallbackTemplateProvider.class).to(CallbackTemplateProviderCommand.class);
         bind(ActionRegistry.class).to(MapBasedActionRegistry.class);
+        bind(ProviderSelector.class).to(ProviderSelectorImpl.class);
         bind(ObservableEventBus.class).to(ObservableGuavaEventBus.class);
         bind(ObservableEventBusSubscriber.class)
                 .annotatedWith(Names.named("workflowPersister"))

@@ -10,6 +10,7 @@ public class ProviderUtils {
         return StoredProvider.builder()
                 .providerId(request.getProviderId())
                 .providerName(request.getProviderName())
+                .providerType(request.getProviderType())
                 .partitions(request.getPartitions())
                 .active(true)
                 .build();
@@ -18,6 +19,7 @@ public class ProviderUtils {
     public static ProviderInfo toDto(StoredProvider storedProvider){
         return ProviderInfo.builder()
                 .providerId(storedProvider.getProviderId())
+                .providerType(storedProvider.getProviderType())
                 .providerName(storedProvider.getProviderName())
                 .partitions(storedProvider.getPartitions())
                 .active(storedProvider.isActive())

@@ -25,6 +25,10 @@ public class CreateProvider {
     @NotEmpty
     private String providerName;
 
+    @NotNull
+    @NotEmpty
+    private String providerType;
+
     @Min(1)
     @Max(64)
     @Builder.Default

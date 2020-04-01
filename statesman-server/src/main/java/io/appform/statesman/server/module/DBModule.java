@@ -23,8 +23,8 @@ public class DBModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public LookupDao<StoredProvider> provideProviderLookupDao() {
-        return dbShardingBundle.createParentObjectDao(StoredProvider.class);
+    public RelationalDao<StoredProvider> provideProviderLookupDao() {
+        return dbShardingBundle.createRelatedObjectDao(StoredProvider.class);
     }
 
 
