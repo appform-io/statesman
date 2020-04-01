@@ -12,6 +12,7 @@ import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.action.ActionType;
 import io.appform.statesman.model.action.template.HttpActionTemplate;
 import io.appform.statesman.model.exception.StatesmanError;
+import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.impl.SyncEventPublisher;
@@ -36,16 +37,16 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
 
     private HandleBarsService handleBarsService;
     private HttpClient client;
-    private ObjectMapper mapper;
 
     @Inject
     public HttpAction(HandleBarsService handleBarsService,
                       MetricRegistry registry,
                       @Named("httpActionDefaultConfig") HttpClientConfiguration config,
+                      @Named("eventPublisher") final EventPublisher publisher,
                       ObjectMapper mapper) {
+        super(publisher, mapper);
         this.client = new HttpClient(mapper, HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(), registry, config));
         this.handleBarsService = handleBarsService;
-        this.mapper = mapper;
     }
 
     @Override
@@ -59,10 +60,6 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
         handle(httpActionData);
     }
 
-    @Override
-    protected void fallback(HttpActionTemplate actionTemplate, Workflow workflow) {
-        //TODO
-    }
 
     private void handle(HttpActionData actionData) {
         try {

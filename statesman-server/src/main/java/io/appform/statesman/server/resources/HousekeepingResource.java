@@ -2,16 +2,17 @@ package io.appform.statesman.server.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import io.appform.statesman.engine.WorkflowProvider;
+import io.appform.statesman.engine.action.ActionExecutor;
+import io.appform.statesman.model.Workflow;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.validation.Valid;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -23,11 +24,14 @@ import javax.ws.rs.core.Response;
 public class HousekeepingResource {
 
 
-    private final WorkflowProvider workflowProvider;
+    private final Provider<WorkflowProvider> workflowProvider;
+    private final Provider<ActionExecutor> actionExecutor;
 
     @Inject
-    public HousekeepingResource(WorkflowProvider workflowProvider) {
+    public HousekeepingResource(Provider<WorkflowProvider> workflowProvider,
+                                Provider<ActionExecutor> actionExecutor) {
         this.workflowProvider = workflowProvider;
+        this.actionExecutor = actionExecutor;
     }
 
     @GET
@@ -37,7 +41,18 @@ public class HousekeepingResource {
     public Response getWorkflow(@PathParam("workflowId") String workflowId) {
 
         return Response.ok()
-                .entity(workflowProvider.getWorkflow(workflowId))
+                .entity(workflowProvider.get().getWorkflow(workflowId))
+                .build();
+    }
+
+    @POST
+    @Timed
+    @Path("/trigger/action/{actionId}")
+    @ApiOperation("trigger ction")
+    public Response triggerAction(@PathParam("action") String actionId,
+                                  @Valid Workflow workflowId) {
+        actionExecutor.get().execute(actionId, workflowId);
+        return Response.ok()
                 .build();
     }
 

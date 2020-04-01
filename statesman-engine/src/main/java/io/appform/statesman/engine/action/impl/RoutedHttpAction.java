@@ -1,6 +1,8 @@
 package io.appform.statesman.engine.action.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import com.google.inject.name.Named;
 import io.appform.statesman.engine.ProviderSelector;
 import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.action.BaseAction;
@@ -10,6 +12,7 @@ import io.appform.statesman.model.action.ActionType;
 import io.appform.statesman.model.action.template.RoutedHttpActionTemplate;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
+import io.appform.statesman.publisher.EventPublisher;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +32,10 @@ public class RoutedHttpAction extends BaseAction<RoutedHttpActionTemplate> {
 
     @Inject
     public RoutedHttpAction(Provider<ActionExecutor> actionExecutor,
-                            ProviderSelector providerSelector) {
+                            @Named("eventPublisher") final EventPublisher publisher,
+                            ProviderSelector providerSelector,
+                            ObjectMapper mapper) {
+        super(publisher, mapper);
         this.providerSelector = providerSelector;
         this.actionExecutor = actionExecutor;
     }
@@ -40,10 +46,6 @@ public class RoutedHttpAction extends BaseAction<RoutedHttpActionTemplate> {
         return ActionType.ROUTED_HTTP;
     }
 
-    @Override
-    protected void fallback(RoutedHttpActionTemplate actionTemplate, Workflow workflow) {
-        //TODO
-    }
 
     @Override
     public void execute(RoutedHttpActionTemplate routedHttpActionTemplate, Workflow workflow) {
