@@ -10,14 +10,14 @@ import java.util.Map;
 public class RoutedHttpActionTemplate extends ActionTemplate {
 
     private String providerType;
-    private Map<String, ActionTemplate> providerTemplates;
+    private Map<String, String> providerTemplates;
 
     public RoutedHttpActionTemplate() {
         super(ActionType.ROUTED_HTTP);
     }
 
     @Builder
-    public RoutedHttpActionTemplate(String templateId, String name, boolean active, String providerType, Map<String, ActionTemplate> providerTemplates) {
+    public RoutedHttpActionTemplate(String templateId, String name, boolean active, String providerType, Map<String, String> providerTemplates) {
         super(ActionType.ROUTED_HTTP, templateId, name, active);
         this.providerTemplates = providerTemplates;
         this.providerType = providerType;

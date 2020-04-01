@@ -36,7 +36,7 @@ public class CompoundHttpAction extends BaseAction<CompoundHttpActionTemplate> {
 
     @Override
     public void execute(CompoundHttpActionTemplate compoundHttpActionTemplate, Workflow workflow) {
-        compoundHttpActionTemplate.getActionTemplates().forEach(actionTemplate -> actionExecutor.get().execute(workflow, actionTemplate));
+        compoundHttpActionTemplate.getActionTemplates().forEach(actionTemplate -> actionExecutor.get().execute(actionTemplate, workflow));
     }
 
     @Override

@@ -28,7 +28,7 @@ public class ActionExecutor {
                 .ifPresent(actionTemplate -> execute(workflow, actionTemplate));
     }
 
-    public void execute(Workflow workflow, ActionTemplate actionTemplate) {
+    private void execute(Workflow workflow, ActionTemplate actionTemplate) {
         actionRegistry.get().get(actionTemplate.getType().name())
                 .ifPresent(action -> action.apply(actionTemplate, workflow));
     }

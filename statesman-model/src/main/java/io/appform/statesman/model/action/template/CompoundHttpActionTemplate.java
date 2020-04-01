@@ -9,14 +9,14 @@ import java.util.List;
 @Data
 public class CompoundHttpActionTemplate extends ActionTemplate {
 
-    private List<ActionTemplate> actionTemplates;
+    private List<String> actionTemplates;
 
     public CompoundHttpActionTemplate() {
         super(ActionType.COMPOUNDED_HTTP);
     }
 
     @Builder
-    public CompoundHttpActionTemplate(String templateId, String name, boolean active, List<ActionTemplate> actionTemplates) {
+    public CompoundHttpActionTemplate(String templateId, String name, boolean active, List<String> actionTemplates) {
         super(ActionType.COMPOUNDED_HTTP, templateId, name, active);
         this.actionTemplates = actionTemplates;
     }

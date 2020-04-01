@@ -52,6 +52,6 @@ public class RoutedHttpAction extends BaseAction<RoutedHttpActionTemplate> {
             throw new StatesmanError("No provider found for action:" + routedHttpActionTemplate.getTemplateId(),
                     ResponseCode.NO_PROVIDER_FOUND);
         }
-        actionExecutor.get().execute(workflow, routedHttpActionTemplate.getProviderTemplates().get(provider));
+        actionExecutor.get().execute(routedHttpActionTemplate.getProviderTemplates().get(provider), workflow);
     }
 }

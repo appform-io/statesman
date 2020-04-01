@@ -51,7 +51,7 @@ public class ActionTemplateStoreCommand implements ActionTemplateStore {
     @Override
     public Optional<ActionTemplate> create(ActionTemplate actionTemplate) {
         try {
-            return actionTemplateLookupDao.save(WorkflowUtils.toDaoGenereatedIds(actionTemplate))
+            return actionTemplateLookupDao.save(WorkflowUtils.toDao(actionTemplate))
                     .map(WorkflowUtils::toDto);
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);

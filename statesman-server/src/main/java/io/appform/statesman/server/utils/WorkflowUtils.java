@@ -93,39 +93,15 @@ public class WorkflowUtils {
         return MapperUtils.deserialize(storedActionTemplate.getData(), ActionTemplate.class);
     }
 
-    public static StoredActionTemplate toDaoGenereatedIds(ActionTemplate actionTemplate) {
-        setActionTemplateId(actionTemplate);
+    public static StoredActionTemplate toDao(ActionTemplate actionTemplate) {
+        String templateId = Strings.isNullOrEmpty(actionTemplate.getTemplateId())
+                ? UUID.randomUUID().toString() : actionTemplate.getTemplateId();
         return StoredActionTemplate.builder()
-                .templateId(actionTemplate.getTemplateId())
+                .templateId(templateId)
                 .active(actionTemplate.isActive())
                 .actionType(actionTemplate.getType().name())
                 .name(actionTemplate.getName())
                 .data(MapperUtils.serialize(actionTemplate))
                 .build();
     }
-
-    private static void setActionTemplateId(ActionTemplate actionTemplate) {
-        actionTemplate.visit(new ActionTemplateVisitor<Void>() {
-            @Override
-            public Void visit(HttpActionTemplate httpActionTemplate) {
-                actionTemplate.setTemplateId(UUID.randomUUID().toString());
-                return null;
-            }
-
-            @Override
-            public Void visit(RoutedHttpActionTemplate routedHttpActionTemplate) {
-                actionTemplate.setTemplateId(UUID.randomUUID().toString());
-                routedHttpActionTemplate.getProviderTemplates().values().forEach(WorkflowUtils::setActionTemplateId);
-                return null;
-            }
-
-            @Override
-            public Void visit(CompoundHttpActionTemplate compoundHttpActionTemplate) {
-                actionTemplate.setTemplateId(UUID.randomUUID().toString());
-                compoundHttpActionTemplate.getActionTemplates().forEach(WorkflowUtils::setActionTemplateId);
-                return null;
-            }
-        });
-    }
-
 }
