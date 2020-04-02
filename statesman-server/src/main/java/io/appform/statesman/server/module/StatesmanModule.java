@@ -29,6 +29,7 @@ import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProviderCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
+import io.appform.statesman.server.droppedcalldetector.IvrDropDetectionConfig;
 import io.appform.statesman.server.provider.ProviderSelectorImpl;
 import io.dropwizard.setup.Environment;
 
@@ -93,5 +94,11 @@ public class StatesmanModule extends AbstractModule {
     @Named("httpActionDefaultConfig")
     public HttpClientConfiguration provideHttpActionDefaultConfig(AppConfig config) {
         return config.getHttpActionDefaultConfig();
+    }
+
+    @Provides
+    @Singleton
+    public IvrDropDetectionConfig ivrDropDetectionConfig(AppConfig appConfig) {
+        return appConfig.getIvrDropDetection();
     }
 }

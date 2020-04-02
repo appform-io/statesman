@@ -3,6 +3,7 @@ package io.appform.statesman.server;
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.publisher.impl.EventPublisherConfig;
+import io.appform.statesman.server.droppedcalldetector.IvrDropDetectionConfig;
 import io.dropwizard.Configuration;
 import io.dropwizard.riemann.RiemannConfig;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
@@ -43,5 +44,9 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private HttpClientConfiguration httpActionDefaultConfig;
+
+    @NotNull
+    @Valid
+    private IvrDropDetectionConfig ivrDropDetection;
 
 }

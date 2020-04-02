@@ -96,3 +96,10 @@ eventPublisherConfig:
   endpoint: "http://34.93.41.24/sendBulkMsg"
   batchSize: 50
   queuePath: /tmp/statesman
+
+
+ivrDropDetection:
+  enabled: true
+  detectionPatterns:
+    ozonetel_punjab:
+      - "payload.*"

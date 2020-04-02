@@ -2,6 +2,7 @@ package io.appform.statesman.server.ingress;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
 import com.google.common.base.Strings;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
@@ -19,6 +20,7 @@ import io.appform.statesman.server.callbacktransformation.TranslationTemplateTyp
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
+import io.appform.statesman.server.droppedcalldetector.IvrDropDetectionConfig;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
 import io.appform.statesman.server.requests.IngressCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -30,9 +32,10 @@ import org.glassfish.jersey.uri.UriComponent;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.StreamSupport;
 
 /**
  *
@@ -46,6 +49,7 @@ public class IngressHandler {
     private final Provider<StateTransitionEngine> engine;
     private final Provider<WorkflowProvider> workflowProvider;
     private final Provider<WorkflowTemplateSelector> templateSelector;
+    private final IvrDropDetectionConfig dropDetectionConfig;
     private final HopeLangEngine hopeLangEngine;
 
     @Inject
@@ -55,14 +59,16 @@ public class IngressHandler {
             HandleBarsService handleBarsService,
             Provider<StateTransitionEngine> engine,
             Provider<WorkflowProvider> workflowProvider,
-            Provider<WorkflowTemplateSelector> templateSelector) {
+            Provider<WorkflowTemplateSelector> templateSelector,
+            IvrDropDetectionConfig dropDetectionConfig) {
         this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
         this.handleBarsService = handleBarsService;
         this.engine = engine;
         this.workflowProvider = workflowProvider;
         this.templateSelector = templateSelector;
-        hopeLangEngine = HopeLangEngine.builder()
+        this.dropDetectionConfig = dropDetectionConfig;
+        this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
     }
@@ -72,16 +78,19 @@ public class IngressHandler {
         val node = mapper.valueToTree(queryParams);
         val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
         val tmpl = toOneShotTmpl(transformationTemplate);
-        if(null == tmpl) {
+        if (null == tmpl) {
             log.warn("No matching transformation template found for provider: {}, context: {}",
-                      ivrProvider, ingressCallback);
+                     ivrProvider, ingressCallback);
             return false;
         }
         val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), node);
         log.info("stdPayload:{}", stdPayload);
-        val context = mapper.readTree(stdPayload);
+        val update = mapper.readTree(stdPayload);
+        if (update.isObject()) {
+            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(ivrProvider, node, dropDetectionConfig));
+        }
         val wfTemplate = templateSelector.get()
-                .determineTemplate(context)
+                .determineTemplate(update)
                 .orElse(null);
         if (null == wfTemplate) {
             log.warn("No matching workflow template found for provider: {}, context: {}", ivrProvider, stdPayload);
@@ -97,7 +106,7 @@ public class IngressHandler {
         wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(), dataObject));
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, context, new MergeDataAction()));
+                .handle(new DataUpdate(wfId, update, new MergeDataAction()));
         log.info("Workflow: {} with template: {} went through transitions: {}",
                  wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return true;
@@ -108,20 +117,23 @@ public class IngressHandler {
         val node = mapper.valueToTree(queryParams);
         val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
         val tmpl = toMultiStepTemplate(transformationTemplate);
-        if(null == tmpl) {
+        if (null == tmpl) {
             log.warn("No matching step transformation template found for provider: {}, context: {}",
-                      ivrProvider, ingressCallback);
+                     ivrProvider, ingressCallback);
             return false;
         }
         val date = new Date();
         val selectedStep = selectStep(node, tmpl);
-        if(null == selectedStep) {
+        if (null == selectedStep) {
             log.warn("No matching step transformation template step found for provider: {}, context: {}",
-                      ivrProvider, ingressCallback);
+                     ivrProvider, ingressCallback);
             return false;
         }
         val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, selectedStep.getTemplate(), node);
-        val context = mapper.readTree(stdPayload);
+        val update = mapper.readTree(stdPayload);
+        if (update.isObject()) {
+            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(ivrProvider, node, dropDetectionConfig));
+        }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         String wfId = UUID.randomUUID().toString();
         Workflow wf = null;
@@ -135,7 +147,9 @@ public class IngressHandler {
                 //Found existing workflow
                 wfTemplate = wfp.getTemplate(wf.getTemplateId()).orElse(null);
                 if (null == wfTemplate) {
-                    log.error("No matching workflow template found for provider: {}, context: {}", ivrProvider, stdPayload);
+                    log.error("No matching workflow template found for provider: {}, context: {}",
+                              ivrProvider,
+                              stdPayload);
                     return false;
                 }
             }
@@ -150,7 +164,7 @@ public class IngressHandler {
         if (wf == null) {
             //First time .. create workflow
             wfTemplate = templateSelector.get()
-                    .determineTemplate(context)
+                    .determineTemplate(update)
                     .orElse(null);
             if (null == wfTemplate) {
                 log.error("No matching workflow template found for provider: {}, context: {}", ivrProvider, stdPayload);
@@ -158,7 +172,7 @@ public class IngressHandler {
             }
             val dataNode = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
             wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(),
-                                               dataNode));
+                                          dataNode));
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (null == wf) {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
@@ -167,7 +181,7 @@ public class IngressHandler {
         }
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, context, new MergeDataAction()));
+                .handle(new DataUpdate(wfId, update, new MergeDataAction()));
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return true;
@@ -202,7 +216,7 @@ public class IngressHandler {
         });
     }
 
-    private static ImmutableMultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
+    private static MultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
         return new ImmutableMultivaluedMap<>(
                 UriComponent.decodeQuery(ingressCallback.getQueryString(), true));
     }
@@ -240,4 +254,32 @@ public class IngressHandler {
                 .orElse(null);
     }
 
+    public static boolean isDroppedCallSingleShot(
+            final String provider, JsonNode jsonNode, IvrDropDetectionConfig dropDetectionConfig) {
+        if (!dropDetectionConfig.isEnabled()) {
+            return false;
+        }
+        val detectionPatterns = dropDetectionConfig.getDetectionPatterns();
+        val patterns = null == detectionPatterns
+                       ? Collections.<String>emptyList()
+                       : detectionPatterns.get(provider);
+        if (patterns.isEmpty()) {
+            log.debug("No call drop detection patterns found for provider: {}", provider);
+            return false;
+        }
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(jsonNode.fields(), Spliterator.ORDERED), false)
+                .filter(field -> patterns.stream()
+                        .anyMatch(pattern -> {
+                            log.info("Matching field: {} with {}. Result: {}",
+                                     field,
+                                     pattern,
+                                     field.getKey().matches(pattern));
+                            return field.getKey().matches(pattern);
+                        }))
+                .anyMatch(field ->
+                                  field.getValue().isArray()
+                                          && (field.getValue().size() == 0
+                                          || (field.getValue().size() == 1
+                                          && Strings.isNullOrEmpty(field.getValue().get(0).asText()))));
+    }
 }

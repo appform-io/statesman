@@ -1,0 +1,74 @@
+Attaching to statesmanserver_mariadb_2_1, statesmanserver_mariadb_1_1, statesman-server
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] mysqld (mysqld 10.0.38-MariaDB-1~xenial) starting as process 1 ...
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] mysqld (mysqld 10.0.38-MariaDB-1~xenial) starting as process 1 ...
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Using mutexes to ref count buffer pool pages
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: The InnoDB memory heap is disabled
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Using mutexes to ref count buffer pool pages
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Compressed tables use zlib 1.2.8
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: The InnoDB memory heap is disabled
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Using Linux native AIO
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Mutexes and rw_locks use GCC atomic builtins
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: GCC builtin __atomic_thread_fence() is used for memory barrier
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Compressed tables use zlib 1.2.8
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Using Linux native AIO
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Using CPU crc32 instructions
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Initializing buffer pool, size = 256.0M
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Using CPU crc32 instructions
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Completed initialization of buffer pool
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Initializing buffer pool, size = 256.0M
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Highest supported file format is Barracuda.
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Completed initialization of buffer pool
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: 128 rollback segment(s) are active.
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Highest supported file format is Barracuda.
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: 128 rollback segment(s) are active.
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB: Waiting for purge to start
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB: Waiting for purge to start
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] InnoDB:  Percona XtraDB (http://www.percona.com) 5.6.42-84.2 started; log sequence number 1616983
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] InnoDB:  Percona XtraDB (http://www.percona.com) 5.6.42-84.2 started; log sequence number 1616983
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] Plugin 'FEEDBACK' is disabled.
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] Plugin 'FEEDBACK' is disabled.
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Note] Server socket created on IP: '::'.
+[33mmariadb_1_1         |[0m 200402 14:08:59 [Warning] 'proxies_priv' entry '@% root@aeae5d0832db' ignored in --skip-name-resolve mode.
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] Server socket created on IP: '::'.
+[33mmariadb_1_1         |[0m 200402 14:09:00 [Note] mysqld: ready for connections.
+[33mmariadb_1_1         |[0m Version: '10.0.38-MariaDB-1~xenial'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Warning] 'proxies_priv' entry '@% root@3b0fab58478e' ignored in --skip-name-resolve mode.
+[36mmariadb_2_1         |[0m 200402 14:08:59 [Note] mysqld: ready for connections.
+[36mmariadb_2_1         |[0m Version: '10.0.38-MariaDB-1~xenial'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution
+[32mstatesman-server    |[0m invalid choice: 'initialize' (choose from 'server', 'check')
+[32mstatesman-server    |[0m usage: java -jar server.jar [-h] [-v] {server,check} ...
+[32mstatesman-server    |[0m 
+[32mstatesman-server    |[0m positional arguments:
+[32mstatesman-server    |[0m   {server,check}         available commands
+[32mstatesman-server    |[0m 
+[32mstatesman-server    |[0m named arguments:
+[32mstatesman-server    |[0m   -h, --help             show this help message and exit
+[32mstatesman-server    |[0m   -v, --version          show the application version and exit
+[32mstatesman-server    |[0m INFO  [2020-04-02 14:09:03,575]  [main] [DefaultServerFactory]: Registering jersey handler with root path prefix: /
+[32mstatesman-server    |[0m INFO  [2020-04-02 14:09:03,579]  [main] [DefaultServerFactory]: Registering admin handler with root path prefix: /
+[32mstatesman-server    |[0m INFO  [2020-04-02 14:09:03,707]  [main] [SessionFactoryFactory]: Entity classes: [io.appform.statesman.server.dao.action.StoredActionTemplate, io.appform.statesman.server.dao.callback.StoredCallbackTransformationTemplate, io.appform.statesman.server.dao.callback.impl.StoredOneShotCallbackTransformationTemplate, io.appform.statesman.server.dao.callback.impl.StoredStepByStepCallbackTransformationTemplate, io.appform.statesman.server.dao.providers.StoredProvider, io.appform.statesman.server.dao.transition.StoredStateTransition, io.appform.statesman.server.dao.workflow.StoredWorkflowInstance, io.appform.statesman.server.dao.workflow.StoredWorkflowTemplate]
+[32mstatesman-server    |[0m org.hibernate.AnnotationException: Unable to create unique key constraint (provider, translation_template_type) on table callback_templates: database column 'translation_template_type' not found. Make sure that you use the correct column name which depends on the naming strategy in use (it may not be the same as the property name in the entity, especially for relational types)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.buildUniqueKeyFromColumnNames(InFlightMetadataCollectorImpl.java:2103)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.buildUniqueKeyFromColumnNames(InFlightMetadataCollectorImpl.java:1964)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.processUniqueConstraintHolders(InFlightMetadataCollectorImpl.java:1952)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.internal.InFlightMetadataCollectorImpl.processSecondPasses(InFlightMetadataCollectorImpl.java:1624)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.complete(MetadataBuildingProcess.java:278)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.model.process.spi.MetadataBuildingProcess.build(MetadataBuildingProcess.java:83)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.internal.MetadataBuilderImpl.build(MetadataBuilderImpl.java:417)
+[32mstatesman-server    |[0m 	at org.hibernate.boot.internal.MetadataBuilderImpl.build(MetadataBuilderImpl.java:86)
+[32mstatesman-server    |[0m 	at org.hibernate.cfg.Configuration.buildSessionFactory(Configuration.java:691)
+[32mstatesman-server    |[0m 	at io.dropwizard.hibernate.SessionFactoryFactory.buildSessionFactory(SessionFactoryFactory.java:96)
+[32mstatesman-server    |[0m 	at io.dropwizard.hibernate.SessionFactoryFactory.build(SessionFactoryFactory.java:49)
+[32mstatesman-server    |[0m 	at io.dropwizard.hibernate.SessionFactoryFactory.build(SessionFactoryFactory.java:39)
+[32mstatesman-server    |[0m 	at io.dropwizard.hibernate.HibernateBundle.run(HibernateBundle.java:67)
+[32mstatesman-server    |[0m 	at io.dropwizard.hibernate.HibernateBundle.run(HibernateBundle.java:19)
+[32mstatesman-server    |[0m 	at io.dropwizard.setup.Bootstrap.run(Bootstrap.java:200)
+[32mstatesman-server    |[0m 	at io.dropwizard.cli.EnvironmentCommand.run(EnvironmentCommand.java:42)
+[32mstatesman-server    |[0m 	at io.dropwizard.cli.ConfiguredCommand.run(ConfiguredCommand.java:87)
+[32mstatesman-server    |[0m 	at io.dropwizard.cli.Cli.run(Cli.java:78)
+[32mstatesman-server    |[0m 	at io.dropwizard.Application.run(Application.java:93)
+[32mstatesman-server    |[0m 	at io.appform.statesman.server.StatesmanApp.main(StatesmanApp.java:56)
+[32mstatesman-server exited with code 1
+[0m
