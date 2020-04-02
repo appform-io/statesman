@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateType;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -38,8 +39,9 @@ public class StepByStepTransformationTemplate extends TransformationTemplate  {
     public StepByStepTransformationTemplate(
             @JsonProperty("provider") String provider,
             @JsonProperty("idPath") String idPath,
+            @JsonProperty("translationTemplateType") TranslationTemplateType translationTemplateType,
             @JsonProperty("templates") List<StepSelection> templates) {
-        super(TransformationTemplateType.STEP_BY_STEP, idPath, provider);
+        super(TransformationTemplateType.STEP_BY_STEP, idPath, translationTemplateType, provider);
         this.templates = templates;
     }
 

@@ -4,6 +4,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -66,11 +67,11 @@ public class CallbackTemplateResource {
 
     @GET
     @Timed
-    @Path("/{provider}")
+    @Path("/{provider}/{translationTemplateType}")
     @ApiOperation("Get Callback Template")
-    public Response getCallbackTemplate(@PathParam("provider") String provider) {
+    public Response getCallbackTemplate(@PathParam("provider") String provider, @PathParam("translationTemplateType") TranslationTemplateType translationTemplateType) {
         Optional<TransformationTemplate> callbackTemplateOptional =
-                callbackTemplateProvider.getTemplate(provider);
+                callbackTemplateProvider.getTemplate(provider, translationTemplateType);
 
         if (!callbackTemplateOptional.isPresent()) {
             return Response.noContent()
