@@ -6,6 +6,7 @@ import io.appform.statesman.server.ingress.IngressHandler;
 import io.appform.statesman.server.ingress.ServiceProviderCallbackHandler;
 import io.appform.statesman.server.requests.IngressCallback;
 import io.swagger.annotations.Api;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
@@ -13,7 +14,6 @@ import javax.inject.Provider;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 
 /**
  *
@@ -37,28 +37,34 @@ public class Callbacks {
 
 
     @POST
-    @Path("/ingress/final/{ivrProvider}")
+    @Path("/ingress/final/{ingressProvider}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @SneakyThrows
     public Response finalIngressCallback(
-            @PathParam("ivrProvider") final String ivrProvider,
-            final IngressCallback ingressCallback) throws IOException {
+            @PathParam("ingressProvider") final String ingressProvider, final IngressCallback ingressCallback) {
+        final boolean status = ingressHandler.get()
+                .invokeEngineForOneShot(ingressProvider, ingressCallback);
+        if(!status) {
+            log.warn("Ignored ingress provider {} callback: {}", ingressProvider, ingressCallback);
+        }
         return Response.ok()
-                .entity(ImmutableMap.of("success",
-                                        ingressHandler.get()
-                                                .invokeEngineForOneShot(ivrProvider, ingressCallback)))
+                .entity(ImmutableMap.of("success", status))
                 .build();
     }
 
     @POST
-    @Path("/ingress/step/{ivrProvider}")
+    @Path("/ingress/step/{ingressProvider}")
     @Consumes(MediaType.APPLICATION_JSON)
+    @SneakyThrows
     public Response stepIngressCallback(
-            @PathParam("ivrProvider") final String ivrProvider,
-            final IngressCallback ingressCallback) throws IOException {
+            @PathParam("ingressProvider") final String ingressProvider, final IngressCallback ingressCallback) {
+        final boolean status = ingressHandler.get()
+                .invokeEngineForMultiStep(ingressProvider, ingressCallback);
+        if(!status) {
+            log.warn("Ignored ingress provider {} callback: {}", ingressProvider, ingressCallback);
+        }
         return Response.ok()
-                .entity(ImmutableMap.of("success",
-                                        ingressHandler.get()
-                                                .invokeEngineForMultiStep(ivrProvider, ingressCallback)))
+                .entity(ImmutableMap.of("success", status))
                 .build();
     }
 
@@ -66,12 +72,14 @@ public class Callbacks {
     @Path("/provider/{serviceProvider}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response providerCallback(
-            @PathParam("serviceProvider") final String providerId,
-            JsonNode incomingData) {
+            @PathParam("serviceProvider") final String serviceProvider, JsonNode incomingData) {
+        final boolean status = providerCallbackHandler.get()
+                .handleServiceProviderCallback(serviceProvider, incomingData);
+        if(!status) {
+            log.warn("Ignored service provider {} callback: {}", serviceProvider, incomingData);
+        }
         return Response.ok()
-                .entity(ImmutableMap.of("success",
-                                        providerCallbackHandler.get()
-                                                .handleServiceProviderCallback(providerId, incomingData)))
+                .entity(ImmutableMap.of("success", status))
                 .build();
     }
 }
