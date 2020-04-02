@@ -17,10 +17,7 @@ import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.impl.SyncEventPublisher;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 
@@ -40,13 +37,17 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
     private HttpClient client;
 
     @Inject
-    public HttpAction(HandleBarsService handleBarsService,
-                      MetricRegistry registry,
-                      @Named("httpActionDefaultConfig") HttpClientConfiguration config,
-                      @Named("eventPublisher") final EventPublisher publisher,
-                      ObjectMapper mapper) {
+    public HttpAction(
+            HandleBarsService handleBarsService,
+            MetricRegistry registry,
+            @Named("httpActionDefaultConfig") HttpClientConfiguration config,
+            @Named("eventPublisher") final EventPublisher publisher,
+            ObjectMapper mapper) {
         super(publisher, mapper);
-        this.client = new HttpClient(mapper, HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(), registry, config));
+        this.client = new HttpClient(mapper,
+                                     HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(),
+                                                            registry,
+                                                            config));
         this.handleBarsService = handleBarsService;
     }
 
@@ -54,10 +55,11 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
     public ActionType getType() {
         return ActionType.HTTP;
     }
-        
+
     @Override
     public void execute(HttpActionTemplate actionTemplate, Workflow workflow) {
         HttpActionData httpActionData = transformPayload(workflow, actionTemplate);
+        log.debug("Action call data: {}", httpActionData);
         handle(httpActionData);
     }
 
@@ -65,32 +67,50 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
     private void handle(HttpActionData actionData) {
         try {
             actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Void>() {
+                private final Map<String, String> headers = actionData.getHeaders();
+                private final String url = actionData.getUrl();
+
                 @Override
                 public Void visitPost() throws Exception {
-                    log.info("HTTP_ACTION POST Call url:{}", actionData.getUrl());
-                    final Response response = client.post(actionData.getUrl(),
-                            actionData.getPayload(),
-                            actionData.getHeaders());
-                    if (!response.isSuccessful()) {
-                        log.error("unable to do post action, actionData: {}", actionData);
-                        throw new StatesmanError();
+                    log.info("HTTP_ACTION POST Call url:{}", url);
+                    Response response = null;
+                    try {
+                        val payload = actionData.getPayload();
+                        response = client.post(url, payload, headers);
+                        if (!response.isSuccessful()) {
+                            log.error("unable to do post action, actionData: {}", actionData);
+                            throw new StatesmanError();
+                        }
+                        return null;
                     }
-                    return null;
+                    finally {
+                        if (null != response) {
+                            response.close();
+                        }
+                    }
                 }
 
                 @Override
                 public Void visitGet() throws Exception {
-                    log.info("HTTP_ACTION GET Call url:{}", actionData.getUrl());
-                    final Response response = client.get(actionData.getUrl(),
-                            actionData.getHeaders());
-                    if (!response.isSuccessful()) {
-                        log.error("unable to do get action, actionData: {}", actionData);
-                        throw new StatesmanError();
+                    log.info("HTTP_ACTION GET Call url:{}", url);
+                    Response response = null;
+                    try {
+                        response = client.get(url, headers);
+                        if (!response.isSuccessful()) {
+                            log.error("unable to do get action, actionData: {}", actionData);
+                            throw new StatesmanError();
+                        }
+                        return null;
                     }
-                    return null;
+                    finally {
+                        if (null != response) {
+                            response.close();
+                        }
+                    }
                 }
             });
-        } catch (final Exception e) {
+        }
+        catch (final Exception e) {
             throw StatesmanError.propagate(e);
         }
     }

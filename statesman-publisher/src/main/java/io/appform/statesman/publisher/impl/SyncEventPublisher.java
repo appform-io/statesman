@@ -76,11 +76,10 @@ public class SyncEventPublisher implements EventPublisher {
     private void ingest(final String topic, final List<Event> events) {
         final KMessage message = convertToKMessage(events);
         final String url = String.format("%s/%s", this.endpoint, topic);
-        log.info("[KafkaPublisher] url: {}", url);
+        log.trace("[KafkaPublisher] url: {}", url);
 
-        //TODO: remove - this is just to test
         try {
-            log.info("[KafkaPublisher] messageToKafka: {}", mapper.writeValueAsString(message));
+            log.trace("[KafkaPublisher] messageToKafka: {}", mapper.writeValueAsString(message));
         } catch (JsonProcessingException e) {
             throw StatesmanError.propagate(e);
         }

@@ -17,6 +17,7 @@ logging:
     deprecation: ERROR
     org.hibernate: ERROR
     QueuedSender: WARN
+    io.appform.statesman: DEBUG
   appenders:
     - type: console
       threshold: TRACE
