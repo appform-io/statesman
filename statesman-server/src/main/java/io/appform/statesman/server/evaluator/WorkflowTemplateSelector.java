@@ -59,6 +59,7 @@ public class WorkflowTemplateSelector implements Managed {
     private void loadParsedWorkflowTemplates() {
         List<WorkflowTemplateContext> parsedTemplates = workflowProvider.getAll()
                 .stream()
+                .filter(WorkflowTemplate::isActive)
                 .flatMap(template -> template.getRules().stream().map(rule -> {
                     Evaluatable parsedTemplateRule;
                     try {
