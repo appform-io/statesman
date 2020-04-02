@@ -295,13 +295,13 @@ public class HandleBarsServiceTest {
         final String template = "{\"language\" : {{{ translate op_1='Resolved' op_2='Closed' pointer='/ticket.cf_resolved'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("null", objectMapper.readTree(
-                                    handleBarsService.transform(
-                                            JsonNodeValueResolver.INSTANCE,
-                                            template,
-                                            objectMapper.createObjectNode()
-                                                    .put("ticket.cf_resolved", 9)))
-                                    .get("language")
-                                    .asText());
+                handleBarsService.transform(
+                        JsonNodeValueResolver.INSTANCE,
+                        template,
+                        objectMapper.createObjectNode()
+                                .put("ticket.cf_resolved", 9)))
+                .get("language")
+                .asText());
     }
 
     @Test
@@ -337,10 +337,58 @@ public class HandleBarsServiceTest {
                         JsonNodeValueResolver.INSTANCE,
                         template,
                         objectMapper.createObjectNode()
-                                .put("ticket.cf_language","Telegu")))
+                                .put("ticket.cf_language", "Telegu")))
                 .get("language");
         Assert.assertTrue(arr.isArray());
         Assert.assertEquals(1, arr.size());
         Assert.assertEquals("TG", arr.get(0).asText());
+    }
+
+    @Test
+    @SneakyThrows
+    public void translateToHTML() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "<b>Age:</b> {{{translate_txt op_true='Above Sixty' op_false='Below Sixty' pointer='/ageAboveSixty'}}}<br> <b>Travel Status:</b> {{{translate_txt op_true='Travelled abroad' op_false='Has not travelled abroad' pointer='/travelled'}}}<br><b>Exposure:</b> {{{translate_txt op_true='Has had contact with COVID-19 patient' op_false='No contact' pointer='/contact'}}}<br> <b>Pre existing conditions:</b> {{{translate_txt op_heart='Heart problems, Asthma or any other Lung problems' op_cancer='Cancer or on chemotherapy or other low immunity problems' op_diabetes='Diabetes or Kidney problems' op_pregnant='Pregnant at present or recently delivered a baby' op_none='No Prexistting Conditions' pointer='/existingDiseases'}}}<br> <b>Symptoms:</b> {{{translate_arr_txt op_fever='Fever' op_cough='Dry Cough' op_throatpain='Throat Pain' op_wheezing='Wheezing' op_others='Others' op_none='none' pointer='/symptoms'}}}";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        Assert.assertEquals(
+                "<b>Age:</b> Above Sixty<br> <b>Travel Status:</b> Travelled abroad<br><b>Exposure:</b> Has had contact with COVID-19 patient<br> <b>Pre existing conditions:</b> Diabetes or Kidney problems<br> <b>Symptoms:</b> Dry Cough, Throat Pain, Wheezing",
+                handleBarsService.transform(
+                        JsonNodeValueResolver.INSTANCE,
+                        template,
+                        objectMapper.readTree("{\n" +
+                                                      "   \"ageAboveSixty\":true,\n" +
+                                                      "   \"travelled\":true,\n" +
+                                                      "   \"contact\":true,\n" +
+                                                      "   \"existingDiseases\":\"diabetes\",\n" +
+                                                      "   \"symptoms\":[\n" +
+                                                      "      \"cough\",\n" +
+                                                      "      \"throatpain\",\n" +
+                                                      "      \"wheezing\"\n" +
+                                                      "   ]\n" +
+                                                      "}")));
+    }
+    @Test
+    @SneakyThrows
+    public void translateToHTMLNull() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "<b>Age:</b> Above Sixty<br> <b>Travel Status:</b> <br><b>Exposure:</b> Has had contact with COVID-19 patient<br> <b>Pre existing conditions:</b> Diabetes or Kidney problems<br> <b>Symptoms:</b> Dry Cough, Throat Pain, Wheezing";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        Assert.assertEquals(
+                "<b>Age:</b> Above Sixty<br> <b>Travel Status:</b> <br><b>Exposure:</b> Has had contact with COVID-19 patient<br> <b>Pre existing conditions:</b> Diabetes or Kidney problems<br> <b>Symptoms:</b> Dry Cough, Throat Pain, Wheezing",
+                handleBarsService.transform(
+                        JsonNodeValueResolver.INSTANCE,
+                        template,
+                        objectMapper.readTree("{\n" +
+                                                      "   \"ageAboveSixty\":true,\n" +
+                                                      "   \"travelled\":93,\n" +
+                                                      "   \"contact\":true,\n" +
+                                                      "   \"existingDiseases\":\"diabetes\",\n" +
+                                                      "   \"symptoms\":[\n" +
+                                                      "      \"cough\",\n" +
+                                                      "      \"throatpain\",\n" +
+                                                      "      \"blah\",\n" +
+                                                      "      \"wheezing\"\n" +
+                                                      "   ]\n" +
+                                                      "}")));
     }
 }

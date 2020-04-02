@@ -60,6 +60,8 @@ public class HandleBarsHelperRegistry {
         registerMapLookupArray();
         registerStrTranslate();
         registerStrTranslateArr();
+        registerStrTranslateTxt();
+        registerStrTranslateArrTxt();
     }
 
     private Object compareGte(int lhs) {
@@ -465,6 +467,82 @@ public class HandleBarsHelperRegistry {
 
             private CharSequence empty() throws JsonProcessingException {
                 return MAPPER.writeValueAsString(MAPPER.createArrayNode());
+            }
+        });
+    }
+
+    private void registerStrTranslateTxt() {
+        handlebars.registerHelper("translate_txt", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+
+                final String key = options.hash("pointer");
+                if (Strings.isNullOrEmpty(key)) {
+                    return empty();
+                }
+                val dataNode = node.at(key);
+                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
+                    return empty();
+                }
+                val lookupKey = dataNode.asText();
+                if(Strings.isNullOrEmpty(lookupKey)) {
+                    return empty();
+                }
+                val lookupValue = options.hash("op_" + lookupKey);
+                if(null == lookupValue) {
+                    return empty();
+                }
+                return lookupValue.toString();
+            }
+
+            private CharSequence empty() throws JsonProcessingException {
+                return "";
+            }
+        });
+    }
+
+    private void registerStrTranslateArrTxt() {
+        handlebars.registerHelper("translate_arr_txt", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+
+                final String key = options.hash("pointer");
+                if (Strings.isNullOrEmpty(key)) {
+                    return empty();
+                }
+                val dataNode = node.at(key);
+                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode()
+                        || (!dataNode.isValueNode() && !dataNode.isArray())) {
+                    return empty();
+                }
+                val lookupKeys = new ArrayList<String>();
+                if(dataNode.isValueNode()) {
+                    val lookupKey = dataNode.asText();
+                    if(Strings.isNullOrEmpty(lookupKey)) {
+                        return empty();
+                    }
+                    lookupKeys.add(lookupKey);
+                }
+                else if(dataNode.isArray()) {
+                    lookupKeys.addAll(StreamSupport.stream(Spliterators.spliteratorUnknownSize(dataNode.elements(), Spliterator.ORDERED), false)
+                            .filter(child -> !child.isNull() && !child.isMissingNode() && child.isValueNode())
+                            .map(JsonNode::asText)
+                            .collect(Collectors.toList()));
+
+                }
+                return lookupKeys.stream()
+                        .map(lookupKey -> {
+                            val value = options.hash("op_" + lookupKey);
+                            return null == value
+                                    ? null
+                                   : value.toString();
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.joining(", "));
+            }
+
+            private CharSequence empty() {
+                return "";
             }
         });
     }
