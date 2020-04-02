@@ -103,7 +103,7 @@ public class IngressHandler {
         }
         val date = new Date();
         val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
-        wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(), dataObject));
+        wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date()));
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, update, new MergeDataAction()));
@@ -172,7 +172,7 @@ public class IngressHandler {
             }
             val dataNode = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
             wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(),
-                                          dataNode));
+                                          dataNode, new Date(), new Date()));
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (null == wf) {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
