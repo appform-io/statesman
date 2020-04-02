@@ -80,7 +80,9 @@ public class StateTransitionEngineTest {
         val wft = new WorkflowTemplate(WF_ID, WF_ID, true, Collections.emptyList(), States.A);
         val wf = new Workflow(WF_ID,
                               WFT_ID,
-                              new DataObject(MAPPER.createObjectNode(), wft.getStartState(), new Date(), new Date()));
+                              new DataObject(MAPPER.createObjectNode(), wft.getStartState(), new Date(), new Date()),
+                              new Date(),
+                              new Date());
         final Provider<WorkflowProvider> workflowProvider = () -> {
             val provider = mock(WorkflowProvider.class);
             when(provider.getTemplate(anyString()))
