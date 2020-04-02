@@ -1,7 +1,9 @@
 package io.appform.statesman.server.resources;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import io.appform.statesman.server.ingress.IngressHandler;
+import io.appform.statesman.server.ingress.ServiceProviderCallbackHandler;
 import io.appform.statesman.server.requests.IngressCallback;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -16,24 +18,28 @@ import java.io.IOException;
 /**
  *
  */
-@Path("/callbacks/ingress")
-@Api("Ingress callbacks")
+@Path("/callbacks")
 @Produces(MediaType.APPLICATION_JSON)
 @Slf4j
-public class IngressCallbacks {
+@Api("Callbacks")
+public class Callbacks {
 
     private final Provider<IngressHandler> ingressHandler;
+    private final Provider<ServiceProviderCallbackHandler> providerCallbackHandler;
 
     @Inject
-    public IngressCallbacks(Provider<IngressHandler> ingressHandler) {
+    public Callbacks(
+            Provider<IngressHandler> ingressHandler,
+            Provider<ServiceProviderCallbackHandler> providerCallbackHandler) {
         this.ingressHandler = ingressHandler;
+        this.providerCallbackHandler = providerCallbackHandler;
     }
 
 
     @POST
-    @Path("/final/{ivrProvider}")
+    @Path("/ingress/final/{ivrProvider}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response finalIVRCallback(
+    public Response finalIngressCallback(
             @PathParam("ivrProvider") final String ivrProvider,
             final IngressCallback ingressCallback) throws IOException {
         return Response.ok()
@@ -43,9 +49,10 @@ public class IngressCallbacks {
                 .build();
     }
 
-    @GET
-    @Path("/step/{ivrProvider}")
-    public Response stepIVRCallback(
+    @POST
+    @Path("/ingress/step/{ivrProvider}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response stepIngressCallback(
             @PathParam("ivrProvider") final String ivrProvider,
             final IngressCallback ingressCallback) throws IOException {
         return Response.ok()
@@ -55,4 +62,16 @@ public class IngressCallbacks {
                 .build();
     }
 
+    @POST
+    @Path("/provider/{serviceProvider}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response providerCallback(
+            @PathParam("serviceProvider") final String providerId,
+            JsonNode incomingData) {
+        return Response.ok()
+                .entity(ImmutableMap.of("success",
+                                        providerCallbackHandler.get()
+                                                .handleServiceProviderCallback(providerId, incomingData)))
+                .build();
+    }
 }

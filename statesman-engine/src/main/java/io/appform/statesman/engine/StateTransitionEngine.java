@@ -91,7 +91,7 @@ public class StateTransitionEngine {
         val evalNode = mapper.createObjectNode();
         evalNode.putObject("data").setAll((ObjectNode) dataObject.getData());
         evalNode.putObject("update").setAll((ObjectNode) dataUpdate.getData());
-        var selectedTransition = transitions.stream()
+        val selectedTransition = transitions.stream()
                 .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.EVALUATED))
                 .filter(StateTransition::isActive)
                 .filter(stateTransition -> {
