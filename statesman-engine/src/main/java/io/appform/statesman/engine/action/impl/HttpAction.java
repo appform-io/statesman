@@ -1,6 +1,7 @@
 package io.appform.statesman.engine.action.impl;
 
 import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -53,7 +54,7 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
     public ActionType getType() {
         return ActionType.HTTP;
     }
-
+        
     @Override
     public void execute(HttpActionTemplate actionTemplate, Workflow workflow) {
         HttpActionData httpActionData = transformPayload(workflow, actionTemplate);
@@ -95,17 +96,18 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
     }
 
     private HttpActionData transformPayload(Workflow workflow, HttpActionTemplate actionTemplate) {
+        JsonNode jsonNode = mapper.valueToTree(workflow);
         return HttpActionData.builder()
                 .method(HttpMethod.valueOf(actionTemplate.getMethod()))
-                .url(handleBarsService.transform(actionTemplate.getUrl(), workflow))
-                .headers(getheaders(workflow, actionTemplate.getHeaders()))
-                .payload(handleBarsService.transform(actionTemplate.getPayload(), workflow))
+                .url(handleBarsService.transform(actionTemplate.getUrl(), jsonNode))
+                .headers(getheaders(jsonNode, actionTemplate.getHeaders()))
+                .payload(handleBarsService.transform(actionTemplate.getPayload(), jsonNode))
                 .build();
     }
 
     //assuming the header string in below format
     //headerStr = "key1:value1,key2:value2"
-    private Map<String, String> getheaders(Workflow workflow, String headers) {
+    private Map<String, String> getheaders(JsonNode workflow, String headers) {
         if (Strings.isNullOrEmpty(headers)) {
             return Collections.emptyMap();
         }
