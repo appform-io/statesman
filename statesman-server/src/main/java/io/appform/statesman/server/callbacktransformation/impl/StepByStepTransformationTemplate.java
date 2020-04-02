@@ -38,8 +38,9 @@ public class StepByStepTransformationTemplate extends TransformationTemplate  {
     public StepByStepTransformationTemplate(
             @JsonProperty("provider") String provider,
             @JsonProperty("idPath") String idPath,
+            @JsonProperty("callbackType") String callbackType,
             @JsonProperty("templates") List<StepSelection> templates) {
-        super(TransformationTemplateType.STEP_BY_STEP, idPath, provider);
+        super(TransformationTemplateType.STEP_BY_STEP, idPath, callbackType, provider);
         this.templates = templates;
     }
 

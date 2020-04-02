@@ -27,8 +27,9 @@ public class OneShotTransformationTemplate extends TransformationTemplate  {
     public OneShotTransformationTemplate(
             @JsonProperty("provider") String provider,
             @JsonProperty("idPath") String idPath,
+            @JsonProperty("callbackType") String callbackType,
             @JsonProperty("template") String template) {
-        super(TransformationTemplateType.ONE_SHOT, idPath, provider);
+        super(TransformationTemplateType.ONE_SHOT, idPath, callbackType, provider);
         this.template = template;
     }
 

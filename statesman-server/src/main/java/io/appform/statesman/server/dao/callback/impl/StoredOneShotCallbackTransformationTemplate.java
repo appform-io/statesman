@@ -21,8 +21,9 @@ public class StoredOneShotCallbackTransformationTemplate extends StoredCallbackT
     @Builder
     public StoredOneShotCallbackTransformationTemplate(String provider,
                                                        String idPath,
+                                                       String callbackType,
                                                        byte[] template) {
-        super(TransformationTemplateType.ONE_SHOT, provider, idPath, template);
+        super(TransformationTemplateType.ONE_SHOT, provider, idPath, callbackType, template);
     }
 
     @Override

@@ -11,7 +11,7 @@ public interface CallbackTemplateProvider {
 
     Optional<TransformationTemplate> updateTemplate(TransformationTemplate workflowTemplate);
 
-    Optional<TransformationTemplate> getTemplate(String provider);
+    Optional<TransformationTemplate> getTemplate(String provider, String callbackType);
 
     List<TransformationTemplate> getAll();
 }

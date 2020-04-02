@@ -21,8 +21,9 @@ public class StoredStepByStepCallbackTransformationTemplate extends StoredCallba
     @Builder
     public StoredStepByStepCallbackTransformationTemplate(String provider,
                                                           String idPath,
+                                                          String callbackType,
                                                           byte[] template) {
-        super(TransformationTemplateType.STEP_BY_STEP, provider, idPath, template);
+        super(TransformationTemplateType.STEP_BY_STEP, provider, idPath, callbackType,  template);
     }
 
     @Override

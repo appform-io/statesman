@@ -66,11 +66,11 @@ public class CallbackTemplateResource {
 
     @GET
     @Timed
-    @Path("/{provider}")
+    @Path("/{provider}/{callbackType}")
     @ApiOperation("Get Callback Template")
-    public Response getCallbackTemplate(@PathParam("provider") String provider) {
+    public Response getCallbackTemplate(@PathParam("provider") String provider, @PathParam("callbackType") String callbackType) {
         Optional<TransformationTemplate> callbackTemplateOptional =
-                callbackTemplateProvider.getTemplate(provider);
+                callbackTemplateProvider.getTemplate(provider, callbackType);
 
         if (!callbackTemplateOptional.isPresent()) {
             return Response.noContent()

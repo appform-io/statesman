@@ -38,7 +38,7 @@ public class ServiceProviderCallbackHandler {
     }
 
     public boolean handleServiceProviderCallback(final String serviceProviderId, JsonNode incomingData) {
-        val tmpl = callbackTemplateProvider.get().getTemplate(serviceProviderId).orElse(null);
+        val tmpl = callbackTemplateProvider.get().getTemplate(serviceProviderId, "TICKET").orElse(null);
         if(null == tmpl) {
             log.warn("No template found for callback from service provider: {}. Cannot proceed.", serviceProviderId);
             return false;

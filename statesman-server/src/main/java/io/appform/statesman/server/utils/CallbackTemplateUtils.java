@@ -23,6 +23,7 @@ public class CallbackTemplateUtils {
                 return StoredOneShotCallbackTransformationTemplate.builder()
                         .provider(oneShotTransformationTemplate.getProvider())
                         .idPath(oneShotTransformationTemplate.getIdPath())
+                        .callbackType(oneShotTransformationTemplate.getCallbackType())
                         .template(MapperUtils.serialize(oneShotTransformationTemplate.getTemplate()))
                         .build();
             }
@@ -33,6 +34,7 @@ public class CallbackTemplateUtils {
                 return StoredStepByStepCallbackTransformationTemplate.builder()
                         .provider(stepByStepTransformationTemplate.getProvider())
                         .idPath(stepByStepTransformationTemplate.getIdPath())
+                        .callbackType(stepByStepTransformationTemplate.getCallbackType())
                         .template(MapperUtils.serialize(stepByStepTransformationTemplate.getTemplates()))
                         .build();
             }
@@ -48,6 +50,7 @@ public class CallbackTemplateUtils {
                         return OneShotTransformationTemplate.builder()
                                 .provider(template.getProvider())
                                 .idPath(template.getIdPath())
+                                .callbackType(template.getCallbackType())
                                 .template(MapperUtils.deserialize(template.getTemplate(),String.class))
                                 .build();
 
@@ -59,6 +62,7 @@ public class CallbackTemplateUtils {
                         return StepByStepTransformationTemplate.builder()
                                 .provider(template.getProvider())
                                 .idPath(template.getIdPath())
+                                .callbackType(template.getCallbackType())
                                 .templates(MapperUtils.deserialize(template.getTemplate(),new TypeReference<List<StepByStepTransformationTemplate.StepSelection>>() {}))
                                 .build();
                     }

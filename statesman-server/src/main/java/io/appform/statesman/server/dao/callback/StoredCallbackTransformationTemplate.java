@@ -1,6 +1,5 @@
 package io.appform.statesman.server.dao.callback;
 
-import io.appform.dropwizard.sharding.sharding.LookupKey;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +11,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "callback_templates", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "provider")
+        @UniqueConstraint(columnNames = {"provider", "callback_type"})
 })
 @Data
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -29,7 +28,9 @@ public abstract class StoredCallbackTransformationTemplate {
     @Column(columnDefinition = "type", insertable = false, updatable = false)
     private TransformationTemplateType type;
 
-    @LookupKey
+    @Column(columnDefinition = "callback_type")
+    private String callbackType;
+
     @Column(name = "provider", nullable = false)
     private String provider;
 
@@ -50,10 +51,12 @@ public abstract class StoredCallbackTransformationTemplate {
     protected StoredCallbackTransformationTemplate(TransformationTemplateType type,
                                                    String provider,
                                                    String idPath,
+                                                   String callbackType,
                                                    byte[] template) {
         this.type = type;
         this.provider = provider;
         this.idPath = idPath;
+        this.callbackType = callbackType;
         this.template = template;
     }
 
