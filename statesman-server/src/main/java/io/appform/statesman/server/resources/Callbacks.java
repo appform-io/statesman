@@ -72,7 +72,7 @@ public class Callbacks {
     @Path("/provider/{serviceProvider}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response providerCallback(
-            @PathParam("serviceProvider") final String serviceProvider, JsonNode incomingData) {
+            @PathParam("serviceProvider") final String serviceProvider, JsonNode incomingData) throws Exception {
         final boolean status = providerCallbackHandler.get()
                 .handleServiceProviderCallback(serviceProvider, incomingData);
         if(!status) {
