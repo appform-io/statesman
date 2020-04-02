@@ -413,7 +413,7 @@ public class HandleBarsHelperRegistry {
                 if(Strings.isNullOrEmpty(lookupKey)) {
                     return empty();
                 }
-                val lookupValue = options.hash("op_" + lookupKey);
+                val lookupValue = options.hash(normalizedKey(lookupKey));
                 if(null == lookupValue) {
                     return empty();
                 }
@@ -457,7 +457,7 @@ public class HandleBarsHelperRegistry {
                 }
                 return MAPPER.writeValueAsString(lookupKeys.stream()
                         .map(lookupKey -> {
-                            val value = options.hash("op_" + lookupKey);
+                            val value = options.hash(normalizedKey(lookupKey));
                             return null == value
                                     ? NullNode.getInstance()
                                    : value;
@@ -488,7 +488,7 @@ public class HandleBarsHelperRegistry {
                 if(Strings.isNullOrEmpty(lookupKey)) {
                     return empty();
                 }
-                val lookupValue = options.hash("op_" + lookupKey);
+                val lookupValue = options.hash(normalizedKey(lookupKey));
                 if(null == lookupValue) {
                     return empty();
                 }
@@ -532,7 +532,7 @@ public class HandleBarsHelperRegistry {
                 }
                 return lookupKeys.stream()
                         .map(lookupKey -> {
-                            val value = options.hash("op_" + lookupKey);
+                            val value = options.hash(normalizedKey(lookupKey));
                             return null == value
                                     ? null
                                    : value.toString();
@@ -563,6 +563,12 @@ public class HandleBarsHelperRegistry {
 
     private int lastIndex(Options options) {
         return options.hash.size() - 1;
+    }
+
+    private String normalizedKey(String s) {
+        return "op_" + s.toLowerCase()
+                .replaceAll("[^ \\s\\w]+"," ")
+                .replaceAll("[_\\s]+", "_");
     }
 
 }
