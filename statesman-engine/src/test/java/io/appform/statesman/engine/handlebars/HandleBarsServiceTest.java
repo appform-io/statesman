@@ -236,4 +236,92 @@ public class HandleBarsServiceTest {
         Assert.assertEquals(1, jsonNode.size());
         Assert.assertEquals("HI", jsonNode.get(0).asText());
     }
+
+    @Test
+    @SneakyThrows
+    public void translate() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "{\"language\" : {{{ translate op_Telegu='TG' op_Tamil='TM' op_Hindi='HI' op_English='EN' pointer='/ticket.cf_language'}}} }";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        Assert.assertEquals("HI",
+                            objectMapper.readTree(
+                                    handleBarsService.transform(
+                                            JsonNodeValueResolver.INSTANCE,
+                                            template,
+                                            objectMapper.createObjectNode()
+                                                    .put("ticket.cf_language", "Hindi")))
+                                    .get("language")
+                                    .asText());
+    }
+
+    @Test
+    @SneakyThrows
+    public void translateBool() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "{\"language\" : {{{ translate op_true='Resolved' op_false='Closed' pointer='/ticket.cf_resolved'}}} }";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        Assert.assertEquals("Resolved",
+                            objectMapper.readTree(
+                                    handleBarsService.transform(
+                                            JsonNodeValueResolver.INSTANCE,
+                                            template,
+                                            objectMapper.createObjectNode()
+                                                    .put("ticket.cf_resolved", true)))
+                                    .get("language")
+                                    .asText());
+    }
+
+    @Test
+    @SneakyThrows
+    public void translateInt() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "{\"language\" : {{{ translate op_1='Resolved' op_2='Closed' pointer='/ticket.cf_resolved'}}} }";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        Assert.assertEquals("Resolved",
+                            objectMapper.readTree(
+                                    handleBarsService.transform(
+                                            JsonNodeValueResolver.INSTANCE,
+                                            template,
+                                            objectMapper.createObjectNode()
+                                                    .put("ticket.cf_resolved", 1)))
+                                    .get("language")
+                                    .asText());
+    }
+
+    @Test
+    @SneakyThrows
+    public void translateMissing() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "{\"language\" : {{{ translate op_1='Resolved' op_2='Closed' pointer='/ticket.cf_resolved'}}} }";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        Assert.assertEquals("null", objectMapper.readTree(
+                                    handleBarsService.transform(
+                                            JsonNodeValueResolver.INSTANCE,
+                                            template,
+                                            objectMapper.createObjectNode()
+                                                    .put("ticket.cf_resolved", 9)))
+                                    .get("language")
+                                    .asText());
+    }
+
+    @Test
+    @SneakyThrows
+    public void translateArray() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "{\"language\" : {{{ translate_arr op_Telegu='TG' op_Tamil='TM' op_Hindi='HI' op_English='EN' pointer='/ticket.cf_language'}}} }";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        final JsonNode arr = objectMapper.readTree(
+                handleBarsService.transform(
+                        JsonNodeValueResolver.INSTANCE,
+                        template,
+                        objectMapper.createObjectNode()
+                                .set("ticket.cf_language",
+                                     objectMapper.createArrayNode()
+                                             .add("Telegu")
+                                             .add("Hindi"))))
+                .get("language");
+        Assert.assertTrue(arr.isArray());
+        Assert.assertEquals("TG", arr.get(0).asText());
+        Assert.assertEquals("HI", arr.get(1).asText());
+    }
 }

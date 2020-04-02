@@ -3,6 +3,7 @@ package io.appform.statesman.engine.handlebars;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -57,6 +59,8 @@ public class HandleBarsHelperRegistry {
         registerGte();
         registerMapLookup();
         registerMapLookupArray();
+        registerStrTranslate();
+        registerStrTranslateArr();
     }
 
     private Object compareGte(int lhs) {
@@ -310,7 +314,7 @@ public class HandleBarsHelperRegistry {
                 final int lastIndex = lastIndex(options);
                 int value = lastIndex;
                 if (!Strings.isNullOrEmpty(key)) {
-                    value = readIndex(node, key, lastIndex);
+                    value = readString(node, key, lastIndex);
                 }
                 return singleElement(options, value);
             }
@@ -322,7 +326,7 @@ public class HandleBarsHelperRegistry {
         });
     }
 
-    private int readIndex(JsonNode node, String key, int lastIndex) {
+    private int readString(JsonNode node, String key, int lastIndex) {
         int value = lastIndex;
         val keyNode = node.at(key);
         if (keyNode.isTextual()) {
@@ -391,6 +395,82 @@ public class HandleBarsHelperRegistry {
         });
     }
 
+    private void registerStrTranslate() {
+        handlebars.registerHelper("translate", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+
+                final String key = options.hash("pointer");
+                if (Strings.isNullOrEmpty(key)) {
+                    return empty();
+                }
+                val dataNode = node.at(key);
+                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
+                    return empty();
+                }
+                val lookupKey = dataNode.asText();
+                if(Strings.isNullOrEmpty(lookupKey)) {
+                    return empty();
+                }
+                val lookupValue = options.hash("op_" + lookupKey);
+                if(null == lookupValue) {
+                    return empty();
+                }
+                return MAPPER.writeValueAsString(lookupValue);
+            }
+
+            private CharSequence empty() throws JsonProcessingException {
+                return MAPPER.writeValueAsString(NullNode.getInstance());
+            }
+        });
+    }
+
+    private void registerStrTranslateArr() {
+        handlebars.registerHelper("translate_arr", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+
+                final String key = options.hash("pointer");
+                if (Strings.isNullOrEmpty(key)) {
+                    return empty();
+                }
+                val dataNode = node.at(key);
+                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode()
+                        || (!dataNode.isValueNode() && !dataNode.isArray())) {
+                    return empty();
+                }
+                val lookupKeys = new ArrayList<String>();
+                if(dataNode.isValueNode()) {
+                    val lookupKey = dataNode.asText();
+                    if(Strings.isNullOrEmpty(lookupKey)) {
+                        return empty();
+                    }
+                }
+                else if(dataNode.isArray()) {
+                    lookupKeys.addAll(StreamSupport.stream(Spliterators.spliteratorUnknownSize(dataNode.elements(), Spliterator.ORDERED), false)
+                            .filter(child -> !child.isNull() && !child.isMissingNode() && child.isValueNode())
+                            .map(JsonNode::asText)
+                            .collect(Collectors.toList()));
+
+                }
+                return MAPPER.writeValueAsString(lookupKeys.stream()
+                        .map(lookupKey -> {
+                            val value = options.hash("op_" + lookupKey);
+                            return null == value
+                                    ? NullNode.getInstance()
+                                   : value;
+                        })
+                        .collect(Collectors.toList()));
+            }
+
+            private CharSequence empty() throws JsonProcessingException {
+                return MAPPER.writeValueAsString(MAPPER.createArrayNode());
+            }
+        });
+    }
+
+
+
     private int extractOptionValue(JsonNode keyNode, int defaultValue) {
         final String text = keyNode.asText();
         try {
@@ -405,5 +485,29 @@ public class HandleBarsHelperRegistry {
 
     private int lastIndex(Options options) {
         return options.hash.size() - 1;
+    }
+
+    private CharSequence translate(Options options, JsonNode node, Function<Object, CharSequence> translator) {
+        final String key = options.hash("pointer");
+        if (Strings.isNullOrEmpty(key)) {
+            return empty(translator);
+        }
+        val dataNode = node.at(key);
+        if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
+            return empty(translator);
+        }
+        val lookupKey = dataNode.asText();
+        if(Strings.isNullOrEmpty(lookupKey)) {
+            return empty(translator);
+        }
+        val lookupValue = options.hash(lookupKey);
+        if(null == lookupValue) {
+            return empty(translator);
+        }
+        return translator.apply(lookupValue);
+    }
+
+    private CharSequence empty(Function<Object, CharSequence> translator) {
+        return translator.apply(NullNode.getInstance());
     }
 }
