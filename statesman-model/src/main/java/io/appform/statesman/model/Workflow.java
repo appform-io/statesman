@@ -2,6 +2,8 @@ package io.appform.statesman.model;
 
 import lombok.*;
 
+import java.util.Date;
+
 /**
  *
  */
@@ -13,4 +15,6 @@ public class Workflow {
     String id;
     String templateId;
     DataObject dataObject;
+    Date created;
+    Date updated;
 }

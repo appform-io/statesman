@@ -17,5 +17,6 @@ public class FoxtrotStateTransitionEvent {
     boolean terminal;
     JsonNode data;
     JsonNode update;
+    long elapseTime;
     String appliedAction;
 }

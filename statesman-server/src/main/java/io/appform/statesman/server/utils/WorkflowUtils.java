@@ -69,6 +69,8 @@ public class WorkflowUtils {
                 .id(storedWorkflowInstance.getWorkflowId())
                 .templateId(storedWorkflowInstance.getTemplateId())
                 .dataObject(MapperUtils.deserialize(storedWorkflowInstance.getData(), DataObject.class))
+                .created(storedWorkflowInstance.getCreated())
+                .updated(storedWorkflowInstance.getUpdated())
                 .build();
     }
 
