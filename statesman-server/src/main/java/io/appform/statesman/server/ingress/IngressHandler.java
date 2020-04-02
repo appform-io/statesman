@@ -73,7 +73,7 @@ public class IngressHandler {
         val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
         val tmpl = toOneShotTmpl(transformationTemplate);
         if(null == tmpl) {
-            log.error("No matching transformation template found for provider: {}, context: {}",
+            log.warn("No matching transformation template found for provider: {}, context: {}",
                       ivrProvider, ingressCallback);
             return false;
         }
@@ -84,7 +84,7 @@ public class IngressHandler {
                 .determineTemplate(context)
                 .orElse(null);
         if (null == wfTemplate) {
-            log.error("No matching workflow template found for provider: {}, context: {}", ivrProvider, stdPayload);
+            log.warn("No matching workflow template found for provider: {}, context: {}", ivrProvider, stdPayload);
             return false;
         }
         var wfId = extractWorkflowId(node, transformationTemplate);
@@ -109,14 +109,14 @@ public class IngressHandler {
         val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
         val tmpl = toMultiStepTemplate(transformationTemplate);
         if(null == tmpl) {
-            log.error("No matching step transformation template found for provider: {}, context: {}",
+            log.warn("No matching step transformation template found for provider: {}, context: {}",
                       ivrProvider, ingressCallback);
             return false;
         }
         val date = new Date();
         val selectedStep = selectStep(node, tmpl);
         if(null == selectedStep) {
-            log.error("No matching step transformation template step found for provider: {}, context: {}",
+            log.warn("No matching step transformation template step found for provider: {}, context: {}",
                       ivrProvider, ingressCallback);
             return false;
         }
