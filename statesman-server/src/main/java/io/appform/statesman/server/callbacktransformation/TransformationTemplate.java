@@ -24,11 +24,13 @@ public abstract class TransformationTemplate {
     private final String provider;
     private final TransformationTemplateType type;
     private final String idPath;
+    private final TranslationTemplateType translationTemplateType;
 
-    protected TransformationTemplate(TransformationTemplateType type, String idPath, String provider) {
+    protected TransformationTemplate(TransformationTemplateType type, String idPath, TranslationTemplateType translationTemplateType, String provider) {
         this.provider = provider;
         this.type = type;
         this.idPath = idPath;
+        this.translationTemplateType = translationTemplateType;
     }
 
     public abstract <T> T accept(TransformationTemplateVisitor<T> visitor);

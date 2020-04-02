@@ -8,6 +8,7 @@ import io.appform.statesman.model.AppliedTransitions;
 import io.appform.statesman.model.DataUpdate;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -38,7 +39,7 @@ public class ServiceProviderCallbackHandler {
     }
 
     public boolean handleServiceProviderCallback(final String serviceProviderId, JsonNode incomingData) {
-        val tmpl = callbackTemplateProvider.get().getTemplate(serviceProviderId).orElse(null);
+        val tmpl = callbackTemplateProvider.get().getTemplate(serviceProviderId, TranslationTemplateType.PROVIDER_CALLBACK).orElse(null);
         if(null == tmpl) {
             log.warn("No template found for callback from service provider: {}. Cannot proceed.", serviceProviderId);
             return false;

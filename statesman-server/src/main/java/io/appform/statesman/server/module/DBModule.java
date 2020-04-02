@@ -54,7 +54,7 @@ public class DBModule extends AbstractModule {
 
     @Singleton
     @Provides
-    public LookupDao<StoredCallbackTransformationTemplate> provideCallbackTransformationTemplateLookupDao() {
-        return dbShardingBundle.createParentObjectDao(StoredCallbackTransformationTemplate.class);
+    public RelationalDao<StoredCallbackTransformationTemplate> provideCallbackTransformationTemplateLookupDao() {
+        return dbShardingBundle.createRelatedObjectDao(StoredCallbackTransformationTemplate.class);
     }
 }
