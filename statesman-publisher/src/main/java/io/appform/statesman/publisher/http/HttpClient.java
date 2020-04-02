@@ -24,9 +24,17 @@ public class HttpClient {
                          final Object payload,
                          final Map<String, String> headers) throws IOException {
         final HttpUrl httpUrl = HttpUrl.get(url);
-        final Request.Builder postBuilder = new Request.Builder()
-                .url(httpUrl)
-                .post(RequestBody.create(APPLICATION_JSON, mapper.writeValueAsBytes(payload)));
+        Request.Builder postBuilder;
+        if(payload instanceof String) {
+             postBuilder =  new Request.Builder()
+                     .url(httpUrl)
+                     .post(RequestBody.create(APPLICATION_JSON, (String)payload));
+        }
+        else {
+            postBuilder = new Request.Builder()
+                    .url(httpUrl)
+                    .post(RequestBody.create(APPLICATION_JSON, mapper.writeValueAsBytes(payload)));
+        }
         if (headers != null) {
             headers.forEach(postBuilder::addHeader);
         }
