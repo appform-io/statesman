@@ -321,7 +321,26 @@ public class HandleBarsServiceTest {
                                              .add("Hindi"))))
                 .get("language");
         Assert.assertTrue(arr.isArray());
+        Assert.assertEquals(2, arr.size());
         Assert.assertEquals("TG", arr.get(0).asText());
         Assert.assertEquals("HI", arr.get(1).asText());
+    }
+
+    @Test
+    @SneakyThrows
+    public void translateArraySingleElement() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "{\"language\" : {{{ translate_arr op_Telegu='TG' op_Tamil='TM' op_Hindi='HI' op_English='EN' pointer='/ticket.cf_language'}}} }";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        final JsonNode arr = objectMapper.readTree(
+                handleBarsService.transform(
+                        JsonNodeValueResolver.INSTANCE,
+                        template,
+                        objectMapper.createObjectNode()
+                                .put("ticket.cf_language","Telegu")))
+                .get("language");
+        Assert.assertTrue(arr.isArray());
+        Assert.assertEquals(1, arr.size());
+        Assert.assertEquals("TG", arr.get(0).asText());
     }
 }

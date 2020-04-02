@@ -445,6 +445,7 @@ public class HandleBarsHelperRegistry {
                     if(Strings.isNullOrEmpty(lookupKey)) {
                         return empty();
                     }
+                    lookupKeys.add(lookupKey);
                 }
                 else if(dataNode.isArray()) {
                     lookupKeys.addAll(StreamSupport.stream(Spliterators.spliteratorUnknownSize(dataNode.elements(), Spliterator.ORDERED), false)
