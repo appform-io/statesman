@@ -3,8 +3,11 @@ package io.appform.statesman.server.ingress;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
 import com.google.common.base.Strings;
+import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.StateTransitionEngine;
@@ -51,6 +54,7 @@ public class IngressHandler {
     private final Provider<WorkflowTemplateSelector> templateSelector;
     private final IvrDropDetectionConfig dropDetectionConfig;
     private final HopeLangEngine hopeLangEngine;
+    private final LoadingCache<String, Evaluatable> hopeRuleCache;
 
     @Inject
     public IngressHandler(
@@ -71,6 +75,9 @@ public class IngressHandler {
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
+        this.hopeRuleCache = Caffeine.newBuilder()
+                .maximumSize(512)
+                .build(hopeLangEngine::parse);
     }
 
     public boolean invokeEngineForOneShot(String ivrProvider, IngressCallback ingressCallback) throws IOException {
@@ -107,8 +114,8 @@ public class IngressHandler {
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, update, new MergeDataAction()));
-        log.info("Workflow: {} with template: {} went through transitions: {}",
-                 wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        log.debug("Workflow: {} with template: {} went through transitions: {}",
+                  wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return true;
     }
 
@@ -249,7 +256,7 @@ public class IngressHandler {
             StepByStepTransformationTemplate template) {
         return template.getTemplates()
                 .stream()
-                .filter(tmpl -> hopeLangEngine.evaluate(tmpl.getSelectionRule(), node))
+                .filter(tmpl -> hopeLangEngine.evaluate(hopeRuleCache.get(tmpl.getSelectionRule()), node))
                 .findFirst()
                 .orElse(null);
     }
@@ -269,17 +276,10 @@ public class IngressHandler {
         }
         return StreamSupport.stream(Spliterators.spliteratorUnknownSize(jsonNode.fields(), Spliterator.ORDERED), false)
                 .filter(field -> patterns.stream()
-                        .anyMatch(pattern -> {
-                            log.info("Matching field: {} with {}. Result: {}",
-                                     field,
-                                     pattern,
-                                     field.getKey().matches(pattern));
-                            return field.getKey().matches(pattern);
-                        }))
-                .anyMatch(field ->
-                                  field.getValue().isArray()
-                                          && (field.getValue().size() == 0
-                                          || (field.getValue().size() == 1
-                                          && Strings.isNullOrEmpty(field.getValue().get(0).asText()))));
+                        .anyMatch(pattern -> field.getKey().matches(pattern)))
+                .anyMatch(field -> field.getValue().isArray()
+                        && (field.getValue().size() == 0
+                        || (field.getValue().size() == 1
+                        && Strings.isNullOrEmpty(field.getValue().get(0).asText()))));
     }
 }
