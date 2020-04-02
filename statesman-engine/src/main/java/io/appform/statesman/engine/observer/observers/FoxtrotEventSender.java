@@ -87,6 +87,7 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
                                                .data(stateTransitionEvent.getWorkflow().getDataObject().getData())
                                                .update(stateTransitionEvent.getUpdate().getData())
                                                .appliedAction(stateTransitionEvent.getTransition().getAction())
+                                               .elapseTime(System.currentTimeMillis() - stateTransitionEvent.getWorkflow().getCreated().getTime())
                                                .build())
                             .build());
         }
