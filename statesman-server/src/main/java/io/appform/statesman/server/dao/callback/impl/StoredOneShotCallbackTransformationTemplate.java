@@ -1,6 +1,7 @@
 package io.appform.statesman.server.dao.callback.impl;
 
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateType;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import io.appform.statesman.server.dao.callback.StoredCallbackTransformationTemplate;
 import io.appform.statesman.server.dao.callback.StoredCallbackTransformationTemplateVisitor;
 import lombok.Builder;
@@ -21,9 +22,9 @@ public class StoredOneShotCallbackTransformationTemplate extends StoredCallbackT
     @Builder
     public StoredOneShotCallbackTransformationTemplate(String provider,
                                                        String idPath,
-                                                       String callbackType,
+                                                       TranslationTemplateType translationTemplateType,
                                                        byte[] template) {
-        super(TransformationTemplateType.ONE_SHOT, provider, idPath, callbackType, template);
+        super(TransformationTemplateType.ONE_SHOT, provider, idPath, translationTemplateType, template);
     }
 
     @Override

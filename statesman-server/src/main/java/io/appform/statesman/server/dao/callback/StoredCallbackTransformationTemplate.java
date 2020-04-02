@@ -1,6 +1,7 @@
 package io.appform.statesman.server.dao.callback;
 
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateType;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Generated;
@@ -11,7 +12,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "callback_templates", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"provider", "callback_type"})
+        @UniqueConstraint(columnNames = {"provider", "translation_template_type"})
 })
 @Data
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -28,8 +29,9 @@ public abstract class StoredCallbackTransformationTemplate {
     @Column(columnDefinition = "type", insertable = false, updatable = false)
     private TransformationTemplateType type;
 
-    @Column(columnDefinition = "callback_type")
-    private String callbackType;
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "translation_template_type")
+    private TranslationTemplateType translationTemplateType;
 
     @Column(name = "provider", nullable = false)
     private String provider;
@@ -51,12 +53,12 @@ public abstract class StoredCallbackTransformationTemplate {
     protected StoredCallbackTransformationTemplate(TransformationTemplateType type,
                                                    String provider,
                                                    String idPath,
-                                                   String callbackType,
+                                                   TranslationTemplateType translationTemplateType,
                                                    byte[] template) {
         this.type = type;
         this.provider = provider;
         this.idPath = idPath;
-        this.callbackType = callbackType;
+        this.translationTemplateType = translationTemplateType;
         this.template = template;
     }
 

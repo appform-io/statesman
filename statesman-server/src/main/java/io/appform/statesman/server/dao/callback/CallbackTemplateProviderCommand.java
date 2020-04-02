@@ -8,6 +8,7 @@ import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.utils.CallbackTemplateUtils;
@@ -57,7 +58,7 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
     public Optional<TransformationTemplate> updateTemplate(TransformationTemplate transformationTemplate) {
         try {
             DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredCallbackTransformationTemplate.class)
-                    .add(Restrictions.eq("callbackType", transformationTemplate.getCallbackType()))
+                    .add(Restrictions.eq("translationTemplateType", transformationTemplate.getTranslationTemplateType()))
                     .add(Restrictions.eq("provider", transformationTemplate.getProvider()));
             boolean updated = callbackTemplateDao.update(transformationTemplate.getProvider(), detachedCriteria,
                     storedCallbackTransformationTemplate -> {
@@ -78,7 +79,7 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
                         });
                         return storedCallbackTransformationTemplate;
                     });
-            return updated ? getTemplateFromDb(transformationTemplate.getProvider(), transformationTemplate.getCallbackType()) : Optional.empty();
+            return updated ? getTemplateFromDb(transformationTemplate.getProvider(), transformationTemplate.getTranslationTemplateType()) : Optional.empty();
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
@@ -90,21 +91,21 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
     }
 
     @Override
-    public Optional<TransformationTemplate> getTemplate(String provider, String callbackType) {
+    public Optional<TransformationTemplate> getTemplate(String provider, TranslationTemplateType translationTemplateType) {
         try {
             return getAll().stream()
                     .filter(transformationTemplate -> transformationTemplate.getProvider().equals(provider)
-                            && transformationTemplate.getCallbackType().equalsIgnoreCase(callbackType))
+                            && transformationTemplate.getTranslationTemplateType() == translationTemplateType)
                     .findFirst();
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
     }
 
-    public Optional<TransformationTemplate> getTemplateFromDb(String provider, String callbackType) {
+    public Optional<TransformationTemplate> getTemplateFromDb(String provider, TranslationTemplateType translationTemplateType) {
         try {
             DetachedCriteria detachedCriteria = DetachedCriteria.forClass(StoredCallbackTransformationTemplate.class)
-                    .add(Restrictions.eq("callbackType", callbackType))
+                    .add(Restrictions.eq("translationTemplateType", translationTemplateType))
                     .add(Restrictions.eq("provider", provider));
             return callbackTemplateDao.select(provider, detachedCriteria, 0, 1)
                     .stream()

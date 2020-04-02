@@ -15,6 +15,7 @@ import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
@@ -220,7 +221,7 @@ public class IngressHandler {
     }
 
     private TransformationTemplate getIngressTransformationTemplate(String ivrProvider) {
-        val transformationTemplate = callbackTemplateProvider.getTemplate(ivrProvider, "INGRESS")
+        val transformationTemplate = callbackTemplateProvider.getTemplate(ivrProvider, TranslationTemplateType.INGRESS)
                 .orElse(null);
         if (null == transformationTemplate) {
             throw new StatesmanError("No matching translation template found for provider: " + ivrProvider,
