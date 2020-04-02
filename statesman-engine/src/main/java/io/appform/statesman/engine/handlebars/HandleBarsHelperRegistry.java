@@ -488,26 +488,6 @@ public class HandleBarsHelperRegistry {
         return options.hash.size() - 1;
     }
 
-    private CharSequence translate(Options options, JsonNode node, Function<Object, CharSequence> translator) {
-        final String key = options.hash("pointer");
-        if (Strings.isNullOrEmpty(key)) {
-            return empty(translator);
-        }
-        val dataNode = node.at(key);
-        if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
-            return empty(translator);
-        }
-        val lookupKey = dataNode.asText();
-        if(Strings.isNullOrEmpty(lookupKey)) {
-            return empty(translator);
-        }
-        val lookupValue = options.hash(lookupKey);
-        if(null == lookupValue) {
-            return empty(translator);
-        }
-        return translator.apply(lookupValue);
-    }
-
     private CharSequence empty(Function<Object, CharSequence> translator) {
         return translator.apply(NullNode.getInstance());
     }
