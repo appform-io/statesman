@@ -17,8 +17,6 @@ import io.appform.statesman.server.utils.MapperUtils;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.riemann.RiemannBundle;
-import io.dropwizard.riemann.RiemannConfig;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
@@ -40,7 +38,6 @@ public class StatesmanApp extends Application<AppConfig> {
         this.dbShardingBundle = dbShardingBundle();
         bootstrap.addBundle(dbShardingBundle);
         bootstrap.addBundle(guiceBundle(dbShardingBundle));
-        bootstrap.addBundle(riemannBundle());
         bootstrap.addBundle(swaggerBundle());
     }
 
@@ -79,15 +76,6 @@ public class StatesmanApp extends Application<AppConfig> {
             @Override
             protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AppConfig config) {
                 return config.getSwagger();
-            }
-        };
-    }
-
-    private RiemannBundle<AppConfig> riemannBundle() {
-        return new RiemannBundle<AppConfig>() {
-            @Override
-            public RiemannConfig getRiemannConfiguration(AppConfig configuration) {
-                return configuration.getRiemann();
             }
         };
     }

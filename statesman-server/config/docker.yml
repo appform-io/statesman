@@ -17,6 +17,7 @@ logging:
     deprecation: ERROR
     org.hibernate: ERROR
     QueuedSender: WARN
+    com.codahale.metrics.collectd: ERROR
     io.appform.statesman: DEBUG
   appenders:
     - type: console
@@ -69,13 +70,6 @@ shards:
       evictionInterval: 30s
       minIdleTime: 1m
 
-riemann:
-  host: ${RIEMANN_HOST}
-  port: 5555
-  prefix: covid.${CONFIG_ENV}.statesman
-  pollingInterval: 30
-  tags:
-    - statesman
 
 swagger:
   resourcePackage: io.appform.statesman.server.resources
@@ -104,3 +98,10 @@ ivrDropDetection:
   detectionPatterns:
     ozonetel_punjab:
       - "payload.*"
+
+metrics:
+  reporters:
+    - type: collectd
+      host: ${COLLECTD_HOST}
+      port: 25826
+      frequency: ${METRIC_PUSH_FREQUENCY}

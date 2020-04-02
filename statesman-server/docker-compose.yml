@@ -28,8 +28,8 @@ services:
       DB_USER: root
       DB_PASSWORD: password
       SHARDS: 2
-      RIEMANN_HOST: riemann.stage
-      RIEMANN_PORT: 5555
+      COLLECTD_HOST: localhost
+      METRIC_PUSH_FREQUENCY: 1min
       CONFIG_ENV: local
     depends_on:
       - mariadb_1

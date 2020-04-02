@@ -81,7 +81,7 @@
             <artifactId>mariadb-java-client</artifactId>
             <version>${mariadb.driver.version}</version>
         </dependency>
-        <dependency>
+<!--        <dependency>
             <groupId>io.dropwizard</groupId>
             <artifactId>dropwizard-riemann</artifactId>
             <version>${dropwizard.riemann.version}</version>
@@ -95,6 +95,11 @@
                     <artifactId>lombok</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>-->
+        <dependency>
+            <groupId>io.appform.dropwizard</groupId>
+            <artifactId>dropwizard-metrics-collectd</artifactId>
+            <version>1.3.20-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>io.appform</groupId>
