@@ -241,7 +241,7 @@ public class HandleBarsServiceTest {
     @SneakyThrows
     public void translate() {
         HandleBarsService handleBarsService = new HandleBarsService();
-        final String template = "{\"language\" : {{{ translate op_Telegu='TG' op_Tamil='TM' op_Hindi='HI' op_English='EN' pointer='/ticket.cf_language'}}} }";
+        final String template = "{\"language\" : {{{ translate op_telegu='TG' op_tamil='TM' op_hindi='HI' op_english='EN' pointer='/ticket.cf_language'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("HI",
                             objectMapper.readTree(
@@ -308,7 +308,7 @@ public class HandleBarsServiceTest {
     @SneakyThrows
     public void translateArray() {
         HandleBarsService handleBarsService = new HandleBarsService();
-        final String template = "{\"language\" : {{{ translate_arr op_Telegu='TG' op_Tamil='TM' op_Hindi='HI' op_English='EN' pointer='/ticket.cf_language'}}} }";
+        final String template = "{\"language\" : {{{ translate_arr op_telegu='TG' op_tamil='TM' op_hindi='HI' op_english='EN' pointer='/ticket.cf_language'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode arr = objectMapper.readTree(
                 handleBarsService.transform(
@@ -330,7 +330,7 @@ public class HandleBarsServiceTest {
     @SneakyThrows
     public void translateArraySingleElement() {
         HandleBarsService handleBarsService = new HandleBarsService();
-        final String template = "{\"language\" : {{{ translate_arr op_Telegu='TG' op_Tamil='TM' op_Hindi='HI' op_English='EN' pointer='/ticket.cf_language'}}} }";
+        final String template = "{\"language\" : {{{ translate_arr op_telegu='TG' op_tamil='TM' op_hindi='HI' op_english='EN' pointer='/ticket.cf_language'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode arr = objectMapper.readTree(
                 handleBarsService.transform(
@@ -390,5 +390,23 @@ public class HandleBarsServiceTest {
                                                       "      \"wheezing\"\n" +
                                                       "   ]\n" +
                                                       "}")));
+    }
+
+    @Test
+    @SneakyThrows
+    public void translateSpaceWords() {
+        HandleBarsService handleBarsService = new HandleBarsService();
+        final String template = "{\"language\" : {{{ translate_arr op_hello_world='HW' op_hello_mars='HM' pointer='/ticket.cf_language'}}} }";
+        final ObjectMapper objectMapper = Jackson.newObjectMapper();
+        final JsonNode arr = objectMapper.readTree(
+                handleBarsService.transform(
+                        JsonNodeValueResolver.INSTANCE,
+                        template,
+                        objectMapper.createObjectNode()
+                                .put("ticket.cf_language", "Hello World")))
+                .get("language");
+        Assert.assertTrue(arr.isArray());
+        Assert.assertEquals(1, arr.size());
+        Assert.assertEquals("HW", arr.get(0).asText());
     }
 }
