@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "callback_templates", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"provider", "translation_template_type"})
+        @UniqueConstraint(columnNames = {"provider","translation_template_type"})
 })
 @Data
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -30,7 +30,7 @@ public abstract class StoredCallbackTransformationTemplate {
     private TransformationTemplateType type;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "translation_template_type")
+    @Column(name = "translation_template_type")
     private TranslationTemplateType translationTemplateType;
 
     @Column(name = "provider", nullable = false)
