@@ -53,7 +53,11 @@
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
-
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.6.2</version>
+        </dependency>
     </dependencies>
 
 </project>

@@ -51,6 +51,7 @@ public class CallbackTemplateResource {
     }
 
     @Timed
+    @GET
     @Path("/all")
     @ApiOperation("Get all callback templates")
     public Response getAll() {

@@ -8,15 +8,18 @@ import lombok.SneakyThrows;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
+
 /**
  *
  */
 public class HandleBarsServiceTest {
 
+    private final HandleBarsService handleBarsService = new HandleBarsService();
+
     @Test
     @SneakyThrows
     public void transform() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]/0'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("KA",
@@ -34,7 +37,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformBool() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup op_1=true op_2=false pointer='/payload[question2]/0'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode language = objectMapper.readTree(
@@ -51,7 +53,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArray() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -73,7 +74,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArrayClubbed() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -97,7 +97,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArrayIntConversion() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -121,7 +120,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArrayInvalidTextValueToDefault() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -145,7 +143,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArrayInvalidTypeToDefault() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -171,7 +168,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArrayMissingNodeToDefault() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -188,7 +184,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArrayEmptyKeyToDefault() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer=''}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -205,7 +200,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArraySingleElement() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -223,7 +217,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void transformArraySingleElementDefaultSelect() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ map_lookup_arr op_1='EN' op_2='KA' op_3='HI' pointer='/payload[question1]'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode jsonNode = objectMapper.readTree(
@@ -240,7 +233,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translate() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ translate op_telegu='TG' op_tamil='TM' op_hindi='HI' op_english='EN' pointer='/ticket.cf_language'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("HI",
@@ -257,7 +249,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateBool() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ translate op_true='Resolved' op_false='Closed' pointer='/ticket.cf_resolved'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("Resolved",
@@ -274,7 +265,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateInt() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ translate op_1='Resolved' op_2='Closed' pointer='/ticket.cf_resolved'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("Resolved",
@@ -291,7 +281,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateMissing() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ translate op_1='Resolved' op_2='Closed' pointer='/ticket.cf_resolved'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals("null", objectMapper.readTree(
@@ -307,7 +296,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateArray() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ translate_arr op_telegu='TG' op_tamil='TM' op_hindi='HI' op_english='EN' pointer='/ticket.cf_language'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode arr = objectMapper.readTree(
@@ -329,7 +317,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateArraySingleElement() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ translate_arr op_telegu='TG' op_tamil='TM' op_hindi='HI' op_english='EN' pointer='/ticket.cf_language'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode arr = objectMapper.readTree(
@@ -347,7 +334,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateToHTML() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "<b>Age:</b> {{{translate_txt op_true='Above Sixty' op_false='Below Sixty' pointer='/ageAboveSixty'}}}<br> <b>Travel Status:</b> {{{translate_txt op_true='Travelled abroad' op_false='Has not travelled abroad' pointer='/travelled'}}}<br><b>Exposure:</b> {{{translate_txt op_true='Has had contact with COVID-19 patient' op_false='No contact' pointer='/contact'}}}<br> <b>Pre existing conditions:</b> {{{translate_txt op_heart='Heart problems, Asthma or any other Lung problems' op_cancer='Cancer or on chemotherapy or other low immunity problems' op_diabetes='Diabetes or Kidney problems' op_pregnant='Pregnant at present or recently delivered a baby' op_none='No Prexistting Conditions' pointer='/existingDiseases'}}}<br> <b>Symptoms:</b> {{{translate_arr_txt op_fever='Fever' op_cough='Dry Cough' op_throatpain='Throat Pain' op_wheezing='Wheezing' op_others='Others' op_none='none' pointer='/symptoms'}}}";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals(
@@ -370,7 +356,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateToHTMLNull() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "<b>Age:</b> Above Sixty<br> <b>Travel Status:</b> <br><b>Exposure:</b> Has had contact with COVID-19 patient<br> <b>Pre existing conditions:</b> Diabetes or Kidney problems<br> <b>Symptoms:</b> Dry Cough, Throat Pain, Wheezing";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         Assert.assertEquals(
@@ -395,7 +380,6 @@ public class HandleBarsServiceTest {
     @Test
     @SneakyThrows
     public void translateSpaceWords() {
-        HandleBarsService handleBarsService = new HandleBarsService();
         final String template = "{\"language\" : {{{ translate_arr op_hello_world='HW' op_hello_mars='HM' pointer='/ticket.cf_language'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
         final JsonNode arr = objectMapper.readTree(
@@ -408,5 +392,28 @@ public class HandleBarsServiceTest {
         Assert.assertTrue(arr.isArray());
         Assert.assertEquals(1, arr.size());
         Assert.assertEquals("HW", arr.get(0).asText());
+    }
+
+    @Test
+    @SneakyThrows
+    public void phoneTest() {
+        final String template = "{{phone value}}";
+        Assert.assertEquals("1234567890", handleBarsService.transform(
+                                    template, Collections.singletonMap("value", "1234567890sdasa%^%$$$^$ %$ _")));
+        Assert.assertEquals("1234567890",
+                            handleBarsService.transform(template, Collections.singletonMap("value", "+91 1234567890")));
+        Assert.assertEquals("1234567890",
+                            handleBarsService.transform(template, Collections.singletonMap("value", "01234567890")));
+        Assert.assertEquals("1234567890",
+                            handleBarsService.transform(template, Collections.singletonMap("value", "+91-1234567890")));
+        Assert.assertEquals("1234567890",
+                            handleBarsService.transform(template, Collections.singletonMap("value", "1234567890")));
+        Assert.assertEquals("",
+                            handleBarsService.transform(template, Collections.emptyMap()));
+        Assert.assertEquals("",
+                            handleBarsService.transform(template, Collections.singletonMap("value", "1234")));
+        Assert.assertEquals("", handleBarsService.transform(
+                                    template, Collections.singletonMap("value", "sasdasd asdqqweq weq we")));
+
     }
 }

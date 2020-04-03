@@ -12,9 +12,6 @@ import lombok.val;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.StreamSupport;
 
 /**
  *
@@ -34,13 +31,7 @@ public class DataActionExecutor {
             public JsonNode visit(MergeDataAction mergeDataAction) {
                 ObjectNode objectNode = mapper.createObjectNode();
                 objectNode.setAll((ObjectNode) dataObject.getData());
-                final ObjectNode updateData = (ObjectNode) dataUpdate.getData();
-                StreamSupport.stream(Spliterators.spliteratorUnknownSize(updateData.fields(), Spliterator.ORDERED), false)
-                        .forEach(e -> {
-                            if (!objectNode.has(e.getKey())) {
-                                objectNode.set(e.getKey(), e.getValue());
-                            }
-                        });
+                objectNode.setAll((ObjectNode)dataUpdate.getData());
                 return objectNode;
             }
 

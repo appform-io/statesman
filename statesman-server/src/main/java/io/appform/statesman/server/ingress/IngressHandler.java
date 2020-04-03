@@ -122,33 +122,36 @@ public class IngressHandler {
     }
 
     public boolean invokeEngineForMultiStep(String ivrProvider, IngressCallback ingressCallback) throws IOException {
-        log.info("Processing callback from: {}: Payload: {}", ivrProvider, ingressCallback);
+        log.debug("Processing callback from: {}: Payload: {}", ivrProvider, ingressCallback);
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
+        log.info("Processing node: {}", node);
         val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
         if(null == transformationTemplate) {
-            log.error("No matching translation template found for provider: " + ivrProvider);
+            log.warn("No matching translation template found for provider{}. node: {} ", ivrProvider, node);
             return false;
         }
         val tmpl = toMultiStepTemplate(transformationTemplate);
         if (null == tmpl) {
-            log.warn("No matching step transformation template found for provider: {}, context: {}",
-                     ivrProvider, ingressCallback);
+            log.warn("No matching step transformation template found for provider: {}, node: {}",
+                     ivrProvider, node);
             return false;
         }
         val date = new Date();
         val selectedStep = selectStep(node, tmpl);
         if (null == selectedStep) {
-            log.warn("No matching step transformation template step found for provider: {}, context: {}",
-                     ivrProvider, ingressCallback);
+            log.warn("No matching step transformation template step found for provider: {}, node: {}",
+                     ivrProvider, node);
             return false;
         }
         val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, selectedStep.getTemplate(), node);
         val update = mapper.readTree(stdPayload);
+        log.debug("Translated payload: {}", update);
         if (update.isObject()) {
             ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(ivrProvider, node, dropDetectionConfig));
         }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
+        log.debug("WFID node: {}", wfIdNode);
         String wfId = UUID.randomUUID().toString();
         Workflow wf = null;
         WorkflowTemplate wfTemplate = null;
@@ -156,32 +159,37 @@ public class IngressHandler {
         if (isValid(wfIdNode)) {
             //We found ID node .. so we have to reuse if present
             wfId = extractWorkflowId(node, transformationTemplate);
+            log.debug("Workflow id extracted: {}", wfId);
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (wf != null) {
+                log.debug("Existing workflow found for : {}", wfId);
                 //Found existing workflow
                 wfTemplate = wfp.getTemplate(wf.getTemplateId()).orElse(null);
                 if (null == wfTemplate) {
-                    log.error("No matching workflow template found for provider: {}, context: {}",
+                    log.warn("No matching workflow template found for provider: {}, node: {}",
                               ivrProvider,
-                              stdPayload);
+                              node);
                     return false;
                 }
             }
         }
         else {
+            log.debug("Workflow could not be extracted for path: {}", tmpl.getIdPath());
             //We have generated the id
             //Make sure wf id is not clashing with any existing id by chance
             while (wfp.workflowExists(wfId)) {
                 wfId = UUID.randomUUID().toString();
             }
+            log.debug("Generated ID: {}", wfId);
         }
         if (wf == null) {
+            log.debug("Will create new workflow for: {}", wfId);
             //First time .. create workflow
             wfTemplate = templateSelector.get()
                     .determineTemplate(update)
                     .orElse(null);
             if (null == wfTemplate) {
-                log.error("No matching workflow template found for provider: {}, context: {}", ivrProvider, stdPayload);
+                log.warn("No matching workflow template found for provider: {}, node: {}", ivrProvider, stdPayload);
                 return false;
             }
             val dataNode = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
@@ -192,10 +200,11 @@ public class IngressHandler {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
                 return false;
             }
+            log.debug("Workflow created: {}", wf);
         }
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, update, new MergeDataAction()));
+                .handle(new DataUpdate(wfId, update, new MergeDataAction()), new MergeDataAction());
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return true;
@@ -271,7 +280,7 @@ public class IngressHandler {
         val detectionPatterns = dropDetectionConfig.getDetectionPatterns();
         val patterns = null == detectionPatterns
                        ? Collections.<String>emptyList()
-                       : detectionPatterns.get(provider);
+                       : detectionPatterns.getOrDefault(provider, Collections.emptyList());
         if (patterns.isEmpty()) {
             log.debug("No call drop detection patterns found for provider: {}", provider);
             return false;

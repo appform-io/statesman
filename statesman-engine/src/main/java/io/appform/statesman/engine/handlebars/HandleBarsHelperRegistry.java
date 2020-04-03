@@ -62,6 +62,7 @@ public class HandleBarsHelperRegistry {
         registerStrTranslateArr();
         registerStrTranslateTxt();
         registerStrTranslateArrTxt();
+        registerPhone();
     }
 
     private Object compareGte(int lhs) {
@@ -333,7 +334,7 @@ public class HandleBarsHelperRegistry {
         if (keyNode.isTextual()) {
             value = extractOptionValue(keyNode, lastIndex);
         }
-        if(keyNode.isIntegralNumber()) {
+        if (keyNode.isIntegralNumber()) {
             value = keyNode.asInt(lastIndex);
         }
         return Math.min(value, lastIndex);
@@ -352,7 +353,7 @@ public class HandleBarsHelperRegistry {
                 }
                 else {
                     val keyNode = node.at(key);
-                    if(!keyNode.isArray()) {
+                    if (!keyNode.isArray()) {
                         readNode(lastIndex, indices, keyNode);
                     }
                     else {
@@ -362,7 +363,7 @@ public class HandleBarsHelperRegistry {
                     }
                 }                //Array of options
                 return MAPPER.writeValueAsString(
-                                indices.stream()
+                        indices.stream()
                                 .map(i -> options.hash("op_" + i))
                                 .collect(Collectors.toList()));
             }
@@ -372,7 +373,7 @@ public class HandleBarsHelperRegistry {
                 if (keyNode.isTextual()) {
                     value = extractOptionValue(keyNode, lastIndex);
                 }
-                else if(keyNode.isIntegralNumber()) {
+                else if (keyNode.isIntegralNumber()) {
                     value = keyNode.asInt(lastIndex);
                 }
                 else {
@@ -406,15 +407,15 @@ public class HandleBarsHelperRegistry {
                     return empty();
                 }
                 val dataNode = node.at(key);
-                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
+                if (null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
                     return empty();
                 }
                 val lookupKey = dataNode.asText();
-                if(Strings.isNullOrEmpty(lookupKey)) {
+                if (Strings.isNullOrEmpty(lookupKey)) {
                     return empty();
                 }
                 val lookupValue = options.hash(normalizedKey(lookupKey));
-                if(null == lookupValue) {
+                if (null == lookupValue) {
                     return empty();
                 }
                 return MAPPER.writeValueAsString(lookupValue);
@@ -436,33 +437,35 @@ public class HandleBarsHelperRegistry {
                     return empty();
                 }
                 val dataNode = node.at(key);
-                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode()
+                if (null == dataNode || dataNode.isNull() || dataNode.isMissingNode()
                         || (!dataNode.isValueNode() && !dataNode.isArray())) {
                     return empty();
                 }
                 val lookupKeys = new ArrayList<String>();
-                if(dataNode.isValueNode()) {
+                if (dataNode.isValueNode()) {
                     val lookupKey = dataNode.asText();
-                    if(Strings.isNullOrEmpty(lookupKey)) {
+                    if (Strings.isNullOrEmpty(lookupKey)) {
                         return empty();
                     }
                     lookupKeys.add(lookupKey);
                 }
-                else if(dataNode.isArray()) {
-                    lookupKeys.addAll(StreamSupport.stream(Spliterators.spliteratorUnknownSize(dataNode.elements(), Spliterator.ORDERED), false)
-                            .filter(child -> !child.isNull() && !child.isMissingNode() && child.isValueNode())
-                            .map(JsonNode::asText)
-                            .collect(Collectors.toList()));
+                else if (dataNode.isArray()) {
+                    lookupKeys.addAll(StreamSupport.stream(Spliterators.spliteratorUnknownSize(dataNode.elements(),
+                                                                                               Spliterator.ORDERED),
+                                                           false)
+                                              .filter(child -> !child.isNull() && !child.isMissingNode() && child.isValueNode())
+                                              .map(JsonNode::asText)
+                                              .collect(Collectors.toList()));
 
                 }
                 return MAPPER.writeValueAsString(lookupKeys.stream()
-                        .map(lookupKey -> {
-                            val value = options.hash(normalizedKey(lookupKey));
-                            return null == value
-                                    ? NullNode.getInstance()
-                                   : value;
-                        })
-                        .collect(Collectors.toList()));
+                                                         .map(lookupKey -> {
+                                                             val value = options.hash(normalizedKey(lookupKey));
+                                                             return null == value
+                                                                    ? NullNode.getInstance()
+                                                                    : value;
+                                                         })
+                                                         .collect(Collectors.toList()));
             }
 
             private CharSequence empty() throws JsonProcessingException {
@@ -481,15 +484,15 @@ public class HandleBarsHelperRegistry {
                     return empty();
                 }
                 val dataNode = node.at(key);
-                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
+                if (null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode()) {
                     return empty();
                 }
                 val lookupKey = dataNode.asText();
-                if(Strings.isNullOrEmpty(lookupKey)) {
+                if (Strings.isNullOrEmpty(lookupKey)) {
                     return empty();
                 }
                 val lookupValue = options.hash(normalizedKey(lookupKey));
-                if(null == lookupValue) {
+                if (null == lookupValue) {
                     return empty();
                 }
                 return lookupValue.toString();
@@ -511,30 +514,32 @@ public class HandleBarsHelperRegistry {
                     return empty();
                 }
                 val dataNode = node.at(key);
-                if(null == dataNode || dataNode.isNull() || dataNode.isMissingNode()
+                if (null == dataNode || dataNode.isNull() || dataNode.isMissingNode()
                         || (!dataNode.isValueNode() && !dataNode.isArray())) {
                     return empty();
                 }
                 val lookupKeys = new ArrayList<String>();
-                if(dataNode.isValueNode()) {
+                if (dataNode.isValueNode()) {
                     val lookupKey = dataNode.asText();
-                    if(Strings.isNullOrEmpty(lookupKey)) {
+                    if (Strings.isNullOrEmpty(lookupKey)) {
                         return empty();
                     }
                     lookupKeys.add(lookupKey);
                 }
-                else if(dataNode.isArray()) {
-                    lookupKeys.addAll(StreamSupport.stream(Spliterators.spliteratorUnknownSize(dataNode.elements(), Spliterator.ORDERED), false)
-                            .filter(child -> !child.isNull() && !child.isMissingNode() && child.isValueNode())
-                            .map(JsonNode::asText)
-                            .collect(Collectors.toList()));
+                else if (dataNode.isArray()) {
+                    lookupKeys.addAll(StreamSupport.stream(Spliterators.spliteratorUnknownSize(dataNode.elements(),
+                                                                                               Spliterator.ORDERED),
+                                                           false)
+                                              .filter(child -> !child.isNull() && !child.isMissingNode() && child.isValueNode())
+                                              .map(JsonNode::asText)
+                                              .collect(Collectors.toList()));
 
                 }
                 return lookupKeys.stream()
                         .map(lookupKey -> {
                             val value = options.hash(normalizedKey(lookupKey));
                             return null == value
-                                    ? null
+                                   ? null
                                    : value.toString();
                         })
                         .filter(Objects::nonNull)
@@ -547,6 +552,21 @@ public class HandleBarsHelperRegistry {
         });
     }
 
+    private void registerPhone() {
+        handlebars.registerHelper("phone", (Helper<String>) (context, options) -> {
+            if (Strings.isNullOrEmpty(context)) {
+                return null;
+            }
+            final String numericString = numericStr(context);
+            if(Strings.isNullOrEmpty(numericString)) {
+                return null;
+            }
+            if(numericString.length() == 10) {
+                return numericString;
+            }
+            return numericString.length() > 10 ? numericString.substring(numericString.length() - 10) : null;
+        });
+    }
 
 
     private int extractOptionValue(JsonNode keyNode, int defaultValue) {
@@ -554,11 +574,16 @@ public class HandleBarsHelperRegistry {
         try {
             return Strings.isNullOrEmpty(text)
                    ? defaultValue
-                   : Integer.parseInt(text);
-        } catch (NumberFormatException e) {
+                   : Integer.parseInt(numericStr(text));
+        }
+        catch (NumberFormatException e) {
             log.error("Error parsing number text: " + text, e);
             return defaultValue;
         }
+    }
+
+    private String numericStr(String context) {
+        return context.replaceAll("[^\\p{Digit}]", "");
     }
 
     private int lastIndex(Options options) {
@@ -567,7 +592,7 @@ public class HandleBarsHelperRegistry {
 
     private String normalizedKey(String s) {
         return "op_" + s.toLowerCase()
-                .replaceAll("[^ \\s\\w]+"," ")
+                .replaceAll("[^ \\s\\w]+", " ")
                 .replaceAll("[_\\s]+", "_");
     }
 

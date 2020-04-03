@@ -2,18 +2,18 @@ package io.appform.statesman.engine;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.Preconditions;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
 import io.appform.statesman.model.*;
+import io.appform.statesman.model.dataaction.DataAction;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import lombok.var;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -31,11 +31,13 @@ public class StateTransitionEngine {
     private final ObjectMapper mapper;
     private final DataActionExecutor dataActionExecutor;
     private final ObservableEventBus eventBus;
-    private final HopeLangEngine hopeLangEngine;
-
-    private final Cache<String, Evaluatable> evalCache = CacheBuilder.newBuilder()
-            .maximumSize(100_000)
+    private final HopeLangEngine hopeLangEngine = HopeLangEngine.builder()
+            .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
             .build();
+
+    private final LoadingCache<String, Evaluatable> evalCache = Caffeine.newBuilder()
+            .maximumSize(100_000)
+            .build(hopeLangEngine::parse);
 
     @Inject
     public StateTransitionEngine(
@@ -49,17 +51,18 @@ public class StateTransitionEngine {
         this.mapper = mapper;
         this.dataActionExecutor = dataActionExecutor;
         this.eventBus = eventBus;
-        this.hopeLangEngine = HopeLangEngine.builder()
-                .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
-                .build();
     }
 
     public AppliedTransitions handle(DataUpdate dataUpdate) {
+        return handle(dataUpdate, null);
+    }
+
+    public AppliedTransitions handle(DataUpdate dataUpdate, DataAction defaultAction) {
         val transitions = new ArrayList<AppliedTransition>();
         AppliedTransition transition = null;
         Set<String> evaluatedRuleSet = new HashSet<>();
         do {
-            transition = handleSingleTransition(dataUpdate, evaluatedRuleSet).orElse(null);
+            transition = handleSingleTransition(dataUpdate, evaluatedRuleSet, defaultAction).orElse(null);
             if (null != transition) {
                 transitions.add(transition);
                 evaluatedRuleSet.add(transition.getTransitionId());
@@ -69,8 +72,12 @@ public class StateTransitionEngine {
         return new AppliedTransitions(dataUpdate.getWorkflowId(), transitions);
     }
 
-    private Optional<AppliedTransition> handleSingleTransition(DataUpdate dataUpdate, Set<String> alreadyVisited) {
+    private Optional<AppliedTransition> handleSingleTransition(
+            DataUpdate dataUpdate,
+            Set<String> alreadyVisited,
+            DataAction defaultAction) {
         val workflowId = dataUpdate.getWorkflowId();
+        log.debug("Existing transitions for {}: {}", workflowId, alreadyVisited);
         val workflow = workflowProvider.get()
                 .getWorkflow(workflowId)
                 .orElse(null);
@@ -94,24 +101,23 @@ public class StateTransitionEngine {
         val selectedTransition = transitions.stream()
                 .filter(stateTransition -> stateTransition.getType().equals(StateTransition.Type.EVALUATED))
                 .filter(StateTransition::isActive)
-                .filter(stateTransition -> {
-                    val transitionRule = stateTransition.getRule();
-                    var rule = evalCache.getIfPresent(transitionRule);
-                    if (null == rule) {
-                        rule = hopeLangEngine.parse(transitionRule);
-                        evalCache.put(transitionRule, rule);
-                    }
-                    return hopeLangEngine.evaluate(rule, evalNode);
-                })
                 .filter(stateTransition -> !alreadyVisited.contains(stateTransition.getId()))
+                .filter(stateTransition -> hopeLangEngine.evaluate(evalCache.get(stateTransition.getRule()), evalNode))
                 .findFirst()
                 .orElse(defaultTransition(transitions, alreadyVisited));
         if (null == selectedTransition) {
+            log.debug("No matching transition for: {} for update: {}", workflowId, dataUpdate);
+            if(null != defaultAction) {
+                log.debug("Applying default action of type: {}", defaultAction.getType().name());
+                dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
+                workflowProvider.get().updateWorkflow(workflow);
+            }
             return Optional.empty();
         }
         dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
         dataObject.setCurrentState(selectedTransition.getToState());
 
+        workflowProvider.get().updateWorkflow(workflow);
         eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
         return Optional.of(new AppliedTransition(currentState,
                                                  selectedTransition.getToState(),

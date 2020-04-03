@@ -28,7 +28,9 @@ services:
       DB_USER: root
       DB_PASSWORD: password
       SHARDS: 2
-      COLLECTD_HOST: localhost
+      INFLUX_DB: test
+      INFLUXDB_HOST: localhost
+      INFLUXDB_PORT: "8086"
       METRIC_PUSH_FREQUENCY: 1min
       CONFIG_ENV: local
     depends_on:

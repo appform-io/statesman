@@ -107,8 +107,6 @@ metrics:
       host: ${INFLUXDB_HOST}
       port: ${INFLUXDB_PORT}
       prefix: service.statesman.
-      tags:
-        host: ${HOSTNAME}
       excludes:
         - ch.qos.logback.core.Appender.debug
         - ch.qos.logback.core.Appender.trace

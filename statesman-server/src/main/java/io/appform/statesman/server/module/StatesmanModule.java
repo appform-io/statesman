@@ -16,7 +16,6 @@ import io.appform.statesman.engine.observer.ObservableEventBusSubscriber;
 import io.appform.statesman.engine.observer.ObservableGuavaEventBus;
 import io.appform.statesman.engine.observer.observers.ActionInvoker;
 import io.appform.statesman.engine.observer.observers.FoxtrotEventSender;
-import io.appform.statesman.engine.observer.observers.WorkflowPersister;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
@@ -46,9 +45,6 @@ public class StatesmanModule extends AbstractModule {
         bind(ActionRegistry.class).to(MapBasedActionRegistry.class);
         bind(ProviderSelector.class).to(ProviderSelectorImpl.class);
         bind(ObservableEventBus.class).to(ObservableGuavaEventBus.class);
-        bind(ObservableEventBusSubscriber.class)
-                .annotatedWith(Names.named("workflowPersister"))
-                .to(WorkflowPersister.class);
         bind(ObservableEventBusSubscriber.class)
                 .annotatedWith(Names.named("actionHandler"))
                 .to(ActionInvoker.class);
