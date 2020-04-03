@@ -101,7 +101,17 @@ ivrDropDetection:
 
 metrics:
   reporters:
-    - type: collectd
-      host: ${COLLECTD_HOST}
-      port: 25826
-      frequency: ${METRIC_PUSH_FREQUENCY}
+    - type: influxdb
+      protocol: http
+      database: ${INFLUX_DB}
+      host: ${INFLUXDB_HOST}
+      port: ${INFLUXDB_PORT}
+      prefix: service.statesman.
+      tags:
+        host: ${HOSTNAME}
+      excludes:
+        - ch.qos.logback.core.Appender.debug
+        - ch.qos.logback.core.Appender.trace
+        - jvm.attribute.name
+        - jvm.attribute.vendor
+      defaultMeasurementMappings: {}

@@ -13,9 +13,6 @@ import org.junit.Test;
 
 import javax.inject.Provider;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -66,4 +63,10 @@ public class WorkflowEvaluatorTest {
         Assert.assertEquals(WFT_ID2, t2.getId());
     }
 
+/*    @Test
+    @SneakyThrows
+    public void t() {
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+        System.out.println(mapper.readTree(Base64.decodeAsString("eyJxdWVyeVN0cmluZyI6Ij9hcGlfa2V5PTA0YmM5OTk1NmQ3MTRkOTFhNDdlZGM3ZWNlZDA2ODQzJnN0YXRlPUtBUk5BVEFLQSZpZD0xMTc0MzczMzYyNWU4MzU1ZWJlMjFkJmNhbGxGcm9tPTg5NTE3MDAyMTAmY2FsbGVkPTgxNjgxNzEwNDYmY2FsbHRpbWU9MzEvMDMvMjAyMCUyMDA4OjEwJTIwUE0iLCJhcGlQYXRoIjoiL2l2cmhhbmRsZXIvZXhvdGVsIiwiaWQiOiJleG90ZWwifQ==")));
+    }*/
 }

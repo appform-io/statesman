@@ -15,8 +15,6 @@ import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
-import io.appform.statesman.model.exception.ResponseCode;
-import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
 import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
@@ -84,6 +82,10 @@ public class IngressHandler {
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
         val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
+        if(null == transformationTemplate) {
+            log.error("No matching translation template found for provider: " + ivrProvider);
+            return false;
+        }
         val tmpl = toOneShotTmpl(transformationTemplate);
         if (null == tmpl) {
             log.warn("No matching transformation template found for provider: {}, context: {}",
@@ -120,9 +122,14 @@ public class IngressHandler {
     }
 
     public boolean invokeEngineForMultiStep(String ivrProvider, IngressCallback ingressCallback) throws IOException {
+        log.info("Processing callback from: {}: Payload: {}", ivrProvider, ingressCallback);
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
         val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
+        if(null == transformationTemplate) {
+            log.error("No matching translation template found for provider: " + ivrProvider);
+            return false;
+        }
         val tmpl = toMultiStepTemplate(transformationTemplate);
         if (null == tmpl) {
             log.warn("No matching step transformation template found for provider: {}, context: {}",
@@ -242,13 +249,8 @@ public class IngressHandler {
     }
 
     private TransformationTemplate getIngressTransformationTemplate(String ivrProvider) {
-        val transformationTemplate = callbackTemplateProvider.getTemplate(ivrProvider, TranslationTemplateType.INGRESS)
+        return callbackTemplateProvider.getTemplate(ivrProvider, TranslationTemplateType.INGRESS)
                 .orElse(null);
-        if (null == transformationTemplate) {
-            throw new StatesmanError("No matching translation template found for provider: " + ivrProvider,
-                                     ResponseCode.INVALID_OPERATION);
-        }
-        return transformationTemplate;
     }
 
     final StepByStepTransformationTemplate.StepSelection selectStep(
