@@ -8,6 +8,7 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import com.google.common.base.Strings;
+import io.appform.statesman.engine.utils.StringUtils;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.dropwizard.jackson.Jackson;
@@ -591,9 +592,7 @@ public class HandleBarsHelperRegistry {
     }
 
     private String normalizedKey(String s) {
-        return "op_" + s.toLowerCase()
-                .replaceAll("[^ \\s\\w]+", " ")
-                .replaceAll("[_\\s]+", "_");
+        return "op_" + StringUtils.normalize(s);
     }
 
 }

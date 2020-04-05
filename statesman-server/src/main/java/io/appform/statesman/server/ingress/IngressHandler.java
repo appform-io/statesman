@@ -13,6 +13,7 @@ import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
+import io.appform.statesman.engine.utils.StringUtils;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
@@ -126,9 +127,12 @@ public class IngressHandler {
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
         log.info("Processing node: {}", node);
-        val transformationTemplate = getIngressTransformationTemplate(ivrProvider);
+        final String tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
+        val transformationTemplate = getIngressTransformationTemplate(
+                tmplLookupKey);
         if(null == transformationTemplate) {
-            log.warn("No matching translation template found for provider{}. node: {} ", ivrProvider, node);
+            log.warn("No matching translation template found for provider {}. Key: {}. node: {} ",
+                     ivrProvider, tmplLookupKey, node);
             return false;
         }
         val tmpl = toMultiStepTemplate(transformationTemplate);
