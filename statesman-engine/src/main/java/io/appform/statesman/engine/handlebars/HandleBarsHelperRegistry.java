@@ -54,6 +54,7 @@ public class HandleBarsHelperRegistry {
         registerStreq();
         registerStrNormalize();
         registerStrNormalizeUpper();
+        registerStrNormalizeInitCap();
         registerEq();
         registerLt();
         registerLte();
@@ -216,6 +217,10 @@ public class HandleBarsHelperRegistry {
                                   (Helper<String>) (value, options) -> StringUtils.normalize(value).toUpperCase());
     }
 
+    private void registerStrNormalizeInitCap() {
+        handlebars.registerHelper("normalize_init_cap",
+                (Helper<String>) (value, options) -> StringUtils.normalizeInitCap(value));
+    }
 
     private void registerDateFormat() {
         handlebars.registerHelper("dateFormat", (Helper<Long>) (context, options) -> {
