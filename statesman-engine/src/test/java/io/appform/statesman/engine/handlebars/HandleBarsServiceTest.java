@@ -423,8 +423,10 @@ public class HandleBarsServiceTest {
         val hb = new HandleBarsService();
         val node = Jackson.newObjectMapper()
                 .createObjectNode()
-                .put("name", "Dr. Jeykll & Mr. Hyde");
+                .put("name", "Dr. Jeykll & Mr. Hyde")
+                .put("state", "punjab");
         Assert.assertEquals("dr_jeykll_mr_hyde", hb.transform("{{normalize name}}", node));
         Assert.assertEquals("DR_JEYKLL_MR_HYDE", hb.transform("{{normalize_upper name}}", node));
+        Assert.assertEquals("Punjab", hb.transform("{{normalize_init_cap state}}", node));
     }
 }
