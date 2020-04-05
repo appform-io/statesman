@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
 import io.dropwizard.jackson.Jackson;
 import lombok.SneakyThrows;
+import lombok.val;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -415,5 +416,15 @@ public class HandleBarsServiceTest {
         Assert.assertEquals("", handleBarsService.transform(
                                     template, Collections.singletonMap("value", "sasdasd asdqqweq weq we")));
 
+    }
+
+    @Test
+    public void testNormalize() {
+        val hb = new HandleBarsService();
+        val node = Jackson.newObjectMapper()
+                .createObjectNode()
+                .put("name", "Dr. Jeykll & Mr. Hyde");
+        Assert.assertEquals("dr_jeykll_mr_hyde", hb.transform("{{normalize name}}", node));
+        Assert.assertEquals("DR_JEYKLL_MR_HYDE", hb.transform("{{normalize_upper name}}", node));
     }
 }

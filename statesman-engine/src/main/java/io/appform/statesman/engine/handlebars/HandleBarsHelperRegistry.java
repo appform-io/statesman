@@ -52,6 +52,8 @@ public class HandleBarsHelperRegistry {
         registerToLowerCase();
         registerDateFormat();
         registerStreq();
+        registerStrNormalize();
+        registerStrNormalizeUpper();
         registerEq();
         registerLt();
         registerLte();
@@ -202,6 +204,16 @@ public class HandleBarsHelperRegistry {
             }
             return null;
         });
+    }
+
+    private void registerStrNormalize() {
+        handlebars.registerHelper("normalize",
+                                  (Helper<String>) (value, options) -> StringUtils.normalize(value));
+    }
+
+    private void registerStrNormalizeUpper() {
+        handlebars.registerHelper("normalize_upper",
+                                  (Helper<String>) (value, options) -> StringUtils.normalize(value).toUpperCase());
     }
 
 
