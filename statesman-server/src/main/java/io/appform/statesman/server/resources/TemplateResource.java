@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/v1/templates")
@@ -65,7 +66,7 @@ public class TemplateResource {
     @ApiOperation("Get all templates")
     public Response getAll() {
 
-        List<WorkflowTemplate> templates = workflowProvider.getAll();
+        Set<WorkflowTemplate> templates = workflowProvider.getAll();
         if (templates.isEmpty()) {
             return Response.noContent()
                     .build();

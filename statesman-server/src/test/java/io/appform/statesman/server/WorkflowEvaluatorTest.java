@@ -2,6 +2,7 @@ package io.appform.statesman.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import io.appform.statesman.model.State;
 import io.appform.statesman.model.WorkflowTemplate;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
@@ -41,7 +42,7 @@ public class WorkflowEvaluatorTest {
         final Provider<WorkflowProviderCommand> workflowProviderCommandProvider = () -> {
             val provider = mock(WorkflowProviderCommand.class);
             when(provider.getAll())
-                    .thenReturn(ImmutableList.of(wft1, wft2));
+                    .thenReturn(ImmutableSet.of(wft1, wft2));
             return provider;
         };
 
