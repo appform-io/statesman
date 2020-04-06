@@ -28,6 +28,9 @@ public class StoredWorkflowInstance {
     @Column(name = "workflow_id")
     private String workflowId;
 
+    @Column(name = "partition_id")
+    private int partitionId;
+
     @Column(name = "template_id")
     private String templateId;
 
@@ -52,12 +55,14 @@ public class StoredWorkflowInstance {
     public StoredWorkflowInstance(String templateId,
                                   String workflowId,
                                   String currentState,
+                                  int partitionId,
                                   boolean completed,
                                   byte[] data) {
         this.templateId = templateId;
         this.currentState = currentState;
         this.completed = completed;
         this.workflowId = workflowId;
+        this.partitionId = partitionId;
         this.data = data;
     }
 }

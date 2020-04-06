@@ -3,6 +3,7 @@ package io.appform.statesman.server.utils;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
+import io.appform.statesman.engine.utils.DateUtils;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.action.template.*;
 import io.appform.statesman.server.dao.action.StoredActionTemplate;
@@ -45,6 +46,7 @@ public class WorkflowUtils {
 
     public static StoredWorkflowInstance toInstanceDao(String templateId, JsonNode initialData) {
         return StoredWorkflowInstance.builder()
+                .partitionId(DateUtils.weekOfYear())
                 .templateId(templateId)
                 .completed(false)
                 .workflowId(UUID.randomUUID().toString())
@@ -57,6 +59,7 @@ public class WorkflowUtils {
     public static StoredWorkflowInstance toInstanceDao(Workflow workflow) {
         return StoredWorkflowInstance.builder()
                 .templateId(workflow.getTemplateId())
+                .partitionId(DateUtils.weekOfYear())
                 .workflowId(workflow.getId())
                 .data(MapperUtils.serialize(workflow.getDataObject()))
                 .currentState(workflow.getDataObject().getCurrentState().getName())
