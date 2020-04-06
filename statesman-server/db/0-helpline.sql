@@ -1,6 +1,6 @@
 CREATE TABLE `action_templates` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `template_id` varchar(255) DEFAULT NULL,
+  `template_id` varchar(64) DEFAULT NULL,
   `action_type` varchar(255) DEFAULT NULL,
   `active` bit(1) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
@@ -14,9 +14,9 @@ CREATE TABLE `action_templates` (
 
 CREATE TABLE `callback_templates` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `provider` varchar(255) NOT NULL,
+  `provider` varchar(64) NOT NULL,
   `type` varchar(45) NOT NULL,
-  `translation_template_type` varchar(255) DEFAULT NULL,
+  `translation_template_type` varchar(64) DEFAULT NULL,
   `id_path` varchar(255) DEFAULT NULL,
   `template` blob DEFAULT NULL,
   `created` datetime(3) DEFAULT current_timestamp(3),
@@ -27,9 +27,9 @@ CREATE TABLE `callback_templates` (
 
 CREATE TABLE `providers` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `provider_id` varchar(255) DEFAULT NULL,
+  `provider_id` varchar(64) DEFAULT NULL,
   `active` bit(1) DEFAULT NULL,
-  `use_case` varchar(255) DEFAULT NULL,
+  `use_case` varchar(128) DEFAULT NULL,
   `provider_name` varchar(255) DEFAULT NULL,
   `partitions` bigint(20) DEFAULT NULL,
   `created` datetime(3) NOT NULL DEFAULT current_timestamp(3),
@@ -40,9 +40,9 @@ CREATE TABLE `providers` (
 
 CREATE TABLE `state_transitions` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `transition_id` varchar(255) DEFAULT NULL,
-  `workflow_template_id` varchar(255) DEFAULT NULL,
-  `from_state` varchar(255) DEFAULT NULL,
+  `transition_id` varchar(64) DEFAULT NULL,
+  `workflow_template_id` varchar(64) DEFAULT NULL,
+  `from_state` varchar(64) DEFAULT NULL,
   `active` bit(1) DEFAULT NULL,
   `data` blob DEFAULT NULL,
   `created` datetime(3) NOT NULL DEFAULT current_timestamp(3),
@@ -54,7 +54,7 @@ CREATE TABLE `state_transitions` (
 
 CREATE TABLE `workflow_templates` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `template_id` varchar(255) DEFAULT NULL,
+  `template_id` varchar(64) DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `active` bit(1) DEFAULT NULL,
   `rules` blob DEFAULT NULL,
@@ -69,8 +69,8 @@ CREATE TABLE `workflow_templates` (
 CREATE TABLE `workflow_instances` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `partition_id` int(11) NOT NULL DEFAULT 1,
-  `workflow_id` varchar(255) DEFAULT NULL,
-  `template_id` varchar(255) DEFAULT NULL,
+  `workflow_id` varchar(64) DEFAULT NULL,
+  `template_id` varchar(64) DEFAULT NULL,
   `current_state` varchar(255) DEFAULT NULL,
   `completed` bit(1) DEFAULT NULL,
   `data` blob DEFAULT NULL,
