@@ -34,7 +34,7 @@ public class HandleBarsService {
     public HandleBarsService() {
         handlebars = new Handlebars();
         registerHelpers(handlebars);
-        compiledTemplates = new ConcurrentHashMap<String, Template>();
+        compiledTemplates = new ConcurrentHashMap<>();
     }
 
     @Nullable
