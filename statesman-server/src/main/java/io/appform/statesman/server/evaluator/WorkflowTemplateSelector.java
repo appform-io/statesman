@@ -41,6 +41,7 @@ public class WorkflowTemplateSelector implements Managed {
                 .build();
         this.parsedWorkflowTemplates = new AtomicReference<>(new ArrayList<>());
         this.executorService = Executors.newSingleThreadScheduledExecutor();
+        loadParsedWorkflowTemplates(); //initial loading
         executorService.scheduleWithFixedDelay(this::loadParsedWorkflowTemplates, 0, 600, TimeUnit.SECONDS);
 
     }
