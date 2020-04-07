@@ -12,6 +12,7 @@ import lombok.Value;
 public class FoxtrotStateTransitionEvent {
     String workflowId;
     String workflowTemplateId;
+    long workflowCreationTime;
     String oldState;
     String newState;
     boolean terminal;
