@@ -17,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class CallbackTemplateProviderCommand implements CallbackTemplateProvider {
 
     private final RelationalDao<StoredCallbackTransformationTemplate> callbackTemplateDao;
-    private final LoadingCache<String, List<TransformationTemplate>> allCallbackTemplates;
+    private final LoadingCache<String, Set<TransformationTemplate>> allCallbackTemplates;
 
 
     @Inject
@@ -86,7 +86,7 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
     }
 
     @Override
-    public List<TransformationTemplate> getAll() {
+    public Set<TransformationTemplate> getAll() {
         return allCallbackTemplates.get("all");
     }
 
@@ -117,12 +117,12 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
         }
     }
 
-    public List<TransformationTemplate> getAllFromDb() {
+    public Set<TransformationTemplate> getAllFromDb() {
         try {
             return callbackTemplateDao.scatterGather(DetachedCriteria.forClass(StoredCallbackTransformationTemplate.class), 0, Integer.MAX_VALUE)
                     .stream()
                     .map(CallbackTemplateUtils::toDto)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
