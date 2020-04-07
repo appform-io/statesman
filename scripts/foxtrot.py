@@ -5,19 +5,46 @@ import json
 import requests
 import time
 
-foxtrot_url = "http://127.0.0.1/foxtrot/v1/analytics"
-headers = {
+FOXTROT_URL = "http://127.0.0.1/foxtrot/v1/analytics"
+BATCH_SIZE = 10000
+HEADERS = {
     "Content-Type": "application/json"
 }
+
+OUTPUT_KEY_NAMES = [
+    'Request Id',
+    'Created Date',
+    'Created Time',
+    'IVR ID',
+    'IVR Language',
+    'Phone Number',
+    'Location',
+    'Pincode',
+    'Claimed by',
+    'Name  ',
+    'Age',
+    'Sex',
+    'Travel History',
+    'Contact History',
+    'IVR assessment',
+    'Current Queue',
+    'Current Status',
+    'Triage Results',
+    'Time of Action',
+    'Doctor Notes',
+    'Last Service ID'
+]
 
 
 def write_as_csv_line_with_keys(file_handler, keys, row):
     line = ','.join([str(row.get(x) if row.has_key(x) else '') for x in keys])
     file_handler.write(line + "\n")
 
+
 def write_as_csv_line(file_handler, row):
     line = ','.join([str(x) for x in row])
     file_handler.write(line + "\n")
+
 
 def formatted_time(epoch):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(epoch))
@@ -32,24 +59,6 @@ def flatten(d, parent_key='', sep='.'):
         else:
             items.append((new_key, v))
     return dict(items)
-
-
-def count_approx_documents(table, filters, start_time, end_time):
-    new_filters = list(filters)
-    new_filters.append({
-        "operator": "between",
-        "field": "time",
-        "to": end_time,
-        "from": start_time
-    })
-
-    foxtrot_request = {
-        "opcode": "count",
-        "table": table,
-        "filters": new_filters
-    }
-    response = requests.post(url=foxtrot_url, data=json.dumps(foxtrot_request), headers=headers)
-    return response.json()['count']
 
 
 def execute_query_foxtrot(table, filters, start, count, start_time, end_time):
@@ -67,32 +76,31 @@ def execute_query_foxtrot(table, filters, start, count, start_time, end_time):
         "from": start,
         "limit": count
     }
-    response = requests.post(url=foxtrot_url, data=json.dumps(foxtrot_request), headers=headers)
+    response = requests.post(url=FOXTROT_URL, data=json.dumps(foxtrot_request), headers=HEADERS)
     if response.status_code == 200:
         return response.json()
     else:
         return {}
 
 
-def execute_foxtrot_query_paginated(table, filters, keys, output_key_names, file_handler, start_time, end_time):
-    write_as_csv_line(file_handler, output_key_names)
-    count = count_approx_documents(table, filters, start_time, end_time)
-    print("Approx Event Count : " + str(count))
-    time_diff = end_time - start_time
-    num_of_buckets = int(count / 1000) * 5 if count > 1000 else 1
-    time_duration_per_bucket = int(time_diff // num_of_buckets)
+def generate_report(table, filters, keys, file_name, start_time, end_time):
+    file_handler = open(file_name, "w")
+    write_as_csv_line(file_handler, OUTPUT_KEY_NAMES)
+    execute_foxtrot_query_paginated(table, filters, keys, file_handler, start_time, end_time)
+    file_handler.close()
 
-    for start_time in range(start_time, end_time, time_duration_per_bucket):
-        print(formatted_time(start_time / 1000) + "  #####  " + formatted_time(
-            (start_time + time_duration_per_bucket) / 1000))
-        response = execute_query_foxtrot(table, filters, 0, 10000, start_time, start_time + time_duration_per_bucket)
+
+def execute_foxtrot_query_paginated(table, filters, keys, file_handler, start_time, end_time):
+    start = 0
+    while (True):
+        response = execute_query_foxtrot(table, filters, start, BATCH_SIZE, start_time, start_time + end_time)
+        current_batch_size = 0
         if 'documents' in response:
             for document in response['documents']:
                 document = flatten(document)
                 write_as_csv_line_with_keys(file_handler, keys, document)
-        file_handler.flush()
-
-
-def execute_foxtrot_query(query):
-    response = requests.post(url=foxtrot_url, data=json.dumps(query), headers=headers)
-    return response.json()
+                current_batch_size += 1
+                file_handler.flush()
+        if (current_batch_size == 0 or current_batch_size < BATCH_SIZE):
+            break
+        start = start + current_batch_size
