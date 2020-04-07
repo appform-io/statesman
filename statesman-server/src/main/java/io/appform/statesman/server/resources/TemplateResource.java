@@ -19,6 +19,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Produces(MediaType.APPLICATION_JSON)
 @Path("/v1/templates")
@@ -144,10 +145,11 @@ public class TemplateResource {
     @Timed
     @Path("/workflow/{workflowTemplateId}/transitions")
     @ApiOperation("Get All State  Transition")
-    public Response getAllStateTransitions(@PathParam("workflowTemplateId") String workflowTemplateId) {
+    public Response getAllStateTransitions(@PathParam("workflowTemplateId") String workflowTemplateId,
+                                           @DefaultValue("true") @QueryParam("onlyActive") boolean onlyActive) {
         List<StateTransition> stateTransitions = transitionStore.getAllTransitions(workflowTemplateId);
         return Response.ok()
-                .entity(stateTransitions)
+                .entity(onlyActive ? stateTransitions.stream().filter(StateTransition::isActive).collect(Collectors.toList()) : stateTransitions)
                 .build();
     }
 
