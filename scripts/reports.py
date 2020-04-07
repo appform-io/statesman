@@ -45,7 +45,7 @@ def punjab_frh(start_time, end_time, file_name):
                                 'data.eventData.data.providerTicketPatientGender',
                                 'data.eventData.data.providerTicketForeignTravelHistory',
                                 'data.eventData.data.providerTicketContact',
-                                'data.eventData.oldState',
+                                'none',
                                 'none',
                                 'data.eventData.data.providerTicketStatus',
                                 'data.eventData.data.providerTicketType',
