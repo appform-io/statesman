@@ -14,13 +14,13 @@ SMTP_HOST = ''
 SMTP_PORT = 587
 SMTP_LOGIN_USER = ''
 SMTP_LOGIN_PASSWORD = ''
-FOXTROT_URL = "http://34.93.199.49:17000/foxtrot/v1/analytics"
+FOXTROT_URL = "https://127.0.0.1/foxtrot/v1/analytics"
 BATCH_SIZE = 10000
 HEADERS = {
     "Content-Type": "application/json"
 }
 
-OUTPUT_KEY_NAMES = [
+OUTPUT_CSV_HEADERS = [
     'Request Id',
     'Created Date',
     'Created Time',
@@ -48,7 +48,19 @@ OUTPUT_KEY_NAMES = [
 ############# CSV HELPER ##########
 
 def write_as_csv_line_with_keys(file_handler, keys, row):
-    line = ','.join([str(row.get(x) if row.has_key(x) else '') for x in keys])
+    output_coulmns = list()
+    for output_csv_header in OUTPUT_CSV_HEADERS:
+        value = ""
+        if (keys.has_key(output_csv_header) and row.has_key(keys[output_csv_header])):
+            value = row[keys[output_csv_header]]
+            if (output_csv_header == 'Created Date'):
+                value = formatted_date(int(value) / 1000)
+            elif (output_csv_header == 'Created Time'):
+                value = formatted_time(int(value) / 1000)
+            elif (output_csv_header == 'Time of Action'):
+                value = formatted_date_time(int(value) / 1000)
+        output_coulmns.append(value)
+    line = ",".join(output_coulmns)
     file_handler.write(line + "\n")
 
 
@@ -59,8 +71,17 @@ def write_as_csv_line(file_handler, row):
 
 ############ DATE HELPER ###########
 
-def formatted_time(epoch):
+def formatted_date_time(epoch):
     return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(epoch))
+
+
+def formatted_date(epoch):
+    return time.strftime('%Y-%m-%d', time.localtime(epoch))
+
+
+def formatted_time(epoch):
+    return time.strftime('%H:%M:%S', time.localtime(epoch))
+
 
 ############ EMAIL HELPER ##########
 
@@ -89,7 +110,9 @@ def send_email_with_files(subject, content, files, mime_sub_type='html'):
         if (not smtp_obj is None):
             smtp_obj.quit()
 
+
 ############ FOXTROT HELPER ##########
+
 
 def flatten(d, parent_key='', sep='.'):
     items = []
@@ -100,6 +123,24 @@ def flatten(d, parent_key='', sep='.'):
         else:
             items.append((new_key, v))
     return dict(items)
+
+
+def count_approx_documents(table, filters, start_time, end_time):
+    new_filters = list(filters)
+    new_filters.append({
+        "operator": "between",
+        "field": "time",
+        "to": end_time,
+        "from": start_time
+    })
+
+    foxtrot_request = {
+        "opcode": "count",
+        "table": table,
+        "filters": new_filters
+    }
+    response = requests.post(url=FOXTROT_URL, data=json.dumps(foxtrot_request), headers=HEADERS)
+    return response.json()['count']
 
 
 def execute_query_foxtrot(table, filters, start, count, start_time, end_time):
@@ -124,25 +165,26 @@ def execute_query_foxtrot(table, filters, start, count, start_time, end_time):
         return {}
 
 
-
 def execute_foxtrot_query_paginated(table, filters, keys, file_handler, start_time, end_time):
-    start = 0
-    while (True):
-        response = execute_query_foxtrot(table, filters, start, BATCH_SIZE, start_time, start_time + end_time)
-        current_batch_size = 0
+    count = count_approx_documents(table, filters, start_time, end_time)
+    print("Approx Event Count : " + str(count))
+    time_diff = end_time - start_time
+    num_of_buckets = int(count / 1000) * 5 if count > 1000 else 1
+    time_duration_per_bucket = int(time_diff // num_of_buckets)
+    for start_time in range(start_time, end_time, time_duration_per_bucket):
+        print(formatted_date_time(start_time / 1000) + "  #####  " + formatted_date_time(
+            (start_time + time_duration_per_bucket) / 1000))
+        response = execute_query_foxtrot(table, filters, 0, BATCH_SIZE, start_time,
+                                         start_time + time_duration_per_bucket)
         if 'documents' in response:
             for document in response['documents']:
                 document = flatten(document)
                 write_as_csv_line_with_keys(file_handler, keys, document)
-                current_batch_size += 1
-                file_handler.flush()
-        if (current_batch_size == 0 or current_batch_size < BATCH_SIZE):
-            break
-        start = start + current_batch_size
+        file_handler.flush()
 
 
 def generate_report(table, filters, keys, file_name, start_time, end_time):
     file_handler = open(file_name, "w")
-    write_as_csv_line(file_handler, OUTPUT_KEY_NAMES)
+    write_as_csv_line(file_handler, OUTPUT_CSV_HEADERS)
     execute_foxtrot_query_paginated(table, filters, keys, file_handler, start_time, end_time)
     file_handler.close()
