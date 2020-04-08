@@ -169,11 +169,11 @@ def execute_foxtrot_query_paginated(table, filters, keys, file_handler, start_ti
     count = count_approx_documents(table, filters, start_time, end_time)
     print("Approx Event Count : " + str(count))
     time_diff = end_time - start_time
-    num_of_buckets = int(count / 1000) * 5 if count > 1000 else 1
+    num_of_buckets = int(count / 3000) * 3 if count > 3000 else 1
     time_duration_per_bucket = int(time_diff // num_of_buckets)
     for start_time in range(start_time, end_time, time_duration_per_bucket):
-        print(formatted_date_time(start_time / 1000) + "  #####  " + formatted_date_time(
-            (start_time + time_duration_per_bucket) / 1000))
+        print(formatted_date_time(start_time / 3000) + "  #####  " + formatted_date_time(
+            (start_time + time_duration_per_bucket) / 3000))
         response = execute_query_foxtrot(table, filters, 0, BATCH_SIZE, start_time,
                                          start_time + time_duration_per_bucket)
         if 'documents' in response:
