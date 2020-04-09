@@ -143,7 +143,7 @@ def count_approx_documents(table, filters, start_time, end_time):
     return response.json()['count']
 
 
-def execute_query_foxtrot(table, filters, start, count, start_time, end_time):
+def execute_query_foxtrot(table, filters, start, count, start_time, end_time, scroll_id):
     new_filters = list(filters)
     new_filters.append({
         "operator": "between",
@@ -156,7 +156,9 @@ def execute_query_foxtrot(table, filters, start, count, start_time, end_time):
         "table": table,
         "filters": new_filters,
         "from": start,
-        "limit": count
+        "limit": count,
+        "scrollRequest" : True,
+        "scrollId" : scroll_id
     }
     response = requests.post(url=FOXTROT_URL, data=json.dumps(foxtrot_request), headers=HEADERS)
     if response.status_code == 200:
@@ -166,16 +168,14 @@ def execute_query_foxtrot(table, filters, start, count, start_time, end_time):
 
 
 def execute_foxtrot_query_paginated(table, filters, keys, file_handler, start_time, end_time):
-    count = count_approx_documents(table, filters, start_time, end_time)
-    print("Approx Event Count : " + str(count))
-    time_diff = end_time - start_time
-    num_of_buckets = int(count / 3000) * 3 if count > 3000 else 1
-    time_duration_per_bucket = int(time_diff // num_of_buckets)
-    for start_time in range(start_time, end_time, time_duration_per_bucket):
-        print(formatted_date_time(start_time / 3000) + "  #####  " + formatted_date_time(
-            (start_time + time_duration_per_bucket) / 3000))
+    scroll_id = None
+    has_more = True
+    while(has_more):
         response = execute_query_foxtrot(table, filters, 0, BATCH_SIZE, start_time,
-                                         start_time + time_duration_per_bucket)
+                                         end_time, scroll_id)
+        print(response)
+        has_more = response["moreDataAvailable"]
+        scroll_id = response["scrollId"] if has_more else scroll_id
         if 'documents' in response:
             for document in response['documents']:
                 document = flatten(document)
