@@ -5,11 +5,11 @@ import urllib
 FROM = 1586375271662
 TO = 1586460257299
 
-STATESMAN_URL = "http://a254946ea791611eabe57061fcb77c4f-40500932.ap-south-1.elb.amazonaws.com:8080/v1/housekeeping/debug/workflow/{}"
-FRESHDESK_URL = "https://telemeds.freshdesk.com/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
+STATESMAN_URL = "http://127.0.0.1:8080/v1/housekeeping/debug/workflow/{}"
+FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
 HEADERS = {
     "Content-Type": "application/json",
-    "Authorization": "Basic YXNnYW5lc2gyMzRAZ21haWwuY29tOnRlbGVtZWQxOQ=="
+    "Authorization": "Basic "
 }
 
 
