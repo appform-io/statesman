@@ -103,11 +103,11 @@ def get_workflow(workflow_id):
 def recon_workflow(payload):
     try:
         print(json.dumps(payload))
-        # response = requests.get(url=STATESMAN_RECON_URL, data=json.dumps(payload), headers=HEADERS)
-        # if response.status_code == 200:
-        #     return response.json()
-        # else:
-        #     return {}
+        response = requests.post(url=STATESMAN_RECON_URL, data=json.dumps(payload), headers=HEADERS)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {}
     except:
         pass
     return {}
@@ -157,7 +157,7 @@ def create_recon_payload(patient_language,
 
 
 def recon_required(workflow):
-    return workflow.has_key("currentState") and workflow["currentState"]["currentState"] == "CALL_NEEDED"
+    return workflow.has_key("dataObject") and workflow["dataObject"].has_key("currentState") and workflow["dataObject"]["currentState"]["name"] == "CALL_NEEDED"
 
 
 ############ COMMON UTILS #############
