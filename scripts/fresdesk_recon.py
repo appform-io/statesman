@@ -29,7 +29,7 @@ def epoch_time(str_time):
 
 
 def str_current_time():
-    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
 
 ############ FRESHDESK HELPER ##########
@@ -72,7 +72,7 @@ def fetch_freshdesk_tickets(from_time, to_time):
 
 
 def download_tickets_last_hour():
-    file_path = "/var/tmp/reports/FERSHDESK_" + str_current_time()
+    file_path = "/var/tmp/reports/FRESHDESK_" + str_current_time()
     response = requests.get(url=FRESHDESK_TICKETS_FILE_URL, headers=HEADERS)
     if response.status_code == 200:
         url = response.json()["export"]["url"]
