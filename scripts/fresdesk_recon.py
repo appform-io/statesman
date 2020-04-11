@@ -8,7 +8,8 @@ import urllib
 FROM = 1586375271662
 TO = 1586460257299
 
-STATESMAN_URL = "http://a254946ea791611eabe57061fcb77c4f-40500932.ap-south-1.elb.amazonaws.com:8080/v1/housekeeping/debug/workflow/{}"
+STATESMAN_WORKFLOW_GET_URL = "http://a254946ea791611eabe57061fcb77c4f-40500932.ap-south-1.elb.amazonaws.com:8080/v1/housekeeping/debug/workflow/{}"
+STATESMAN_RECON_URL = "https://ingress.telemed-ind.appform.io/callbacks/FRESHDESK"
 FRESHDESK_URL = "https://telemeds.freshdesk.com/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
 FRESHDESK_TICKETS_FILE_URL = "https://telemeds.freshdesk.com/reports/scheduled_exports/4830771586540088/download_file.json"
 HEADERS = {
@@ -89,7 +90,7 @@ def download_tickets_last_hour():
 
 def get_workflow(workflow_id):
     try:
-        response = requests.get(url=STATESMAN_URL.format(workflow_id), headers=HEADERS)
+        response = requests.get(url=STATESMAN_WORKFLOW_GET_URL.format(workflow_id), headers=HEADERS)
         if response.status_code == 200:
             return response.json()
         else:
@@ -102,7 +103,7 @@ def get_workflow(workflow_id):
 def recon_workflow(payload):
     try:
         print(json.dumps(payload))
-        # response = requests.get(url="", data=json.dumps(payload), headers=HEADERS)
+        # response = requests.get(url=STATESMAN_RECON_URL, data=json.dumps(payload), headers=HEADERS)
         # if response.status_code == 200:
         #     return response.json()
         # else:
@@ -131,27 +132,25 @@ def create_recon_payload(patient_language,
                          fsm_customer_signature,
                          ticket_type):
     paylaod = {
-        "body": {
-            "freshdesk_webhook": {
-                "ticket_cf_patient_language": patient_language,
-                "ticket_status": status,
-                "ticket_cf_fsm_contact_name": contact_name,
-                "ticket_cf_patient_age": patient_age,
-                "ticket_cf_patient_name": patient_name,
-                "ticket_cf_fsm_phone_number": patient_number,
-                "ticket_cf_patient_gender": patient_gender,
-                "ticket_cf_foreign_travel_history": foreign_travel_history,
-                "ticket_cf_contact": contact,
-                "ticket_agent_email": agent_email,
-                "ticket_cf_state": state,
-                "ticket_group_name": group_name,
-                "ticket_id": id,
-                "ticket_url": url,
-                "ticket_agent_name": agent_name,
-                "ticket_tags": tags,
-                "ticket_cf_fsm_customer_signature": fsm_customer_signature,
-                "ticket_ticket_type": ticket_type
-            }
+        "freshdesk_webhook": {
+            "ticket_cf_patient_language": patient_language,
+            "ticket_status": status,
+            "ticket_cf_fsm_contact_name": contact_name,
+            "ticket_cf_patient_age": patient_age,
+            "ticket_cf_patient_name": patient_name,
+            "ticket_cf_fsm_phone_number": patient_number,
+            "ticket_cf_patient_gender": patient_gender,
+            "ticket_cf_foreign_travel_history": foreign_travel_history,
+            "ticket_cf_contact": contact,
+            "ticket_agent_email": agent_email,
+            "ticket_cf_state": state,
+            "ticket_group_name": group_name,
+            "ticket_id": id,
+            "ticket_url": url,
+            "ticket_agent_name": agent_name,
+            "ticket_tags": tags,
+            "ticket_cf_fsm_customer_signature": fsm_customer_signature,
+            "ticket_ticket_type": ticket_type
         }
     }
     return paylaod
@@ -216,8 +215,6 @@ def file_based_recon():
     if (file_name is not None):
         input_file = csv.DictReader(open(file_name))
         for row in input_file:
-            print(row["Customer's signature"])
-            print(row["Status"])
             if (row.has_key("Customer's signature") and (row['Status'] == 'Resolved' or row['Status'] == 'Closed')):
                 workflow = get_workflow(row["Customer's signature"])
                 if (recon_required(workflow)):
