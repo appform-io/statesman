@@ -52,6 +52,7 @@ public class ServiceProviderCallbackHandler {
     }
 
     public boolean handleServiceProviderCallback(final String serviceProviderId, JsonNode incomingData)  throws IOException {
+        log.debug("Raw callback from {}: {}", serviceProviderId, incomingData);
         val tmpl = callbackTemplateProvider.get().getTemplate(serviceProviderId, TranslationTemplateType.PROVIDER_CALLBACK).orElse(null);
         if(null == tmpl) {
             log.warn("No template found for callback from service provider: {}. Cannot proceed.", serviceProviderId);
