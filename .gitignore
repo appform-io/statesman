@@ -3,7 +3,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Java template
 *.class
-
+*.pyc
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 

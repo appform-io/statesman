@@ -81,6 +81,7 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
                             .eventData(FoxtrotStateTransitionEvent.builder()
                                                .workflowId(stateTransitionEvent.getWorkflow().getId())
                                                .workflowTemplateId(stateTransitionEvent.getWorkflow().getTemplateId())
+                                               .workflowCreationTime(stateTransitionEvent.getWorkflow().getCreated().getTime())
                                                .oldState(stateTransitionEvent.getOldState().getName())
                                                .newState(stateTransitionEvent.getWorkflow().getDataObject().getCurrentState().getName())
                                                .terminal(stateTransitionEvent.getWorkflow().getDataObject().getCurrentState().isTerminal())

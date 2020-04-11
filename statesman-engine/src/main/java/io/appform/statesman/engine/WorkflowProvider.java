@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.WorkflowTemplate;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  *
@@ -17,7 +17,7 @@ public interface WorkflowProvider {
 
     Optional<WorkflowTemplate> getTemplate(String workflowTemplateId);
 
-    List<WorkflowTemplate> getAll();
+    Set<WorkflowTemplate> getAll();
 
     Optional<Workflow> createWorkflow(String templateId, JsonNode initialData);
 

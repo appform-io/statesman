@@ -18,8 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.hibernate.criterion.DetachedCriteria;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -30,7 +30,7 @@ public class WorkflowProviderCommand implements WorkflowProvider {
     private final LookupDao<StoredWorkflowTemplate> workflowTemplateLookupDao;
     private final LookupDao<StoredWorkflowInstance> workflowInstanceLookupDao;
     private final LoadingCache<String, Optional<WorkflowTemplate>> workflowTemplateCache;
-    private final LoadingCache<String, List<WorkflowTemplate>> allActiveWorkflow;
+    private final LoadingCache<String, Set<WorkflowTemplate>> allActiveWorkflow;
 
     @Inject
     public WorkflowProviderCommand(LookupDao<StoredWorkflowTemplate> workflowTemplateLookupDao,
@@ -95,17 +95,17 @@ public class WorkflowProviderCommand implements WorkflowProvider {
     }
 
     @Override
-    public List<WorkflowTemplate> getAll() {
+    public Set<WorkflowTemplate> getAll() {
         return allActiveWorkflow.get("all");
     }
 
 
-    public List<WorkflowTemplate> getAllFromDb() {
+    public Set<WorkflowTemplate> getAllFromDb() {
         try {
             return workflowTemplateLookupDao.scatterGather(DetachedCriteria.forClass(StoredWorkflowTemplate.class))
                     .stream()
                     .map(WorkflowUtils::toDto)
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }

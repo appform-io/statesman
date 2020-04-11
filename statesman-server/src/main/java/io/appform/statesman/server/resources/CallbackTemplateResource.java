@@ -14,8 +14,8 @@ import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Path("/v1/callback/templates")
 @Slf4j
@@ -56,7 +56,7 @@ public class CallbackTemplateResource {
     @ApiOperation("Get all callback templates")
     public Response getAll() {
 
-        List<TransformationTemplate> templates = callbackTemplateProvider.getAll();
+        Set<TransformationTemplate> templates = callbackTemplateProvider.getAll();
         if (templates.isEmpty()) {
             return Response.noContent()
                     .build();
