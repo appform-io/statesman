@@ -1,3 +1,6 @@
+import csv
+import datetime
+import json
 import requests
 import time
 import urllib
@@ -5,13 +8,16 @@ import urllib
 FROM = 1586375271662
 TO = 1586460257299
 
-STATESMAN_URL = "http://127.0.0.1:8080/v1/housekeeping/debug/workflow/{}"
-FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
+STATESMAN_URL = "http://a254946ea791611eabe57061fcb77c4f-40500932.ap-south-1.elb.amazonaws.com:8080/v1/housekeeping/debug/workflow/{}"
+FRESHDESK_URL = "https://telemeds.freshdesk.com/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
+FRESHDESK_TICKETS_FILE_URL = "https://telemeds.freshdesk.com/reports/scheduled_exports/4830771586540088/download_file.json"
 HEADERS = {
     "Content-Type": "application/json",
-    "Authorization": "Basic "
+    "Authorization": "Basic YXNnYW5lc2gyMzRAZ21haWwuY29tOnRlbGVtZWQxOQ=="
 }
 
+
+############ DATE HELPER ###########
 
 def formatted_date_time(epoch):
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(epoch / 1000))
@@ -20,6 +26,12 @@ def formatted_date_time(epoch):
 def epoch_time(str_time):
     return (int(time.mktime(time.strptime(str_time, "%Y-%m-%dT%H:%M:%SZ"))) + 19800) * 1000
 
+
+def str_current_time():
+    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+############ FRESHDESK HELPER ##########
 
 def fetch_next_freshdesk_tickets(page, from_str_time):
     response = requests.get(url=FRESHDESK_URL.format(page, urllib.quote(from_str_time)), headers=HEADERS)
@@ -58,26 +70,159 @@ def fetch_freshdesk_tickets(from_time, to_time):
     return all_tickets
 
 
-def filter_resolved(tickets):
-    resolved_tickets = []
-    for ticket in tickets:
-        if (ticket["status"] == 4):
-            resolved_tickets.append(ticket)
-    return resolved_tickets
+def download_tickets_last_hour():
+    file_path = "/var/tmp/reports/FERSHDESK_" + str_current_time()
+    response = requests.get(url=FRESHDESK_TICKETS_FILE_URL, headers=HEADERS)
+    if response.status_code == 200:
+        url = response.json()["export"]["url"]
+        file_response = requests.get(url=url)
+        file_handler = open(file_path, 'wb')
+        file_handler.write(file_response.content)
+        file_handler.close()
+        return file_path
+    else:
+        return None
+
+
+############ STATESMAN HELPER ##########
+
 
 def get_workflow(workflow_id):
-    response = requests.get(url=STATESMAN_URL.format(workflow_id), headers=HEADERS)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return {}
+    try:
+        response = requests.get(url=STATESMAN_URL.format(workflow_id), headers=HEADERS)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {}
+    except:
+        pass
+    return {}
+
+
+def recon_workflow(payload):
+    try:
+        print(json.dumps(payload))
+        # response = requests.get(url="", data=json.dumps(payload), headers=HEADERS)
+        # if response.status_code == 200:
+        #     return response.json()
+        # else:
+        #     return {}
+    except:
+        pass
+    return {}
+
+
+def create_recon_payload(patient_language,
+                         status,
+                         contact_name,
+                         patient_age,
+                         patient_name,
+                         patient_number,
+                         patient_gender,
+                         foreign_travel_history,
+                         contact,
+                         agent_email,
+                         state,
+                         group_name,
+                         id,
+                         url,
+                         agent_name,
+                         tags,
+                         fsm_customer_signature,
+                         ticket_type):
+    paylaod = {
+        "body": {
+            "freshdesk_webhook": {
+                "ticket_cf_patient_language": patient_language,
+                "ticket_status": status,
+                "ticket_cf_fsm_contact_name": contact_name,
+                "ticket_cf_patient_age": patient_age,
+                "ticket_cf_patient_name": patient_name,
+                "ticket_cf_fsm_phone_number": patient_number,
+                "ticket_cf_patient_gender": patient_gender,
+                "ticket_cf_foreign_travel_history": foreign_travel_history,
+                "ticket_cf_contact": contact,
+                "ticket_agent_email": agent_email,
+                "ticket_cf_state": state,
+                "ticket_group_name": group_name,
+                "ticket_id": id,
+                "ticket_url": url,
+                "ticket_agent_name": agent_name,
+                "ticket_tags": tags,
+                "ticket_cf_fsm_customer_signature": fsm_customer_signature,
+                "ticket_ticket_type": ticket_type
+            }
+        }
+    }
+    return paylaod
+
 
 def recon_required(workflow):
     return workflow.has_key("currentState") and workflow["currentState"]["currentState"] == "CALL_NEEDED"
 
-for resolved_ticket in filter_resolved(fetch_freshdesk_tickets(FROM, TO)):
-    print resolved_ticket
-    if(resolved_ticket.has_key("custom_fields") and resolved_ticket["custom_fields"].has_key("cf_fsm_customer_signature") and resolved_ticket["custom_fields"]["cf_fsm_customer_signature"] != ''):
-        workflow = get_workflow(resolved_ticket["custom_fields"]["cf_fsm_customer_signature"])
-        print workflow
-        print recon_required(workflow)
+
+############ COMMON UTILS #############
+
+def get_or_default(data, key, default_value):
+    return data[key] if data.has_key(key) else default_value
+
+
+def filter_resolved(tickets):
+    resolved_tickets = []
+    for ticket in tickets:
+        if (ticket["status"] == 4 or ticket["status"] == 5):
+            resolved_tickets.append(ticket)
+    return resolved_tickets
+
+
+############ API BASED RECON ###########
+
+
+def api_based_recon():
+    for resolved_ticket in filter_resolved(fetch_freshdesk_tickets(FROM, TO)):
+        print resolved_ticket
+        if (resolved_ticket.has_key("custom_fields") and resolved_ticket["custom_fields"].has_key(
+                "cf_fsm_customer_signature") and resolved_ticket["custom_fields"][
+            "cf_fsm_customer_signature"] != ''):
+            workflow = get_workflow(resolved_ticket["custom_fields"]["cf_fsm_customer_signature"])
+            recon_required(workflow)
+
+
+############ FILE BASED RECON ###########
+
+def create_recon_payload_from_csv_line(row):
+    return create_recon_payload(patient_language=get_or_default(row, "Patient Language", ""),
+                                status=get_or_default(row, "Status", ""),
+                                contact_name=get_or_default(row, "Contact", "Contact Id"),
+                                patient_age=get_or_default(row, "Patient Age", ""),
+                                patient_name=get_or_default(row, "Patient Name", ""),
+                                patient_number=get_or_default(row, "Phone number", ""),
+                                patient_gender=get_or_default(row, "Patient Gender", ""),
+                                foreign_travel_history=get_or_default(row, "Foreign Travel History", ""),
+                                contact=get_or_default(row, "Contact", ""),
+                                agent_email=get_or_default(row, "Agent Email", ""),
+                                state=get_or_default(row, "State", ""),
+                                group_name=get_or_default(row, "Group", ""),
+                                id=get_or_default(row, "Ticket Id", ""),
+                                url=get_or_default(row, "Ticket URL", ""),
+                                agent_name=get_or_default(row, "Agent", ""),
+                                tags=get_or_default(row, "Tags", ""),
+                                fsm_customer_signature=get_or_default(row, "Customer's signature", ""),
+                                ticket_type=get_or_default(row, "Type", ""))
+
+
+def file_based_recon():
+    file_name = download_tickets_last_hour()
+    if (file_name is not None):
+        input_file = csv.DictReader(open(file_name))
+        for row in input_file:
+            print(row["Customer's signature"])
+            print(row["Status"])
+            if (row.has_key("Customer's signature") and (row['Status'] == 'Resolved' or row['Status'] == 'Closed')):
+                workflow = get_workflow(row["Customer's signature"])
+                if (recon_required(workflow)):
+                    payload = create_recon_payload_from_csv_line(row)
+                    recon_workflow(payload)
+
+
+file_based_recon()
