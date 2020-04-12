@@ -55,6 +55,7 @@ public class HandleBarsHelperRegistry {
         registerStrNormalize();
         registerStrNormalizeUpper();
         registerStrNormalizeInitCap();
+        registerElapsedTime();
         registerEq();
         registerLt();
         registerLte();
@@ -194,6 +195,28 @@ public class HandleBarsHelperRegistry {
                 return compareEq(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
             }
             throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
+        });
+    }
+
+    private void registerElapsedTime() {
+        handlebars.registerHelper("elapsedTime", new Helper<Object>() {
+
+            @Override
+            public Object apply(Object startTime, Options options) throws IOException {
+                long currTime = options.params != null && options.params.length != 0
+                            ? options.param(0)
+                            : System.currentTimeMillis();
+                if (startTime instanceof Date) {
+                    return currTime - ((Date) startTime).getTime();
+                }
+                if (startTime instanceof Long) {
+                    return currTime - (long) startTime;
+                }
+                if (startTime instanceof Integer) {
+                    return currTime - (int) startTime;
+                }
+                throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
+            }
         });
     }
 

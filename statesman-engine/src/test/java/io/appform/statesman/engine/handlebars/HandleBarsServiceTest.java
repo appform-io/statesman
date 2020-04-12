@@ -10,6 +10,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.Date;
 
 /**
  *
@@ -428,5 +429,17 @@ public class HandleBarsServiceTest {
         Assert.assertEquals("dr_jeykll_mr_hyde", hb.transform("{{normalize name}}", node));
         Assert.assertEquals("DR_JEYKLL_MR_HYDE", hb.transform("{{normalize_upper name}}", node));
         Assert.assertEquals("Punjab", hb.transform("{{normalize_init_cap state}}", node));
+    }
+
+    @Test
+    public void testElapsedTime() {
+        val hb = new HandleBarsService();
+        val currDate = new Date();
+        val oldDate = new Date(currDate.getTime() - 5_000);
+        val node = Jackson.newObjectMapper()
+                    .createObjectNode()
+                    .put("date", currDate.getTime())
+                    .put("oldDate", oldDate.getTime());
+        Assert.assertEquals("5000", hb.transform("{{elapsedTime oldDate date}}", node));
     }
 }
