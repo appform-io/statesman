@@ -55,6 +55,7 @@ public class HandleBarsHelperRegistry {
         registerStrNormalize();
         registerStrNormalizeUpper();
         registerStrNormalizeInitCap();
+        registerCurrTime();
         registerElapsedTime();
         registerEq();
         registerLt();
@@ -195,6 +196,16 @@ public class HandleBarsHelperRegistry {
                 return compareEq(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
             }
             throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
+        });
+    }
+
+    private void registerCurrTime() {
+        handlebars.registerHelper("currTime", new Helper<Object>() {
+
+            @Override
+            public Object apply(Object startTime, Options options) throws IOException {
+                return System.currentTimeMillis();
+            }
         });
     }
 

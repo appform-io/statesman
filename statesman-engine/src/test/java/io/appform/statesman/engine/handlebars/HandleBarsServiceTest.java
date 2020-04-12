@@ -441,5 +441,6 @@ public class HandleBarsServiceTest {
                     .put("date", currDate.getTime())
                     .put("oldDate", oldDate.getTime());
         Assert.assertEquals("5000", hb.transform("{{elapsedTime oldDate date}}", node));
+        Assert.assertTrue(currDate.getTime() <= Long.parseLong(hb.transform("{{currTime}}", node)));
     }
 }
