@@ -17,6 +17,7 @@ import lombok.val;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -210,23 +211,44 @@ public class HandleBarsHelperRegistry {
     }
 
     private void registerElapsedTime() {
-        handlebars.registerHelper("elapsedTime", new Helper<Object>() {
+        handlebars.registerHelper("elapsedTime", new Helper<String>() {
 
             @Override
-            public Object apply(Object startTime, Options options) throws IOException {
-                long currTime = options.params != null && options.params.length != 0
-                            ? options.param(0)
-                            : System.currentTimeMillis();
-                if (startTime instanceof Date) {
-                    return currTime - ((Date) startTime).getTime();
+            public Object apply(String dateFormat, Options options) throws IOException {
+                if(null == options.params || options.params.length < 1) {
+                    return 0;
                 }
-                if (startTime instanceof Long) {
-                    return currTime - (long) startTime;
+                SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+                val fromData = options.param(0);
+                Date fromDate = null;
+                if(fromData instanceof String) {
+                    try {
+                        fromDate = sdf.parse((String)fromData);
+                    }
+                    catch (ParseException e) {
+                        log.error("Error parsing from date: " + fromData, e);
+                    }
                 }
-                if (startTime instanceof Integer) {
-                    return currTime - (int) startTime;
+                if(null == fromDate) {
+                    log.error("From date could not be extracted from {}", fromData);
+                    return 0;
                 }
-                throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
+                Date toDate = null;
+                if(options.params.length > 1) {
+                    val toData = options.param(1);
+                    if(toData instanceof String) {
+                        try {
+                            toDate = sdf.parse((String)toData);
+                        }
+                        catch (ParseException e) {
+                            log.error("Error parsing to date: " + toData, e);
+                        }
+                    }
+                }
+                if(null == toDate) {
+                    toDate = new Date();
+                }
+                return toDate.getTime() - fromDate.getTime();
             }
         });
     }

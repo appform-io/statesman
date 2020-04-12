@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  *
@@ -435,12 +436,27 @@ public class HandleBarsServiceTest {
     public void testElapsedTime() {
         val hb = new HandleBarsService();
         val currDate = new Date();
-        val oldDate = new Date(currDate.getTime() - 5_000);
+        Assert.assertTrue(currDate.getTime() <= Long.parseLong(
+                Objects.requireNonNull(hb.transform("{{currTime}}",
+                                                    Jackson.newObjectMapper().createObjectNode()))));
+    }
+
+
+    @Test
+    @SneakyThrows
+    public void testElapsedTime1() {
+        val hb = new HandleBarsService();
+        val currDate = new Date();
         val node = Jackson.newObjectMapper()
-                    .createObjectNode()
-                    .put("date", currDate.getTime())
-                    .put("oldDate", oldDate.getTime());
-        Assert.assertEquals("5000", hb.transform("{{elapsedTime oldDate date}}", node));
-        Assert.assertTrue(currDate.getTime() <= Long.parseLong(hb.transform("{{currTime}}", node)));
+                .readTree("{\n" +
+                                  "   \"StartTime\" : [\n" +
+                                  "      \"2020-04-12 23:25:15\"\n" +
+                                  "   ],\n" +
+                                  "   \"CurrentTime\" : [\n" +
+                                  "      \"2020-04-12 23:25:59\"\n" +
+                                  "   ]\n" +
+                                  "}\n");
+        final String out = hb.transform("{{elapsedTime \"YYYY-MM-dd HH:mm:ss\" StartTime/0 CurrentTime/0}}", node);
+        Assert.assertEquals("44000", out);
     }
 }
