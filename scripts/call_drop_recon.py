@@ -2,9 +2,9 @@ import MySQLdb
 import json
 import requests
 
-HOST = 'helpline-db.czmihillm8kl.ap-south-1.rds.amazonaws.com'
+HOST = '127.0.0.1'
 USER = 'root'
-PASSWORD = 'yrh98aKLbEmaaC9UHvbRZBndwijF8oLH'
+PASSWORD = ''
 DATABASE = 'statesman_db_'
 SHARDS = 16
 
