@@ -7,6 +7,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
 import com.google.common.base.Strings;
+import com.google.inject.name.Named;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
@@ -70,7 +71,7 @@ public class IngressHandler {
             Provider<WorkflowProvider> workflowProvider,
             Provider<WorkflowTemplateSelector> templateSelector,
             IvrDropDetectionConfig dropDetectionConfig,
-            EventPublisher publisher) {
+            @Named("eventPublisher") EventPublisher publisher) {
         this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
         this.handleBarsService = handleBarsService;

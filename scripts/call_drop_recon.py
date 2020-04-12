@@ -10,7 +10,7 @@ SHARDS = 16
 
 START_STATE_WORKFLOW_SQL = """ select workflow_id from workflow_instances where current_state = 'START' and updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
 
-STATESMAN_RECON_URL = "https://127.0.0.1/v1/housekeeping/trigger/workflow/{}"
+STATESMAN_RECON_URL = "http://127.0.0.1:8080/v1/housekeeping/trigger/workflow/{}"
 HEADERS = {
     "Content-Type": "application/json"
 }

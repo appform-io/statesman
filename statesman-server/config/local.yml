@@ -63,13 +63,6 @@ swagger:
   description: Statesman Backend
 
 
-riemann:
-  host: 127.0.0.1
-  port: 5555
-  prefix: covid.local.statesman
-  pollingInterval: 30
-  tags:
-    - statesman
 
 httpActionDefaultConfig:
   connections: 10
@@ -87,3 +80,9 @@ eventPublisherConfig:
   batchSize: 50
   queuePath: /tmp/statesman
 
+
+ivrDropDetection:
+  enabled: true
+  detectionPatterns:
+    ozonetel_punjab:
+      - "payload.*"
