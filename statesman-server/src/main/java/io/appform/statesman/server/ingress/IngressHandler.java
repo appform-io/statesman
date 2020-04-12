@@ -10,12 +10,17 @@ import com.google.common.base.Strings;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
+import io.appform.statesman.engine.Constants;
 import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
+import io.appform.statesman.engine.events.EngineEventType;
+import io.appform.statesman.engine.events.WorkflowInitEvent;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.engine.utils.StringUtils;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
+import io.appform.statesman.publisher.EventPublisher;
+import io.appform.statesman.publisher.model.Event;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
 import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
@@ -54,6 +59,7 @@ public class IngressHandler {
     private final IvrDropDetectionConfig dropDetectionConfig;
     private final HopeLangEngine hopeLangEngine;
     private final LoadingCache<String, Evaluatable> hopeRuleCache;
+    private final EventPublisher publisher;
 
     @Inject
     public IngressHandler(
@@ -63,7 +69,8 @@ public class IngressHandler {
             Provider<StateTransitionEngine> engine,
             Provider<WorkflowProvider> workflowProvider,
             Provider<WorkflowTemplateSelector> templateSelector,
-            IvrDropDetectionConfig dropDetectionConfig) {
+            IvrDropDetectionConfig dropDetectionConfig,
+            EventPublisher publisher) {
         this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
         this.handleBarsService = handleBarsService;
@@ -71,6 +78,7 @@ public class IngressHandler {
         this.workflowProvider = workflowProvider;
         this.templateSelector = templateSelector;
         this.dropDetectionConfig = dropDetectionConfig;
+        this.publisher = publisher;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
@@ -114,7 +122,9 @@ public class IngressHandler {
         }
         val date = new Date();
         val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
-        wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date()));
+        val workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
+        wfp.saveWorkflow(workflow);
+        workflowInitPostProcessing(workflow);
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, update, new MergeDataAction()));
@@ -198,8 +208,10 @@ public class IngressHandler {
                 return false;
             }
             val dataNode = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
-            wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(),
-                                          dataNode, new Date(), new Date()));
+            val workflow = new Workflow(wfId, wfTemplate.getId(),
+                    dataNode, new Date(), new Date());
+            wfp.saveWorkflow(workflow);
+            workflowInitPostProcessing(workflow);
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (null == wf) {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
@@ -277,7 +289,7 @@ public class IngressHandler {
                 .orElse(null);
     }
 
-    public static boolean isDroppedCallSingleShot(
+    private boolean isDroppedCallSingleShot(
             final String provider, JsonNode jsonNode, IvrDropDetectionConfig dropDetectionConfig) {
         if (!dropDetectionConfig.isEnabled()) {
             return false;
@@ -297,5 +309,27 @@ public class IngressHandler {
                         && (field.getValue().size() == 0
                         || (field.getValue().size() == 1
                         && Strings.isNullOrEmpty(field.getValue().get(0).asText()))));
+    }
+
+    private void workflowInitPostProcessing(Workflow workflow) {
+        try {
+            this.publisher.publish(Event.builder()
+                    .topic(io.appform.statesman.engine.Constants.FOXTROT_REPORTING_TOPIC)
+                    .app(Constants.FOXTROT_APP_NAME)
+                    .eventType(EngineEventType.WORKFLOW_INIT.name())
+                    .groupingKey(workflow.getId())
+                    .partitionKey(workflow.getId())
+                    .time(new Date())
+                    .eventSchemaVersion("v1")
+                    .eventData(WorkflowInitEvent.builder()
+                            .workflowId(workflow.getId())
+                            .workflowTemplateId(workflow.getTemplateId())
+                            .currentState(workflow.getDataObject().getCurrentState().getName())
+                            .build())
+                    .build());
+
+        } catch (Exception e) {
+            log.error("Error while sending foxtrot event for workflowInit of workflow:" + workflow.getId(), e);
+        }
     }
 }
