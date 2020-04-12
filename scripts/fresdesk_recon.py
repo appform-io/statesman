@@ -10,6 +10,7 @@ import urllib
 FROM = 1586375271662
 TO = 1586460257299
 
+FILE_PATH_PREFIX = "/var/tmp/reports/FRESHDESK_"
 STATESMAN_WORKFLOW_GET_URL = "http://127.0.0.1:8080/v1/housekeeping/debug/workflow/{}"
 STATESMAN_RECON_URL = "https://127.0.0.1/callbacks/FRESHDESK"
 FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
