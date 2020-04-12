@@ -71,7 +71,7 @@ CREATE TABLE `workflow_instances` (
   `partition_id` int(11) NOT NULL DEFAULT 1,
   `workflow_id` varchar(64) DEFAULT NULL,
   `template_id` varchar(64) DEFAULT NULL,
-  `current_state` varchar(64) DEFAULT NULL,
+  `current_state` varchar(128) DEFAULT NULL,
   `completed` bit(1) DEFAULT NULL,
   `data` blob DEFAULT NULL,
   `created` datetime(3) NOT NULL DEFAULT current_timestamp(3),
