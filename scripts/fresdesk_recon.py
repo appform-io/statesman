@@ -1,6 +1,8 @@
 import csv
 import datetime
+import glob
 import json
+import os
 import requests
 import time
 import urllib
@@ -72,7 +74,7 @@ def fetch_freshdesk_tickets(from_time, to_time):
 
 
 def download_tickets_last_hour():
-    file_path = "/var/tmp/reports/FRESHDESK_" + str_current_time()
+    file_path = FILE_PATH_PREFIX + str_current_time()
     response = requests.get(url=FRESHDESK_TICKETS_FILE_URL, headers=HEADERS)
     if response.status_code == 200:
         url = response.json()["export"]["url"]
@@ -157,10 +159,24 @@ def create_recon_payload(patient_language,
 
 
 def recon_required(workflow):
-    return workflow.has_key("dataObject") and workflow["dataObject"].has_key("currentState") and workflow["dataObject"]["currentState"]["name"] == "CALL_NEEDED"
+    return workflow.has_key("dataObject") and workflow["dataObject"].has_key("currentState") and \
+           workflow["dataObject"]["currentState"]["name"] == "CALL_NEEDED"
 
 
 ############ COMMON UTILS #############
+
+def delete_path(file_path):
+    try:
+        os.remove(file_path)
+    except OSError:
+        print("Error while deleting file:" + file_path)
+
+
+def delete_match(file_path_regex):
+    file_list = glob.glob(file_path_regex)
+    for file_path in file_list:
+        delete_path(file_path)
+
 
 def get_or_default(data, key, default_value):
     return data[key] if data.has_key(key) else default_value
@@ -222,4 +238,5 @@ def file_based_recon():
                     recon_workflow(payload)
 
 
+delete_match(FILE_PATH_PREFIX + "*")
 file_based_recon()
