@@ -9,6 +9,8 @@ import io.appform.statesman.engine.observer.ObservableEvent;
 import io.appform.statesman.engine.observer.ObservableEventBusSubscriber;
 import io.appform.statesman.engine.observer.ObservableEventVisitor;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
+import io.appform.statesman.engine.observer.events.WorkflowInitEvent;
+import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.model.Event;
@@ -46,6 +48,11 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
 
                 return stateTransitionEvent.accept(EVENT_TRANSLATOR);
             }
+
+            @Override
+            public List<Event> visit(WorkflowInitEvent workflowInitEvent) {
+                return workflowInitEvent.accept(EVENT_TRANSLATOR);
+            }
         });
 
         //publish
@@ -57,8 +64,7 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
             if (null != eventList && !eventList.isEmpty()) {
                 publisher.publish(Constants.FOXTROT_REPORTING_TOPIC, eventList);
             }
-        }
-        catch (final Exception e) {
+        } catch (final Exception e) {
             log.error("unable to send event", e);
             throw StatesmanError.propagate(e);
         }
@@ -79,18 +85,37 @@ public class FoxtrotEventSender extends ObservableEventBusSubscriber {
                             .time(new Date())
                             .eventSchemaVersion("v1")
                             .eventData(FoxtrotStateTransitionEvent.builder()
-                                               .workflowId(stateTransitionEvent.getWorkflow().getId())
-                                               .workflowTemplateId(stateTransitionEvent.getWorkflow().getTemplateId())
-                                               .workflowCreationTime(stateTransitionEvent.getWorkflow().getCreated().getTime())
-                                               .oldState(stateTransitionEvent.getOldState().getName())
-                                               .newState(stateTransitionEvent.getWorkflow().getDataObject().getCurrentState().getName())
-                                               .terminal(stateTransitionEvent.getWorkflow().getDataObject().getCurrentState().isTerminal())
-                                               .data(stateTransitionEvent.getWorkflow().getDataObject().getData())
-                                               .update(stateTransitionEvent.getUpdate().getData())
-                                               .appliedAction(stateTransitionEvent.getTransition().getAction())
-                                               .elapseTime(System.currentTimeMillis() - stateTransitionEvent.getWorkflow().getCreated().getTime())
-                                               .build())
+                                    .workflowId(stateTransitionEvent.getWorkflow().getId())
+                                    .workflowTemplateId(stateTransitionEvent.getWorkflow().getTemplateId())
+                                    .workflowCreationTime(stateTransitionEvent.getWorkflow().getCreated().getTime())
+                                    .oldState(stateTransitionEvent.getOldState().getName())
+                                    .newState(stateTransitionEvent.getWorkflow().getDataObject().getCurrentState().getName())
+                                    .terminal(stateTransitionEvent.getWorkflow().getDataObject().getCurrentState().isTerminal())
+                                    .data(stateTransitionEvent.getWorkflow().getDataObject().getData())
+                                    .update(stateTransitionEvent.getUpdate().getData())
+                                    .appliedAction(stateTransitionEvent.getTransition().getAction())
+                                    .elapseTime(System.currentTimeMillis() - stateTransitionEvent.getWorkflow().getCreated().getTime())
+                                    .build())
                             .build());
+        }
+
+        @Override
+        public List<Event> visit(WorkflowInitEvent workflowInitEvent) {
+            Workflow workflow = workflowInitEvent.getWorkflow();
+            return Collections.singletonList(Event.builder()
+                    .topic(io.appform.statesman.engine.Constants.FOXTROT_REPORTING_TOPIC)
+                    .app(Constants.FOXTROT_APP_NAME)
+                    .eventType(EngineEventType.WORKFLOW_INIT.name())
+                    .groupingKey(workflow.getId())
+                    .partitionKey(workflow.getId())
+                    .time(new Date())
+                    .eventSchemaVersion("v1")
+                    .eventData(io.appform.statesman.engine.events.WorkflowInitEvent.builder()
+                            .workflowId(workflow.getId())
+                            .workflowTemplateId(workflow.getTemplateId())
+                            .currentState(workflow.getDataObject().getCurrentState().getName())
+                            .build())
+                    .build());
         }
     }
 }

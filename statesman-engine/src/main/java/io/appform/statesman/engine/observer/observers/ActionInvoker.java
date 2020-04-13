@@ -8,6 +8,7 @@ import io.appform.statesman.engine.observer.ObservableEvent;
 import io.appform.statesman.engine.observer.ObservableEventBusSubscriber;
 import io.appform.statesman.engine.observer.ObservableEventVisitor;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
+import io.appform.statesman.engine.observer.events.WorkflowInitEvent;
 import lombok.val;
 
 import javax.inject.Provider;
@@ -39,6 +40,12 @@ public class ActionInvoker extends ObservableEventBusSubscriber {
                             .execute(selectedTransition.getAction(),
                                      stateTransitionEvent.getWorkflow());
                 }
+                return null;
+            }
+
+            @Override
+            public Void visit(WorkflowInitEvent workflowInitEvent) {
+                //NOOP
                 return null;
             }
         });

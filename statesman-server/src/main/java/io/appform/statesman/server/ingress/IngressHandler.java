@@ -60,7 +60,6 @@ public class IngressHandler {
     private final IvrDropDetectionConfig dropDetectionConfig;
     private final HopeLangEngine hopeLangEngine;
     private final LoadingCache<String, Evaluatable> hopeRuleCache;
-    private final EventPublisher publisher;
 
     @Inject
     public IngressHandler(
@@ -70,8 +69,7 @@ public class IngressHandler {
             Provider<StateTransitionEngine> engine,
             Provider<WorkflowProvider> workflowProvider,
             Provider<WorkflowTemplateSelector> templateSelector,
-            IvrDropDetectionConfig dropDetectionConfig,
-            @Named("eventPublisher") EventPublisher publisher) {
+            IvrDropDetectionConfig dropDetectionConfig) {
         this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
         this.handleBarsService = handleBarsService;
@@ -79,7 +77,6 @@ public class IngressHandler {
         this.workflowProvider = workflowProvider;
         this.templateSelector = templateSelector;
         this.dropDetectionConfig = dropDetectionConfig;
-        this.publisher = publisher;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
@@ -125,7 +122,6 @@ public class IngressHandler {
         val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
         val workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
         wfp.saveWorkflow(workflow);
-        workflowInitPostProcessing(workflow);
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, update, new MergeDataAction()));
@@ -212,7 +208,6 @@ public class IngressHandler {
             val workflow = new Workflow(wfId, wfTemplate.getId(),
                     dataNode, new Date(), new Date());
             wfp.saveWorkflow(workflow);
-            workflowInitPostProcessing(workflow);
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (null == wf) {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
@@ -310,27 +305,5 @@ public class IngressHandler {
                         && (field.getValue().size() == 0
                         || (field.getValue().size() == 1
                         && Strings.isNullOrEmpty(field.getValue().get(0).asText()))));
-    }
-
-    private void workflowInitPostProcessing(Workflow workflow) {
-        try {
-            this.publisher.publish(Event.builder()
-                    .topic(io.appform.statesman.engine.Constants.FOXTROT_REPORTING_TOPIC)
-                    .app(Constants.FOXTROT_APP_NAME)
-                    .eventType(EngineEventType.WORKFLOW_INIT.name())
-                    .groupingKey(workflow.getId())
-                    .partitionKey(workflow.getId())
-                    .time(new Date())
-                    .eventSchemaVersion("v1")
-                    .eventData(WorkflowInitEvent.builder()
-                            .workflowId(workflow.getId())
-                            .workflowTemplateId(workflow.getTemplateId())
-                            .currentState(workflow.getDataObject().getCurrentState().getName())
-                            .build())
-                    .build());
-
-        } catch (Exception e) {
-            log.error("Error while sending foxtrot event for workflowInit of workflow:" + workflow.getId(), e);
-        }
     }
 }

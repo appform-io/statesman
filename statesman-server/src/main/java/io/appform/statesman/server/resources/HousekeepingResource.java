@@ -72,7 +72,7 @@ public class HousekeepingResource {
                                     @Valid JsonNode update) {
         Workflow wf = workflowProvider.get().getWorkflow(workflowId).orElse(null);
         if (wf == null) {
-            return Response.status(Response.Status.NOT_FOUND)
+            return Response.noContent()
                     .build();
         }
         final AppliedTransitions appliedTransitions
