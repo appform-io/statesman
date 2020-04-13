@@ -71,12 +71,13 @@ CREATE TABLE `workflow_instances` (
   `partition_id` int(11) NOT NULL DEFAULT 1,
   `workflow_id` varchar(64) DEFAULT NULL,
   `template_id` varchar(64) DEFAULT NULL,
-  `current_state` varchar(255) DEFAULT NULL,
+  `current_state` varchar(128) DEFAULT NULL,
   `completed` bit(1) DEFAULT NULL,
   `data` blob DEFAULT NULL,
   `created` datetime(3) NOT NULL DEFAULT current_timestamp(3),
   `updated` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
   PRIMARY KEY (`id`,`partition_id`),
+  KEY `idx_current_state_updated` (`current_state`,`updated`),
   UNIQUE KEY `uniq_workflow_id_partition_id` (`workflow_id`,`partition_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
 PARTITION BY RANGE (`partition_id`)

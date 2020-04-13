@@ -7,15 +7,21 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
 import com.google.common.base.Strings;
+import com.google.inject.name.Named;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
+import io.appform.statesman.engine.Constants;
 import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
+import io.appform.statesman.engine.events.EngineEventType;
+import io.appform.statesman.engine.events.WorkflowInitEvent;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.engine.utils.StringUtils;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
+import io.appform.statesman.publisher.EventPublisher;
+import io.appform.statesman.publisher.model.Event;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
 import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
@@ -115,7 +121,8 @@ public class IngressHandler {
         }
         val date = new Date();
         val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
-        wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date()));
+        val workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
+        wfp.saveWorkflow(workflow);
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(new DataUpdate(wfId, update, new MergeDataAction()));
@@ -199,8 +206,9 @@ public class IngressHandler {
                 return false;
             }
             val dataNode = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
-            wfp.saveWorkflow(new Workflow(wfId, wfTemplate.getId(),
-                                          dataNode, new Date(), new Date()));
+            val workflow = new Workflow(wfId, wfTemplate.getId(),
+                    dataNode, new Date(), new Date());
+            wfp.saveWorkflow(workflow);
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (null == wf) {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
@@ -278,7 +286,7 @@ public class IngressHandler {
                 .orElse(null);
     }
 
-    public static boolean isDroppedCallSingleShot(
+    private boolean isDroppedCallSingleShot(
             final String provider, JsonNode jsonNode, IvrDropDetectionConfig dropDetectionConfig) {
         if (!dropDetectionConfig.isEnabled()) {
             return false;
