@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
+import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
 import io.appform.statesman.server.ingress.IngressHandler;
 import io.appform.statesman.server.requests.IngressCallback;
@@ -48,7 +49,7 @@ public class SomeTest {
         final MultivaluedMap<String, String> parsedParams = IngressHandler.parseQueryParams(callback);
         final JsonNode parsedNode = mapper.valueToTree(parsedParams);
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedNode));
-        val template = "{ \"type\" : \"kaleyra\",\"state\" : \"karnataka\",\"phone\" : \"{{callFrom/0}}\", \"language\": {{{ map_lookup op_1='kannada' op_2='hindi' op_3='english' pointer='/Question1/0'}}}, \"covidTest\": {{{ map_lookup op_1=false op_2=true op_3=false pointer='/Question2/0'}}}, \"contact\": {{{ map_lookup op_1=true op_2=false pointer='/Question3/0'}}}, \"symptoms\": {{{ map_lookup_arr op_1='fever' op_2='cough' op_3='throatpain' op_4='wheezing' op_5='others' op_6='none' pointer='/Question4/0'}}}, \"callStartTime\": {{toEpochTime calltime/0 'dd/MM/YYYY hh:mm a' 'IST'}}, \"callDuration\": {{duration/0}}000, \"allDataCollected\": true }";
-        System.out.println(mapper.readTree(hb.transform(template, parsedNode)));
+        val template = "{ \"type\" : \"kaleyra\",\"state\" : \"karnataka\",\"phone\" : \"{{callFrom/0}}\", \"language\": {{{ map_lookup op_1='kannada' op_2='hindi' op_3='english' pointer='/Question1/0'}}}, \"covidTest\": {{{ map_lookup op_1=false op_2=true op_3=false pointer='/Question2/0'}}}, \"contact\": {{{ map_lookup op_1=true op_2=false pointer='/Question3/0'}}}, \"symptoms\": {{{ map_lookup_arr op_1='fever' op_2='cough' op_3='throatpain' op_4='wheezing' op_5='others' op_6='none' pointer='/Question4/0'}}}, \"callStartTime\": {{toEpochTime calltime/0 'dd/MM/YYYY hh:mm a' 'IST'}}, \"callDuration\": {{duration/0}}000, \"callDropped\": false, \"allDataCollected\": true }";
+        System.out.println(mapper.valueToTree(new OneShotTransformationTemplate("kaleyra_karnatak", "", TranslationTemplateType.INGRESS, template)));
     }
 }

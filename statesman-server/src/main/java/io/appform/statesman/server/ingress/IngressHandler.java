@@ -82,10 +82,11 @@ public class IngressHandler {
     public boolean invokeEngineForOneShot(String ivrProvider, IngressCallback ingressCallback) throws IOException {
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
+        log.info("Processing node: {}", node);
         val tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
         val transformationTemplate = getIngressTransformationTemplate(tmplLookupKey);
         if(null == transformationTemplate) {
-            log.error("No matching translation template found for provider: " + ivrProvider);
+            log.error("No matching translation template found for provider: {}", tmplLookupKey);
             return false;
         }
         val tmpl = toOneShotTmpl(transformationTemplate);
