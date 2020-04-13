@@ -244,7 +244,7 @@ public class IngressHandler {
         });
     }
 
-    private static MultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
+    public static MultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
         return new ImmutableMultivaluedMap<>(
                 UriComponent.decodeQuery(ingressCallback.getQueryString(), true));
     }

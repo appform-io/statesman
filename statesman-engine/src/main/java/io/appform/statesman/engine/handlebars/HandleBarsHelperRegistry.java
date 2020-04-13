@@ -52,6 +52,7 @@ public class HandleBarsHelperRegistry {
         registerToUpperCase();
         registerToLowerCase();
         registerDateFormat();
+        registerToEpoch();
         registerStreq();
         registerStrNormalize();
         registerStrNormalizeUpper();
@@ -295,6 +296,29 @@ public class HandleBarsHelperRegistry {
                 log.error("Error formatting date", e);
             }
             return null;
+        });
+    }
+
+    private void registerToEpoch() {
+        handlebars.registerHelper("toEpochTime", (Helper<String>) (context, options) -> {
+            try {
+                if(null == options.params || options.params.length == 0) {
+                    return 0L;
+                }
+                if (null != context) {
+                    SimpleDateFormat sdf = new SimpleDateFormat(options.param(0));
+                    String timeZone =
+                            options.params.length < 2
+                            ? DEFAULT_TIME_ZONE
+                            : options.param(1);
+                    sdf.setTimeZone(TimeZone.getTimeZone(timeZone));
+                    return sdf.parse(context).getTime();
+                }
+            }
+            catch (Exception e) {
+                log.error("Error formatting date", e);
+            }
+            return 0L;
         });
     }
 

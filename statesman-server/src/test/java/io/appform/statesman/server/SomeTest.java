@@ -1,11 +1,18 @@
 package io.appform.statesman.server;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
+import io.appform.statesman.server.ingress.IngressHandler;
+import io.appform.statesman.server.requests.IngressCallback;
 import io.dropwizard.jackson.Jackson;
+import lombok.SneakyThrows;
 import lombok.val;
 import org.junit.Test;
+
+import javax.ws.rs.core.MultivaluedMap;
 
 /**
  *
@@ -30,5 +37,18 @@ public class SomeTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         val config = mapper.readValue(yaml, OneShotTransformationTemplate.class);
         System.out.println(Jackson.newObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(config));
+    }
+
+    @Test
+    @SneakyThrows
+    public void testKalKaTemplate() {
+        val hb = new HandleBarsService();
+        val mapper = Jackson.newObjectMapper();
+        val callback = new IngressCallback("kaleyra", "?api_key=abcaad8f2e464707be5548533d3d37cb&state=KARNATAKA&id=4228889695e9445572f70e&callFrom=9986032019&called=8068171046&Question1=3&Question2=2&Question3=2&Question4=12&calltime=13/04/2020%2004:27%20PM&duration=37", "/ivrhandler/kaleyra");
+        final MultivaluedMap<String, String> parsedParams = IngressHandler.parseQueryParams(callback);
+        final JsonNode parsedNode = mapper.valueToTree(parsedParams);
+        System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedNode));
+        val template = "{ \"type\" : \"kaleyra\",\"state\" : \"karnataka\",\"phone\" : \"{{callFrom/0}}\", \"language\": {{{ map_lookup op_1='kannada' op_2='hindi' op_3='english' pointer='/Question1/0'}}}, \"covidTest\": {{{ map_lookup op_1=false op_2=true op_3=false pointer='/Question2/0'}}}, \"contact\": {{{ map_lookup op_1=true op_2=false pointer='/Question3/0'}}}, \"symptoms\": {{{ map_lookup_arr op_1='fever' op_2='cough' op_3='throatpain' op_4='wheezing' op_5='others' op_6='none' pointer='/Question4/0'}}}, \"callStartTime\": {{toEpochTime calltime/0 'dd/MM/YYYY hh:mm a' 'IST'}}, \"callDuration\": {{duration/0}}000, \"allDataCollected\": true }";
+        System.out.println(mapper.readTree(hb.transform(template, parsedNode)));
     }
 }
