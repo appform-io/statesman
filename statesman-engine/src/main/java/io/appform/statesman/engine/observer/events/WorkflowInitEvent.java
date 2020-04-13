@@ -14,7 +14,7 @@ import lombok.Data;
 public class WorkflowInitEvent extends ObservableEvent {
     private Workflow workflow;
 
-    protected WorkflowInitEvent() {
+    public WorkflowInitEvent() {
         super(ObservableEventType.WORKFLOW_INIT);
     }
 
