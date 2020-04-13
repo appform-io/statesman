@@ -133,6 +133,7 @@ def create_recon_payload(patient_language,
                          agent_name,
                          tags,
                          fsm_customer_signature,
+                         doctor_notes,
                          ticket_type):
     paylaod = {
         "freshdesk_webhook": {
@@ -153,6 +154,7 @@ def create_recon_payload(patient_language,
             "ticket_agent_name": agent_name,
             "ticket_tags": tags,
             "ticket_cf_fsm_customer_signature": fsm_customer_signature,
+            "ticket_cf_doctor_notes": doctor_notes,
             "ticket_ticket_type": ticket_type
         }
     }
@@ -224,6 +226,7 @@ def create_recon_payload_from_csv_line(row):
                                 agent_name=get_or_default(row, "Agent", ""),
                                 tags=get_or_default(row, "Tags", ""),
                                 fsm_customer_signature=get_or_default(row, "Customer's signature", ""),
+                                doctor_notes=get_or_default(row, "Doctor Notes", ""),
                                 ticket_type=get_or_default(row, "Type", ""))
 
 

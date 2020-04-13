@@ -8,6 +8,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.dropwizard.sharding.dao.LookupDao;
 import io.appform.statesman.engine.WorkflowProvider;
+import io.appform.statesman.engine.observer.ObservableEventBus;
+import io.appform.statesman.engine.observer.events.WorkflowInitEvent;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.WorkflowTemplate;
 import io.appform.statesman.model.exception.ResponseCode;
@@ -31,12 +33,15 @@ public class WorkflowProviderCommand implements WorkflowProvider {
     private final LookupDao<StoredWorkflowInstance> workflowInstanceLookupDao;
     private final LoadingCache<String, Optional<WorkflowTemplate>> workflowTemplateCache;
     private final LoadingCache<String, Set<WorkflowTemplate>> allActiveWorkflow;
+    private final ObservableEventBus eventBus;
 
     @Inject
     public WorkflowProviderCommand(LookupDao<StoredWorkflowTemplate> workflowTemplateLookupDao,
-                                   LookupDao<StoredWorkflowInstance> workflowInstanceLookupDao) {
+                                   LookupDao<StoredWorkflowInstance> workflowInstanceLookupDao,
+                                   ObservableEventBus eventBus) {
         this.workflowTemplateLookupDao = workflowTemplateLookupDao;
         this.workflowInstanceLookupDao = workflowInstanceLookupDao;
+        this.eventBus = eventBus;
         log.info("Initializing cache WORKFLOW_TEMPLATE_CACHE");
         workflowTemplateCache = Caffeine.newBuilder()
                 .maximumSize(1_000)
@@ -141,7 +146,10 @@ public class WorkflowProviderCommand implements WorkflowProvider {
     public void saveWorkflow(Workflow workflow) {
         try {
             StoredWorkflowInstance storedWorkflowInstance = WorkflowUtils.toInstanceDao(workflow);
-            workflowInstanceLookupDao.save(storedWorkflowInstance).map(WorkflowUtils::toInstanceDto);
+            workflow = workflowInstanceLookupDao.save(storedWorkflowInstance).map(WorkflowUtils::toInstanceDto).orElse(null);
+            if(workflow != null) {
+               eventBus.publish(new WorkflowInitEvent(workflow));
+            }
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
