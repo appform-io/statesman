@@ -45,7 +45,7 @@ public class SomeTest {
     public void testKalKaTemplate() {
         val hb = new HandleBarsService();
         val mapper = Jackson.newObjectMapper();
-        val callback = new IngressCallback("kaleyra", "?api_key=abcaad8f2e464707be5548533d3d37cb&state=KARNATAKA&id=4228889695e9445572f70e&callFrom=9986032019&called=8068171046&Question1=3&Question2=2&Question3=2&Question4=12&calltime=13/04/2020%2004:27%20PM&duration=37", "/ivrhandler/kaleyra");
+        val callback = new IngressCallback("kaleyra", "?state=KARNATAKA&id=4228889695e9445572f70e&callFrom=9986032019&called=8068171046&Question1=3&Question2=2&Question3=2&Question4=12&calltime=13/04/2020%2004:27%20PM&duration=37", "/ivrhandler/kaleyra");
         final MultivaluedMap<String, String> parsedParams = IngressHandler.parseQueryParams(callback);
         final JsonNode parsedNode = mapper.valueToTree(parsedParams);
         System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(parsedNode));

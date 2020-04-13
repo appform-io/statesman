@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
@@ -99,7 +100,7 @@ public class IngressHandler {
         log.info("stdPayload:{}", stdPayload);
         val update = mapper.readTree(stdPayload);
         if (update.isObject()) {
-            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(ivrProvider, node, dropDetectionConfig));
+            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(tmplLookupKey, node, dropDetectionConfig));
         }
         val wfTemplate = templateSelector.get()
                 .determineTemplate(update)
@@ -278,6 +279,7 @@ public class IngressHandler {
                 .orElse(null);
     }
 
+    @VisibleForTesting
     public static boolean isDroppedCallSingleShot(
             final String provider, JsonNode jsonNode, IvrDropDetectionConfig dropDetectionConfig) {
         if (!dropDetectionConfig.isEnabled()) {

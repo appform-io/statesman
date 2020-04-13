@@ -392,6 +392,8 @@ ivrDropDetection:
   detectionPatterns:
     ozonetel_punjab:
       - "payload.*"
+    kaleyra_karnataka:
+      - "Question4.*"
 
 metrics:
   reporters:

@@ -82,3 +82,5 @@ buildNumber.properties
 .mvn/timing.properties
 .DS_Store
 .sw*
+out
+dep
