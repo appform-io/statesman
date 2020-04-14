@@ -118,7 +118,8 @@ public class StateTransitionEngine {
         dataObject.setCurrentState(selectedTransition.getToState());
 
         workflowProvider.get().updateWorkflow(workflow);
-        eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, selectedTransition));
+        eventBus.publish(new StateTransitionEvent(
+                                template, workflow, dataUpdate, currentState, selectedTransition.getAction()));
         return Optional.of(new AppliedTransition(currentState,
                                                  selectedTransition.getToState(),
                                                  selectedTransition.getId()));

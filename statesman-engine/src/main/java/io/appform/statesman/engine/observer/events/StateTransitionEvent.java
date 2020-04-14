@@ -19,20 +19,20 @@ public class StateTransitionEvent extends ObservableEvent {
     Workflow workflow;
     DataUpdate update;
     State oldState;
-    StateTransition transition;
+    String appliedAction;
 
     public StateTransitionEvent(
             WorkflowTemplate template,
             Workflow workflow,
             DataUpdate update,
             State oldState,
-            StateTransition transition) {
+            String appliedAction) {
         super(ObservableEventType.STATE_TRANSITION);
         this.template = template;
         this.workflow = workflow;
         this.update = update;
         this.oldState = oldState;
-        this.transition = transition;
+        this.appliedAction = appliedAction;
     }
 
     @Override

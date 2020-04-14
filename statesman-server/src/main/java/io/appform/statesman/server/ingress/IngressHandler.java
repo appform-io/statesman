@@ -8,21 +8,17 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-import com.google.inject.name.Named;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
-import io.appform.statesman.engine.Constants;
 import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
-import io.appform.statesman.engine.events.EngineEventType;
-import io.appform.statesman.engine.events.WorkflowInitEvent;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
+import io.appform.statesman.engine.observer.ObservableEventBus;
+import io.appform.statesman.engine.observer.events.StateTransitionEvent;
 import io.appform.statesman.engine.utils.StringUtils;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
-import io.appform.statesman.publisher.EventPublisher;
-import io.appform.statesman.publisher.model.Event;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplateVisitor;
 import io.appform.statesman.server.callbacktransformation.TranslationTemplateType;
@@ -58,10 +54,10 @@ public class IngressHandler {
     private final Provider<StateTransitionEngine> engine;
     private final Provider<WorkflowProvider> workflowProvider;
     private final Provider<WorkflowTemplateSelector> templateSelector;
+    private final Provider<ObservableEventBus> eventBus;
     private final IvrDropDetectionConfig dropDetectionConfig;
     private final HopeLangEngine hopeLangEngine;
     private final LoadingCache<String, Evaluatable> hopeRuleCache;
-
     @Inject
     public IngressHandler(
             CallbackTemplateProvider callbackTemplateProvider,
@@ -70,6 +66,7 @@ public class IngressHandler {
             Provider<StateTransitionEngine> engine,
             Provider<WorkflowProvider> workflowProvider,
             Provider<WorkflowTemplateSelector> templateSelector,
+            Provider<ObservableEventBus> eventBus,
             IvrDropDetectionConfig dropDetectionConfig) {
         this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
@@ -77,6 +74,7 @@ public class IngressHandler {
         this.engine = engine;
         this.workflowProvider = workflowProvider;
         this.templateSelector = templateSelector;
+        this.eventBus = eventBus;
         this.dropDetectionConfig = dropDetectionConfig;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
@@ -124,9 +122,11 @@ public class IngressHandler {
         val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
         val workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
         wfp.saveWorkflow(workflow);
+        final DataUpdate dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
+        eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, update, new MergeDataAction()));
+                .handle(dataUpdate);
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return true;
@@ -196,6 +196,7 @@ public class IngressHandler {
             }
             log.debug("Generated ID: {}", wfId);
         }
+        val dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
         if (wf == null) {
             log.debug("Will create new workflow for: {}", wfId);
             //First time .. create workflow
@@ -215,16 +216,16 @@ public class IngressHandler {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
                 return false;
             }
+            eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
             log.debug("Workflow created: {}", wf);
         }
         final AppliedTransitions appliedTransitions
                 = engine.get()
-                .handle(new DataUpdate(wfId, update, new MergeDataAction()), new MergeDataAction());
+                .handle(dataUpdate, new MergeDataAction());
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
         return true;
     }
-
 
     private static OneShotTransformationTemplate toOneShotTmpl(TransformationTemplate transformationTemplate) {
         return transformationTemplate.accept(new TransformationTemplateVisitor<OneShotTransformationTemplate>() {

@@ -4,23 +4,20 @@ import io.appform.statesman.engine.observer.ObservableEvent;
 import io.appform.statesman.engine.observer.ObservableEventType;
 import io.appform.statesman.engine.observer.ObservableEventVisitor;
 import io.appform.statesman.model.Workflow;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 
 /**
  *
  */
-@Data
+@Value
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class WorkflowInitEvent extends ObservableEvent {
-    private Workflow workflow;
-
-    public WorkflowInitEvent() {
-        super(ObservableEventType.WORKFLOW_INIT);
-    }
+    Workflow workflow;
 
     @Builder
     public WorkflowInitEvent(Workflow workflow) {
-        this();
+        super(ObservableEventType.WORKFLOW_INIT);
         this.workflow = workflow;
     }
 

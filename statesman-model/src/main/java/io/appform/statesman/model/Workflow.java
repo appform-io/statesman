@@ -7,7 +7,6 @@ import java.util.Date;
 /**
  *
  */
-@Data
 @Value
 @Builder
 @AllArgsConstructor

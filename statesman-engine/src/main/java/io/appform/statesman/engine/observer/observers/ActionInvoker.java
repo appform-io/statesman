@@ -34,11 +34,10 @@ public class ActionInvoker extends ObservableEventBusSubscriber {
         event.accept(new ObservableEventVisitor<Void>() {
             @Override
             public Void visit(StateTransitionEvent stateTransitionEvent) {
-                val selectedTransition = stateTransitionEvent.getTransition();
-                if(!Strings.isNullOrEmpty(selectedTransition.getAction())) {
+                val appliedAction = stateTransitionEvent.getAppliedAction();
+                if(!Strings.isNullOrEmpty(appliedAction)) {
                     actionExecutor.get()
-                            .execute(selectedTransition.getAction(),
-                                     stateTransitionEvent.getWorkflow());
+                            .execute(appliedAction, stateTransitionEvent.getWorkflow());
                 }
                 return null;
             }
