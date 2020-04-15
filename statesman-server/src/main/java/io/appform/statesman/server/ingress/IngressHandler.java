@@ -227,6 +227,98 @@ public class IngressHandler {
         return true;
     }
 
+    public boolean invokeEngineForOBDCalls(String ivrProvider, IngressCallback ingressCallback) throws IOException {
+        log.debug("Processing OBD callback from: {}: Payload: {}", ivrProvider, ingressCallback);
+        val queryParams = parseQueryParams(ingressCallback);
+        val node = mapper.valueToTree(queryParams);
+        log.info("Processing node: {}", node);
+        final String tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
+        val transformationTemplate = callbackTemplateProvider.getTemplate(ivrProvider, TranslationTemplateType.OBD_CALL_RESP)
+                .orElse(null);
+        if(null == transformationTemplate) {
+            log.warn("No matching obd call resp translation template found for provider {}. Key: {}. node: {} ",
+                     ivrProvider, tmplLookupKey, node);
+            return false;
+        }
+        val tmpl = toOneShotTmpl(transformationTemplate);
+        if (null == tmpl) {
+            log.warn("No matching obd call resp transformation template found for provider: {}, context: {}",
+                     ivrProvider, ingressCallback);
+            return false;
+        }
+        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), node);
+        log.info("stdPayload:{}", stdPayload);
+        val update = mapper.readTree(stdPayload);
+        var wfId = extractWorkflowId(node, transformationTemplate);
+        val wfp = this.workflowProvider.get();
+        val workflow = wfp.getWorkflow(wfId).orElse(null);
+        if(null == workflow) {
+            log.error("No existing workflow found for workflow id: {}, update: {}", wfId, update);
+            return false;
+        }
+        val templateId = workflow.getTemplateId();
+        val wfTemplate = wfp.getTemplate(templateId).orElse(null);
+        if(null == wfTemplate) {
+            log.error("No existing workflow template found for workflow id: {}, template: {}, update: {}",
+                      wfId, templateId, update);
+            return false;
+        }
+        final DataUpdate dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
+        eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
+        final AppliedTransitions appliedTransitions
+                = engine.get()
+                .handle(dataUpdate);
+        log.debug("Workflow: {} with template: {} went through transitions: {}",
+                  wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        return true;
+    }
+
+    public boolean invokeEngineForFormPost(String callcenter, JsonNode formData) throws IOException {
+        log.debug("Processing form post from: {}: Payload: {}", callcenter, formData);
+        final String tmplLookupKey = callcenter + "_" + StringUtils.normalize(formData.at("/state").asText());
+        val transformationTemplate = callbackTemplateProvider.getTemplate(callcenter, TranslationTemplateType.OBD_CALL_RESP)
+                .orElse(null);
+        if(null == transformationTemplate) {
+            log.warn("No matching obd call resp translation template found for callcenter {}. Key: {}. node: {} ",
+                     callcenter, tmplLookupKey, formData);
+            return false;
+        }
+        val tmpl = toOneShotTmpl(transformationTemplate);
+        if (null == tmpl) {
+            log.warn("No matching obd call resp transformation template found for callcenter: {}, context: {}",
+                     callcenter, formData);
+            return false;
+        }
+        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), formData);
+        log.info("stdPayload:{}", stdPayload);
+        val update = mapper.readTree(stdPayload);
+        val wfTemplate = templateSelector.get()
+                .determineTemplate(update)
+                .orElse(null);
+        if (null == wfTemplate) {
+            log.warn("No matching workflow template found for provider: {}, context: {}", callcenter, stdPayload);
+            return false;
+        }
+        var wfId = extractWorkflowId(formData, transformationTemplate);
+        val wfp = this.workflowProvider.get();
+        while (wfp.workflowExists(wfId)) {
+            wfId = UUID.randomUUID().toString();
+        }
+
+        val date = new Date();
+        val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
+        val workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
+        wfp.saveWorkflow(workflow);
+        final DataUpdate dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
+        eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
+        final AppliedTransitions appliedTransitions
+                = engine.get()
+                .handle(dataUpdate);
+        log.debug("Workflow: {} with template: {} went through transitions: {}",
+                  wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        return true;
+    }
+
     private static OneShotTransformationTemplate toOneShotTmpl(TransformationTemplate transformationTemplate) {
         return transformationTemplate.accept(new TransformationTemplateVisitor<OneShotTransformationTemplate>() {
             @Override
