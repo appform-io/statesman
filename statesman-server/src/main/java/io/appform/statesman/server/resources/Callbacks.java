@@ -69,6 +69,38 @@ public class Callbacks {
     }
 
     @POST
+    @Path("/ingress/obd/{ingressProvider}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @SneakyThrows
+    public Response stepIngressObdCallback(
+            @PathParam("ingressProvider") final String ingressProvider, final IngressCallback ingressCallback) {
+        final boolean status = ingressHandler.get()
+                .invokeEngineForOBDCalls(ingressProvider, ingressCallback);
+        if(!status) {
+            log.warn("Ignored ingress OBD callback from provider {} callback: {}", ingressProvider, ingressCallback);
+        }
+        return Response.ok()
+                .entity(ImmutableMap.of("success", status))
+                .build();
+    }
+
+    @POST
+    @Path("/ingress/form/{callcenter}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @SneakyThrows
+    public Response stepIngressForm(
+            @PathParam("callcenter") final String callcenter, final JsonNode data) {
+        final boolean status = ingressHandler.get()
+                .invokeEngineForFormPost(callcenter, data);
+        if(!status) {
+            log.warn("Ignored ingress form post callback from callcenter {} callback: {}", callcenter, data);
+        }
+        return Response.ok()
+                .entity(ImmutableMap.of("success", status))
+                .build();
+    }
+
+    @POST
     @Path("/provider/{serviceProvider}")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response providerCallback(
