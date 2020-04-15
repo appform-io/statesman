@@ -10,11 +10,14 @@ import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.server.utils.MapperUtils;
 import io.appform.statesman.server.utils.WorkflowUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.criterion.DetachedCriteria;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Singleton
@@ -65,6 +68,14 @@ public class ActionTemplateStoreCommand implements ActionTemplateStore {
         } catch (Exception e) {
             throw StatesmanError.propagate(e, ResponseCode.DAO_ERROR);
         }
+    }
+
+    @Override
+    public List<ActionTemplate> all() {
+        return actionTemplateLookupDao.scatterGather(DetachedCriteria.forClass(StoredActionTemplate.class))
+                .stream()
+                .map(WorkflowUtils::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override

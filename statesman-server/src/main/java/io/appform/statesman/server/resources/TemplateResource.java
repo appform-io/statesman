@@ -185,6 +185,16 @@ public class TemplateResource {
 
     @GET
     @Timed
+    @Path("/action/get/all")
+    @ApiOperation("Get All Action Template")
+    public Response allAction() {
+        return Response.ok()
+                .entity(actionTemplateStore.all())
+                .build();
+    }
+
+    @GET
+    @Timed
     @Path("/action/{templateId}")
     @ApiOperation("Get Action Template")
     public Response createAction(@PathParam("templateId") String templateId) {
