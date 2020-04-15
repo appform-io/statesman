@@ -73,9 +73,11 @@ public class Callbacks {
     @Consumes(MediaType.APPLICATION_JSON)
     @SneakyThrows
     public Response stepIngressObdCallback(
-            @PathParam("ingressProvider") final String ingressProvider, final IngressCallback ingressCallback) {
+            @PathParam("ingressProvider") final String ingressProvider,
+            @QueryParam("state") final String state,
+            final IngressCallback ingressCallback) {
         final boolean status = ingressHandler.get()
-                .invokeEngineForOBDCalls(ingressProvider, ingressCallback);
+                .invokeEngineForOBDCalls(ingressProvider, state, ingressCallback);
         if(!status) {
             log.warn("Ignored ingress OBD callback from provider {} callback: {}", ingressProvider, ingressCallback);
         }

@@ -227,13 +227,14 @@ public class IngressHandler {
         return true;
     }
 
-    public boolean invokeEngineForOBDCalls(String ivrProvider, IngressCallback ingressCallback) throws IOException {
+    public boolean invokeEngineForOBDCalls(String ivrProvider,
+                                           String state,
+                                           IngressCallback ingressCallback) throws IOException {
         log.debug("Processing OBD callback from: {}: Payload: {}", ivrProvider, ingressCallback);
-        val queryParams = parseQueryParams(ingressCallback);
-        val node = mapper.valueToTree(queryParams);
+        val node = ingressCallback.getBody();
         log.info("Processing node: {}", node);
-        final String tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
-        val transformationTemplate = callbackTemplateProvider.getTemplate(ivrProvider, TranslationTemplateType.OBD_CALL_RESP)
+        final String tmplLookupKey = ivrProvider + "_obd_" + StringUtils.normalize(node.at("/IVRID").asText());
+        val transformationTemplate = callbackTemplateProvider.getTemplate(tmplLookupKey, TranslationTemplateType.OBD_CALL_RESP)
                 .orElse(null);
         if(null == transformationTemplate) {
             log.warn("No matching obd call resp translation template found for provider {}. Key: {}. node: {} ",
