@@ -63,7 +63,6 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
         handle(httpActionData);
     }
 
-
     private void handle(HttpActionData actionData) {
         try {
             actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Void>() {
@@ -78,9 +77,11 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
                         val payload = actionData.getPayload();
                         response = client.post(url, payload, headers);
                         if (!response.isSuccessful()) {
-                            log.error("unable to do post action, actionData: {}", actionData);
+                            log.error("unable to do post action, actionData: {} Response: {}",
+                                      actionData, HttpUtil.body(response));
                             throw new StatesmanError();
                         }
+                        log.debug("HTTP Response: {}", HttpUtil.body(response));
                         return null;
                     }
                     finally {
@@ -97,9 +98,11 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
                     try {
                         response = client.get(url, headers);
                         if (!response.isSuccessful()) {
-                            log.error("unable to do get action, actionData: {}", actionData);
+                            log.error("unable to do get action, actionData: {} Response: {}",
+                                      actionData, HttpUtil.body(response));
                             throw new StatesmanError();
                         }
+                        log.debug("HTTP Response: {}", HttpUtil.body(response));
                         return null;
                     }
                     finally {
