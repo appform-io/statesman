@@ -464,6 +464,7 @@ public class HandleBarsHelperRegistry {
                         indices.stream()
                                 .map(i -> options.hash("op_" + i))
                                 .filter(Objects::nonNull)
+                                .distinct()
                                 .collect(Collectors.toList()));
             }
 
@@ -643,6 +644,7 @@ public class HandleBarsHelperRegistry {
                                    : value.toString();
                         })
                         .filter(Objects::nonNull)
+                        .distinct()
                         .collect(Collectors.joining(", "));
             }
 

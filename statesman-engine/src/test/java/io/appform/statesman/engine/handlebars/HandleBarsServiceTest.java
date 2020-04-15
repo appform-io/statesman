@@ -86,15 +86,14 @@ public class HandleBarsServiceTest {
                         objectMapper.createObjectNode()
                                 .set("payload[question1]",
                                      objectMapper.createArrayNode()
-                                             .add("192")
+                                             .add("19")
                                              .add("2"))))
                 .get("language");
         Assert.assertTrue(jsonNode.isArray());
-        Assert.assertEquals(4, jsonNode.size());
+        Assert.assertEquals(3, jsonNode.size());
         Assert.assertEquals("EN", jsonNode.get(0).asText());
         Assert.assertEquals("HI", jsonNode.get(1).asText()); //( gets replaced by last value
         Assert.assertEquals("KA", jsonNode.get(2).asText());
-        Assert.assertEquals("KA", jsonNode.get(3).asText());
     }
 
     @Test
@@ -109,15 +108,14 @@ public class HandleBarsServiceTest {
                         objectMapper.createObjectNode()
                                 .set("payload[question1]",
                                      objectMapper.createArrayNode()
-                                             .add(192)
+                                             .add(19)
                                              .add(2))))
                 .get("language");
         Assert.assertTrue(jsonNode.isArray());
-        Assert.assertEquals(4, jsonNode.size());
+        Assert.assertEquals(3, jsonNode.size());
         Assert.assertEquals("EN", jsonNode.get(0).asText());
         Assert.assertEquals("HI", jsonNode.get(1).asText()); //( gets replaced by last value
         Assert.assertEquals("KA", jsonNode.get(2).asText());
-        Assert.assertEquals("KA", jsonNode.get(3).asText());
     }
 
     @Test
@@ -136,11 +134,10 @@ public class HandleBarsServiceTest {
                                              .add("122"))))
                 .get("language");
         Assert.assertTrue(jsonNode.isArray());
-        Assert.assertEquals(4, jsonNode.size());
+        Assert.assertEquals(3, jsonNode.size());
         Assert.assertEquals("HI", jsonNode.get(0).asText()); //( gets replaced by last value
         Assert.assertEquals("EN", jsonNode.get(1).asText());
         Assert.assertEquals("KA", jsonNode.get(2).asText());
-        Assert.assertEquals("KA", jsonNode.get(3).asText());
     }
 
     @Test
@@ -161,11 +158,8 @@ public class HandleBarsServiceTest {
                                              .add(true))))
                 .get("language");
         Assert.assertTrue(jsonNode.isArray());
-        Assert.assertEquals(4, jsonNode.size());
+        Assert.assertEquals(1, jsonNode.size());
         Assert.assertEquals("HI", jsonNode.get(0).asText()); //( gets replaced by last value
-        Assert.assertEquals("HI", jsonNode.get(1).asText());
-        Assert.assertEquals("HI", jsonNode.get(2).asText());
-        Assert.assertEquals("HI", jsonNode.get(3).asText());
     }
 
     @Test
