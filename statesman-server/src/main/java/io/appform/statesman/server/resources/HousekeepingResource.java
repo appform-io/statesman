@@ -57,9 +57,9 @@ public class HousekeepingResource {
     @Timed
     @Path("/trigger/action/{actionId}")
     @ApiOperation("trigger Action")
-    public Response triggerAction(@PathParam("action") String actionId,
-                                  @Valid Workflow workflowId) {
-        actionExecutor.get().execute(actionId, workflowId);
+    public Response triggerAction(@PathParam("actionId") String actionId,
+                                  @Valid Workflow workflow) {
+        actionExecutor.get().execute(actionId, workflow);
         return Response.ok()
                 .build();
     }
