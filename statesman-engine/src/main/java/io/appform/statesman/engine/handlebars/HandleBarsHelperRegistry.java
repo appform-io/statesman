@@ -463,6 +463,7 @@ public class HandleBarsHelperRegistry {
                 return MAPPER.writeValueAsString(
                         indices.stream()
                                 .map(i -> options.hash("op_" + i))
+                                .filter(Objects::nonNull)
                                 .collect(Collectors.toList()));
             }
 
@@ -563,6 +564,7 @@ public class HandleBarsHelperRegistry {
                                                                     ? NullNode.getInstance()
                                                                     : value;
                                                          })
+                                                         .filter(Objects::nonNull)
                                                          .collect(Collectors.toList()));
             }
 
