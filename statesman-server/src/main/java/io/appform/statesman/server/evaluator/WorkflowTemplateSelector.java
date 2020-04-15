@@ -2,16 +2,13 @@ package io.appform.statesman.server.evaluator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
-import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.model.WorkflowTemplate;
 import io.dropwizard.lifecycle.Managed;
-import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -42,7 +39,7 @@ public class WorkflowTemplateSelector implements Managed {
         this.parsedWorkflowTemplates = new AtomicReference<>(new ArrayList<>());
         this.executorService = Executors.newSingleThreadScheduledExecutor();
         loadParsedWorkflowTemplates(); //initial loading
-        executorService.scheduleWithFixedDelay(this::loadParsedWorkflowTemplates, 0, 600, TimeUnit.SECONDS);
+        executorService.scheduleWithFixedDelay(this::loadParsedWorkflowTemplates, 0, 120, TimeUnit.SECONDS);
 
     }
 
@@ -58,6 +55,7 @@ public class WorkflowTemplateSelector implements Managed {
 
 
     private void loadParsedWorkflowTemplates() {
+        log.info("Reloading templates for workflow selection");
         List<WorkflowTemplateContext> parsedTemplates = workflowProvider.getAll()
                 .stream()
                 .filter(WorkflowTemplate::isActive)
@@ -73,6 +71,9 @@ public class WorkflowTemplateSelector implements Managed {
                 }))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+        log.info("Reloaded templates:{}", parsedTemplates.stream()
+                .map(WorkflowTemplateContext::getTemplate)
+                .collect(Collectors.toSet()));
         parsedWorkflowTemplates.set(parsedTemplates);
     }
 
