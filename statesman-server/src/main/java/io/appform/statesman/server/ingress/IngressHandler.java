@@ -94,23 +94,15 @@ public class IngressHandler {
             log.error("No matching translation template found for provider: {}", tmplLookupKey);
             return false;
         }
-        val tmpl = toOneShotTmpl(transformationTemplate);
-        if (null == tmpl) {
-            log.warn("No matching transformation template found for provider: {}, context: {}",
-                     ivrProvider, ingressCallback);
+        val update = translateIvrPaylaod(transformationTemplate, tmplLookupKey, node);
+        if(update == null) {
             return false;
-        }
-        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), node);
-        log.info("stdPayload:{}", stdPayload);
-        val update = mapper.readTree(stdPayload);
-        if (update.isObject()) {
-            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(tmplLookupKey, node, dropDetectionConfig));
         }
         val wfTemplate = templateSelector.get()
                 .determineTemplate(update)
                 .orElse(null);
         if (null == wfTemplate) {
-            log.warn("No matching workflow template found for provider: {}, context: {}", ivrProvider, stdPayload);
+            log.warn("No matching workflow template found for provider: {}, context: {}", ivrProvider, mapper.writeValueAsString(update));
             return false;
         }
         var wfId = extractWorkflowId(node, transformationTemplate);
@@ -145,25 +137,11 @@ public class IngressHandler {
                      ivrProvider, tmplLookupKey, node);
             return false;
         }
-        val tmpl = toMultiStepTemplate(transformationTemplate);
-        if (null == tmpl) {
-            log.warn("No matching step transformation template found for provider: {}, node: {}",
-                     ivrProvider, node);
+        val update = translateIvrPaylaod(transformationTemplate, tmplLookupKey, node);
+        if(update == null) {
             return false;
         }
         val date = new Date();
-        val selectedStep = selectStep(node, tmpl);
-        if (null == selectedStep) {
-            log.warn("No matching step transformation template step found for provider: {}, node: {}",
-                     ivrProvider, node);
-            return false;
-        }
-        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, selectedStep.getTemplate(), node);
-        val update = mapper.readTree(stdPayload);
-        log.debug("Translated payload: {}", update);
-        if (update.isObject()) {
-            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(ivrProvider, node, dropDetectionConfig));
-        }
         val wfIdNode = node.at(transformationTemplate.getIdPath());
         log.debug("WFID node: {}", wfIdNode);
         String wfId = UUID.randomUUID().toString();
@@ -188,7 +166,7 @@ public class IngressHandler {
             }
         }
         else {
-            log.debug("Workflow could not be extracted for path: {}", tmpl.getIdPath());
+            log.debug("Workflow could not be extracted for path: {}", transformationTemplate.getIdPath());
             //We have generated the id
             //Make sure wf id is not clashing with any existing id by chance
             while (wfp.workflowExists(wfId)) {
@@ -204,7 +182,7 @@ public class IngressHandler {
                     .determineTemplate(update)
                     .orElse(null);
             if (null == wfTemplate) {
-                log.warn("No matching workflow template found for provider: {}, node: {}", ivrProvider, stdPayload);
+                log.warn("No matching workflow template found for provider: {}, node: {}", ivrProvider, mapper.writeValueAsString(update));
                 return false;
             }
             val dataNode = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
@@ -213,7 +191,7 @@ public class IngressHandler {
             wfp.saveWorkflow(workflow);
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (null == wf) {
-                log.error("Workflow could not be created for: {}, context: {}", ivrProvider, stdPayload);
+                log.error("Workflow could not be created for: {}, context: {}", ivrProvider, mapper.writeValueAsString(update));
                 return false;
             }
             eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
@@ -320,6 +298,51 @@ public class IngressHandler {
         return true;
     }
 
+    public JsonNode translateIngressIvrPayload(String providerKey,
+                                               IngressCallback ingressCallback) throws IOException {
+        val queryParams = parseQueryParams(ingressCallback);
+        val node = mapper.valueToTree(queryParams);
+        val transformationTemplate = getIngressTransformationTemplate(providerKey);
+        if(null == transformationTemplate) {
+           return null;
+        }
+        return translateIvrPaylaod(transformationTemplate, providerKey, node);
+    }
+
+    private JsonNode translateIvrPaylaod(TransformationTemplate transformationTemplate,
+                                         String providerKey,
+                                         JsonNode node) throws IOException {
+        String template = transformationTemplate.accept(new TransformationTemplateVisitor<String>() {
+            @Override
+            public String visit(OneShotTransformationTemplate oneShotTransformationTemplate) {
+                return oneShotTransformationTemplate.getTemplate();
+            }
+
+            @Override
+            public String visit(StepByStepTransformationTemplate stepByStepTransformationTemplate) {
+                val selectedStep = selectStep(node, stepByStepTransformationTemplate);
+                if (null == selectedStep) {
+                    log.warn("No matching step transformation template step found for providerKey: {}, node: {}",
+                            providerKey, node);
+                    return null;
+                }
+                return selectedStep.getTemplate();
+            }
+        });
+        if (Strings.isNullOrEmpty(template)) {
+            log.warn("No matching transformation template found for provider: {}, node:{}",
+                    providerKey, node);
+            return null;
+        }
+        val stdPayload =  handleBarsService.transform(JsonNodeValueResolver.INSTANCE, template, node);
+        log.info("stdPayload:{}", stdPayload);
+        val update = mapper.readTree(stdPayload);
+        if (update.isObject()) {
+            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(providerKey, node, dropDetectionConfig));
+        }
+        return update;
+    }
+
     private static OneShotTransformationTemplate toOneShotTmpl(TransformationTemplate transformationTemplate) {
         return transformationTemplate.accept(new TransformationTemplateVisitor<OneShotTransformationTemplate>() {
             @Override
@@ -330,20 +353,6 @@ public class IngressHandler {
             @Override
             public OneShotTransformationTemplate visit(StepByStepTransformationTemplate stepByStepTransformationTemplate) {
                 return null;
-            }
-        });
-    }
-
-    private static StepByStepTransformationTemplate toMultiStepTemplate(TransformationTemplate transformationTemplate) {
-        return transformationTemplate.accept(new TransformationTemplateVisitor<StepByStepTransformationTemplate>() {
-            @Override
-            public StepByStepTransformationTemplate visit(OneShotTransformationTemplate oneShotTransformationTemplate) {
-                return null;
-            }
-
-            @Override
-            public StepByStepTransformationTemplate visit(StepByStepTransformationTemplate stepByStepTransformationTemplate) {
-                return stepByStepTransformationTemplate;
             }
         });
     }
@@ -371,7 +380,7 @@ public class IngressHandler {
                 .orElse(null);
     }
 
-    final StepByStepTransformationTemplate.StepSelection selectStep(
+    private StepByStepTransformationTemplate.StepSelection selectStep(
             JsonNode node,
             StepByStepTransformationTemplate template) {
         return template.getTemplates()

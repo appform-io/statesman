@@ -2,24 +2,28 @@ package io.appform.statesman.server.resources;
 
 import com.codahale.metrics.annotation.Timed;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.engine.action.ActionExecutor;
-import io.appform.statesman.model.AppliedTransitions;
-import io.appform.statesman.model.DataUpdate;
-import io.appform.statesman.model.Workflow;
+import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
+import io.appform.statesman.server.ingress.IngressHandler;
+import io.appform.statesman.server.requests.IngressCallback;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Date;
+import java.util.UUID;
 
 @Path("/v1/housekeeping")
 @Slf4j
@@ -32,14 +36,21 @@ public class HousekeepingResource {
     private final Provider<WorkflowProvider> workflowProvider;
     private final Provider<StateTransitionEngine> engine;
     private final Provider<ActionExecutor> actionExecutor;
+    private final Provider<IngressHandler> ingressHandler;
+    private final ObjectMapper mapper;
+
 
     @Inject
     public HousekeepingResource(Provider<WorkflowProvider> workflowProvider,
                                 Provider<StateTransitionEngine> engine,
-                                Provider<ActionExecutor> actionExecutor) {
+                                Provider<ActionExecutor> actionExecutor,
+                                Provider<IngressHandler> ingressHandler,
+                                ObjectMapper mapper) {
         this.workflowProvider = workflowProvider;
         this.engine = engine;
         this.actionExecutor = actionExecutor;
+        this.ingressHandler = ingressHandler;
+        this.mapper = mapper;
     }
 
     @GET
@@ -61,6 +72,40 @@ public class HousekeepingResource {
                                   @Valid Workflow workflow) {
         actionExecutor.get().execute(actionId, workflow);
         return Response.ok()
+                .build();
+    }
+
+    @POST
+    @Timed
+    @Path("/ingress/translate/{translatorId}")
+    @ApiOperation("trigger Action")
+    public Response translateIngressPayload(@PathParam("translatorId") String translatorId,
+                                     @Valid IngressCallback ingressCallback) throws Exception {
+        return Response.ok()
+                .entity(ingressHandler.get().translateIngressIvrPayload(translatorId, ingressCallback))
+                .build();
+    }
+
+    @POST
+    @Timed
+    @Path("/trigger/workflow/template/{workflowTemplateId}")
+    @ApiOperation("Trigger new workflow for given WorkflowTemplateId")
+    public Response triggerWorkflowTemplate(@PathParam("workflowTemplateId") String workflowTemplateId,
+                                            @Valid JsonNode translatedData) {
+        WorkflowTemplate wfTemplate = workflowProvider.get().getTemplate(workflowTemplateId).orElse(null);
+        if (null == wfTemplate) {
+            log.warn("No such workflow template:{}", workflowTemplateId);
+            return Response.noContent()
+                    .build();
+        }
+        val date = new Date();
+        val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
+        val workflow = new Workflow(UUID.randomUUID().toString(), wfTemplate.getId(), dataObject, date, date);
+        workflowProvider.get().saveWorkflow(workflow);
+        final AppliedTransitions appliedTransitions
+                = engine.get().handle(new DataUpdate(workflow.getId(), translatedData, new MergeDataAction()), new MergeDataAction());
+        return Response.ok()
+                .entity(appliedTransitions)
                 .build();
     }
 
