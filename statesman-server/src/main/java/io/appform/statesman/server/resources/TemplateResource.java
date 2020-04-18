@@ -113,20 +113,19 @@ public class TemplateResource {
     }
 
 
-
     @POST
     @Timed
     @Path("/workflow/{workflowTemplateId}/transitions")
-    @ApiOperation("Create State Transition")
-    public Response createStateTransition(@PathParam("workflowTemplateId") String workflowTemplateId,
-                                          @Valid StateTransition stateTransition) {
-        Optional<StateTransition> stateTransitionOptional = transitionStore.create(workflowTemplateId, stateTransition);
-        if (!stateTransitionOptional.isPresent()) {
-            return Response.serverError()
-                    .build();
-        }
+    @ApiOperation("Create State Transitions")
+    public Response createStateTransitions(@PathParam("workflowTemplateId") String workflowTemplateId,
+                                          @Valid List<StateTransition> stateTransitions) {
+        List<StateTransition> savedStateTransition = stateTransitions.stream().map(stateTransition ->
+                transitionStore.create(workflowTemplateId, stateTransition))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toList());
         return Response.ok()
-                .entity(stateTransitionOptional.get())
+                .entity(savedStateTransition)
                 .build();
     }
 
