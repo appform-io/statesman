@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
@@ -25,7 +24,7 @@ import io.appform.statesman.server.callbacktransformation.TranslationTemplateTyp
 import io.appform.statesman.server.callbacktransformation.impl.OneShotTransformationTemplate;
 import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransformationTemplate;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
-import io.appform.statesman.server.droppedcalldetector.IvrDropDetectionConfig;
+import io.appform.statesman.server.droppedcalldetector.DroppedCallDetectors;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
 import io.appform.statesman.server.requests.IngressCallback;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +38,8 @@ import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.ws.rs.core.MultivaluedMap;
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.StreamSupport;
+import java.util.Date;
+import java.util.UUID;
 
 /**
  *
@@ -55,7 +54,7 @@ public class IngressHandler {
     private final Provider<WorkflowProvider> workflowProvider;
     private final Provider<WorkflowTemplateSelector> templateSelector;
     private final Provider<ObservableEventBus> eventBus;
-    private final IvrDropDetectionConfig dropDetectionConfig;
+    private final DroppedCallDetectors droppedCallDetectors;
     private final HopeLangEngine hopeLangEngine;
     private final LoadingCache<String, Evaluatable> hopeRuleCache;
     @Inject
@@ -67,7 +66,7 @@ public class IngressHandler {
             Provider<WorkflowProvider> workflowProvider,
             Provider<WorkflowTemplateSelector> templateSelector,
             Provider<ObservableEventBus> eventBus,
-            IvrDropDetectionConfig dropDetectionConfig) {
+            DroppedCallDetectors droppedCallDetectors) {
         this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
         this.handleBarsService = handleBarsService;
@@ -75,7 +74,7 @@ public class IngressHandler {
         this.workflowProvider = workflowProvider;
         this.templateSelector = templateSelector;
         this.eventBus = eventBus;
-        this.dropDetectionConfig = dropDetectionConfig;
+        this.droppedCallDetectors = droppedCallDetectors;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
@@ -338,7 +337,7 @@ public class IngressHandler {
         log.info("stdPayload:{}", stdPayload);
         val update = mapper.readTree(stdPayload);
         if (update.isObject()) {
-            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(providerKey, node, dropDetectionConfig));
+            ((ObjectNode) update).put("callDropped", isDroppedCallSingleShot(providerKey, node));
         }
         return update;
     }
@@ -390,26 +389,9 @@ public class IngressHandler {
                 .orElse(null);
     }
 
-    @VisibleForTesting
-    public static boolean isDroppedCallSingleShot(
-            final String provider, JsonNode jsonNode, IvrDropDetectionConfig dropDetectionConfig) {
-        if (!dropDetectionConfig.isEnabled()) {
-            return false;
-        }
-        val detectionPatterns = dropDetectionConfig.getDetectionPatterns();
-        val patterns = null == detectionPatterns
-                       ? Collections.<String>emptyList()
-                       : detectionPatterns.getOrDefault(provider, Collections.emptyList());
-        if (patterns.isEmpty()) {
-            log.debug("No call drop detection patterns found for provider: {}", provider);
-            return false;
-        }
-        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(jsonNode.fields(), Spliterator.ORDERED), false)
-                .filter(field -> patterns.stream()
-                        .anyMatch(pattern -> field.getKey().matches(pattern)))
-                .anyMatch(field -> field.getValue().isArray()
-                        && (field.getValue().size() == 0
-                        || (field.getValue().size() == 1
-                        && Strings.isNullOrEmpty(field.getValue().get(0).asText()))));
+    private boolean isDroppedCallSingleShot(final String provider, JsonNode jsonNode) {
+        return droppedCallDetectors.detectorFor(provider)
+                .map(droppedCallDetector -> droppedCallDetector.detectDroppedCall(jsonNode))
+                .orElse(true);
     }
 }

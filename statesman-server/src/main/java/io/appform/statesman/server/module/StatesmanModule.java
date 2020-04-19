@@ -28,7 +28,7 @@ import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProviderCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
-import io.appform.statesman.server.droppedcalldetector.IvrDropDetectionConfig;
+import io.appform.statesman.server.droppedcalldetector.IVRDropDetectionConfig;
 import io.appform.statesman.server.provider.ProviderSelectorImpl;
 import io.dropwizard.setup.Environment;
 
@@ -94,7 +94,7 @@ public class StatesmanModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public IvrDropDetectionConfig ivrDropDetectionConfig(AppConfig appConfig) {
+    public IVRDropDetectionConfig ivrDropDetectionConfig(AppConfig appConfig) {
         return appConfig.getIvrDropDetection();
     }
 }
