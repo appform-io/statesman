@@ -453,4 +453,23 @@ public class HandleBarsServiceTest {
         final String out = hb.transform("{{elapsedTime \"YYYY-MM-dd HH:mm:ss\" StartTime/0 CurrentTime/0}}", node);
         Assert.assertEquals("44000", out);
     }
+
+    @Test
+    @SneakyThrows
+    public void testEmpty() {
+        val hb = new HandleBarsService();
+        val currDate = new Date();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+        val node = mapper
+                .createObjectNode();
+        node.set("nodata", mapper.createArrayNode().add(""));
+        node.set("data", mapper.createArrayNode().add("1").add("2"));
+
+        Assert.assertEquals("true", hb.transform("{{empty nodata}}", node));
+        Assert.assertEquals("false", hb.transform("{{notEmpty nodata}}", node));
+
+        Assert.assertEquals("false", hb.transform("{{empty data}}", node));
+        Assert.assertEquals("true", hb.transform("{{notEmpty data}}", node));
+    }
+
 }

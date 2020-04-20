@@ -71,6 +71,8 @@ public class HandleBarsHelperRegistry {
         registerStrTranslateTxt();
         registerStrTranslateArrTxt();
         registerPhone();
+        registerEmpty();
+        registerNotEmpty();
     }
 
     private Object compareGte(int lhs) {
@@ -670,6 +672,45 @@ public class HandleBarsHelperRegistry {
         });
     }
 
+    private void registerEmpty() {
+        handlebars.registerHelper("empty", new Helper<JsonNode>() {
+            @Override
+            public Object apply(JsonNode context, Options options) throws IOException {
+                if(context.isNull() || context.isMissingNode()) {
+                    return true;
+                }
+                if(context.size() == 0) {
+                    return true;
+                }
+
+                if(context.isArray()) {
+                    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(context.elements(), Spliterator.ORDERED), false)
+                        .allMatch(node -> node.isNull() || node.isMissingNode() || (node.isTextual() && Strings.isNullOrEmpty(node.asText())));
+                }
+                return false;
+            }
+        });
+    }
+
+    private void registerNotEmpty() {
+        handlebars.registerHelper("notEmpty", new Helper<JsonNode>() {
+            @Override
+            public Object apply(JsonNode context, Options options) throws IOException {
+                if(context.isNull() || context.isMissingNode()) {
+                    return false;
+                }
+                if(context.size() == 0) {
+                    return false;
+                }
+
+                if(context.isArray()) {
+                    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(context.elements(), Spliterator.ORDERED), false)
+                        .noneMatch(node -> node.isNull() || node.isMissingNode() || (node.isTextual() && Strings.isNullOrEmpty(node.asText())));
+                }
+                return true;
+            }
+        });
+    }
 
     private int extractOptionValue(JsonNode keyNode, int defaultValue) {
         final String text = keyNode.asText();
