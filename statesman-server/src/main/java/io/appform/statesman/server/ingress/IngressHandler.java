@@ -85,6 +85,7 @@ public class IngressHandler {
     }
 
     public boolean invokeEngineForOneShot(String ivrProvider, IngressCallback ingressCallback) throws IOException {
+        log.debug("Processing ivr callback: {}", ingressCallback);
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
         log.info("Processing node: {}", node);
@@ -125,6 +126,7 @@ public class IngressHandler {
     }
 
     public boolean invokeEngineForMultiStep(String ivrProvider, IngressCallback ingressCallback) throws IOException {
+        log.debug("Processing ivr callback: {}", ingressCallback);
         log.debug("Processing callback from: {}: Payload: {}", ivrProvider, ingressCallback);
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
