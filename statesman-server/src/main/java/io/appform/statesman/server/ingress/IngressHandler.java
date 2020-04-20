@@ -245,7 +245,6 @@ public class IngressHandler {
             return false;
         }
         final DataUpdate dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
-        eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
         final AppliedTransitions appliedTransitions
                 = engine.get()
                 .handle(dataUpdate);
