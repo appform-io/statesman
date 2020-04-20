@@ -73,6 +73,7 @@ public class HandleBarsHelperRegistry {
         registerPhone();
         registerEmpty();
         registerNotEmpty();
+        registerParseToInt();
     }
 
     private Object compareGte(int lhs) {
@@ -708,6 +709,22 @@ public class HandleBarsHelperRegistry {
                         .noneMatch(node -> node.isNull() || node.isMissingNode() || (node.isTextual() && Strings.isNullOrEmpty(node.asText())));
                 }
                 return true;
+            }
+        });
+    }
+
+    private void registerParseToInt() {
+        handlebars.registerHelper("toInt", new Helper<String>() {
+            @Override
+            public Object apply(String context, Options options) throws IOException {
+                if(!Strings.isNullOrEmpty(context)) {
+                    try {
+                        return Integer.parseInt(context);
+                    } catch (NumberFormatException e) {
+                        log.error("Count not parse string value: {}", context);
+                    }
+                }
+                return -1;
             }
         });
     }

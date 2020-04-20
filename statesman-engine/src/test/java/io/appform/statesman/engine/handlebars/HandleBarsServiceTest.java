@@ -462,14 +462,34 @@ public class HandleBarsServiceTest {
         final ObjectMapper mapper = Jackson.newObjectMapper();
         val node = mapper
                 .createObjectNode();
+        node.set("arr", mapper.createArrayNode());
         node.set("nodata", mapper.createArrayNode().add(""));
         node.set("data", mapper.createArrayNode().add("1").add("2"));
+
+        Assert.assertEquals("true", hb.transform("{{empty arr}}", node));
+        Assert.assertEquals("false", hb.transform("{{notEmpty arr}}", node));
 
         Assert.assertEquals("true", hb.transform("{{empty nodata}}", node));
         Assert.assertEquals("false", hb.transform("{{notEmpty nodata}}", node));
 
         Assert.assertEquals("false", hb.transform("{{empty data}}", node));
         Assert.assertEquals("true", hb.transform("{{notEmpty data}}", node));
+    }
+
+
+    @Test
+    @SneakyThrows
+    public void testParseToInt() {
+        val hb = new HandleBarsService();
+        val currDate = new Date();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+
+        Assert.assertEquals("1", hb.transform("{{toInt value}}", mapper.createObjectNode().put("value", "1")));
+        Assert.assertEquals("-1", hb.transform("{{toInt value}}", mapper.createObjectNode().put("value", "")));
+        Assert.assertEquals("-1", hb.transform("{{toInt value}}", mapper.createObjectNode().put("value", "abc")));
+        Assert.assertEquals("-1", hb.transform("{{toInt value}}", mapper.createObjectNode()));
+
     }
 
 }
