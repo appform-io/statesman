@@ -10,11 +10,10 @@ import javax.validation.constraints.NotNull;
  *
  */
 @Value
-public class HopeRuleEvaluationTest {
+public class HandlebarsTemplateTestingRequest {
     @NotNull
-    JsonNode payload;
-
+    JsonNode body;
     @NotNull
     @NotEmpty
-    String rule;
+    String template;
 }

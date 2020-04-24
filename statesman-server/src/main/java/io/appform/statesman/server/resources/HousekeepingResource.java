@@ -16,7 +16,8 @@ import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.impl.MergeDataAction;
-import io.appform.statesman.model.testing.HopeRuleEvaluationTest;
+import io.appform.statesman.model.testing.HandlebarsTemplateTestingRequest;
+import io.appform.statesman.model.testing.HopeRuleEvaluationTestingRequest;
 import io.appform.statesman.model.testing.IngressTemplateTestingRequest;
 import io.appform.statesman.server.ingress.IngressHandler;
 import io.appform.statesman.server.requests.IngressCallback;
@@ -118,10 +119,21 @@ public class HousekeepingResource {
     @Path("/ingress/rule/test")
     @SneakyThrows
     @ApiOperation("Test hope rule")
-    public Response testRule(@Valid HopeRuleEvaluationTest hopeRuleEvaluationTest) {
+    public Response testRule(@Valid HopeRuleEvaluationTestingRequest hopeRuleEvaluationTest) {
         return Response.ok()
                 .entity(Collections.singletonMap("result",
                                                  hopeLangEngine.evaluate(hopeRuleEvaluationTest.getRule(), hopeRuleEvaluationTest.getPayload())))
+                .build();
+    }
+
+    @POST
+    @Timed
+    @Path("/handlebars/template/test")
+    @SneakyThrows
+    @ApiOperation("Test raw handlebars template")
+    public Response testHandlebarsTemplate(@Valid HandlebarsTemplateTestingRequest request) {
+        return Response.ok()
+                .entity(handleBarsService.transform(request.getTemplate(), request.getBody()))
                 .build();
     }
 
