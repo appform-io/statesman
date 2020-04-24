@@ -15,6 +15,7 @@ import io.appform.statesman.engine.StateTransitionEngine;
 import io.appform.statesman.engine.WorkflowProvider;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.engine.observer.ObservableEventBus;
+import io.appform.statesman.engine.observer.events.IngressCallbackEvent;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
 import io.appform.statesman.engine.utils.StringUtils;
 import io.appform.statesman.model.*;
@@ -48,6 +49,10 @@ import java.util.stream.StreamSupport;
 @Slf4j
 @Singleton
 public class IngressHandler {
+
+    private final String TRANSLATOR_NOT_FOUND = "TRANSLATOR_NOT_FOUND";
+    private final String COULD_NOT_TRANSLATE = "COULD_NOT_TRANSLATE";
+    private final String WORKFLOW_TEMPLATE_NOT_FOUND = "WORKFLOW_TEMPLATE_NOT_FOUND";
     private final CallbackTemplateProvider callbackTemplateProvider;
     private final ObjectMapper mapper;
     private final HandleBarsService handleBarsService;
@@ -90,13 +95,24 @@ public class IngressHandler {
         val node = mapper.valueToTree(queryParams);
         log.info("Processing node: {}", node);
         val tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
+        val ingressCallbackEvent = IngressCallbackEvent.builder()
+                .callbackType("OneShot")
+                .ivrProvider(ivrProvider)
+                .translatorId(tmplLookupKey)
+                .queryString(ingressCallback.getQueryString())
+                .bodyString(jsonString(ingressCallback.getBody()))
+                .build();
         val transformationTemplate = getIngressTransformationTemplate(tmplLookupKey);
         if(null == transformationTemplate) {
             log.error("No matching translation template found for provider: {}", tmplLookupKey);
+            ingressCallbackEvent.setErrorMessage(TRANSLATOR_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val update = translateIvrPaylaod(transformationTemplate, tmplLookupKey, node);
         if(update == null) {
+            ingressCallbackEvent.setErrorMessage(COULD_NOT_TRANSLATE);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val wfTemplate = templateSelector.get()
@@ -104,6 +120,8 @@ public class IngressHandler {
                 .orElse(null);
         if (null == wfTemplate) {
             log.warn("No matching workflow template found for provider: {}, context: {}", ivrProvider, mapper.writeValueAsString(update));
+            ingressCallbackEvent.setErrorMessage(WORKFLOW_TEMPLATE_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         var wfId = extractWorkflowId(node, transformationTemplate);
@@ -122,6 +140,9 @@ public class IngressHandler {
                 .handle(dataUpdate);
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        ingressCallbackEvent.setSmEngineTriggered(true);
+        ingressCallbackEvent.setWorkflowId(dataUpdate.getWorkflowId());
+        eventBus.get().publish(ingressCallbackEvent);
         return true;
     }
 
@@ -132,15 +153,26 @@ public class IngressHandler {
         val node = mapper.valueToTree(queryParams);
         log.info("Processing node: {}", node);
         final String tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
+        val ingressCallbackEvent = IngressCallbackEvent.builder()
+                .callbackType("MultiStep")
+                .ivrProvider(ivrProvider)
+                .translatorId(tmplLookupKey)
+                .queryString(ingressCallback.getQueryString())
+                .bodyString(jsonString(ingressCallback.getBody()))
+                .build();
         val transformationTemplate = getIngressTransformationTemplate(
                 tmplLookupKey);
         if(null == transformationTemplate) {
             log.warn("No matching translation template found for provider {}. Key: {}. node: {} ",
                      ivrProvider, tmplLookupKey, node);
+            ingressCallbackEvent.setErrorMessage(TRANSLATOR_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val update = translateIvrPaylaod(transformationTemplate, tmplLookupKey, node);
         if(update == null) {
+            ingressCallbackEvent.setErrorMessage(COULD_NOT_TRANSLATE);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val date = new Date();
@@ -185,6 +217,8 @@ public class IngressHandler {
                     .orElse(null);
             if (null == wfTemplate) {
                 log.warn("No matching workflow template found for provider: {}, node: {}", ivrProvider, mapper.writeValueAsString(update));
+                ingressCallbackEvent.setErrorMessage(WORKFLOW_TEMPLATE_NOT_FOUND);
+                eventBus.get().publish(ingressCallbackEvent);
                 return false;
             }
             val dataNode = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
@@ -194,6 +228,8 @@ public class IngressHandler {
             wf = wfp.getWorkflow(wfId).orElse(null);
             if (null == wf) {
                 log.error("Workflow could not be created for: {}, context: {}", ivrProvider, mapper.writeValueAsString(update));
+                ingressCallbackEvent.setErrorMessage("WORKFLOW_COULD_NOT_BE_CREATED");
+                eventBus.get().publish(ingressCallbackEvent);
                 return false;
             }
             eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
@@ -204,6 +240,9 @@ public class IngressHandler {
                 .handle(dataUpdate, new MergeDataAction());
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        ingressCallbackEvent.setWorkflowId(dataUpdate.getWorkflowId());
+        ingressCallbackEvent.setSmEngineTriggered(true);
+        eventBus.get().publish(ingressCallbackEvent);
         return true;
     }
 
@@ -214,17 +253,28 @@ public class IngressHandler {
         val node = ingressCallback.getBody();
         log.info("Processing node: {}", node);
         final String tmplLookupKey = ivrProvider + "_obd_" + StringUtils.normalize(node.at("/IVRID").asText());
+        val ingressCallbackEvent = IngressCallbackEvent.builder()
+                .callbackType("OBDCalls")
+                .ivrProvider(ivrProvider)
+                .translatorId(tmplLookupKey)
+                .queryString(ingressCallback.getQueryString())
+                .bodyString(jsonString(ingressCallback.getBody()))
+                .build();
         val transformationTemplate = callbackTemplateProvider.getTemplate(tmplLookupKey, TranslationTemplateType.OBD_CALL_RESP)
                 .orElse(null);
         if(null == transformationTemplate) {
             log.warn("No matching obd call resp translation template found for provider {}. Key: {}. node: {} ",
                      ivrProvider, tmplLookupKey, node);
+            ingressCallbackEvent.setErrorMessage(TRANSLATOR_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val tmpl = toOneShotTmpl(transformationTemplate);
         if (null == tmpl) {
             log.warn("No matching obd call resp transformation template found for provider: {}, context: {}",
                      ivrProvider, ingressCallback);
+            ingressCallbackEvent.setErrorMessage(COULD_NOT_TRANSLATE);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), node);
@@ -242,6 +292,8 @@ public class IngressHandler {
         if(null == wfTemplate) {
             log.error("No existing workflow template found for workflow id: {}, template: {}, update: {}",
                       wfId, templateId, update);
+            ingressCallbackEvent.setErrorMessage(WORKFLOW_TEMPLATE_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         final DataUpdate dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
@@ -250,23 +302,36 @@ public class IngressHandler {
                 .handle(dataUpdate);
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        ingressCallbackEvent.setWorkflowId(dataUpdate.getWorkflowId());
+        ingressCallbackEvent.setSmEngineTriggered(true);
+        eventBus.get().publish(ingressCallbackEvent);
         return true;
     }
 
     public boolean invokeEngineForFormPost(String callcenter, JsonNode formData) throws IOException {
         log.debug("Processing form post from: {}: Payload: {}", callcenter, formData);
         final String tmplLookupKey = callcenter + "_" + StringUtils.normalize(formData.at("/state").asText());
+        val ingressCallbackEvent = IngressCallbackEvent.builder()
+                .callbackType("OBDCalls")
+                .ivrProvider(callcenter)
+                .translatorId(tmplLookupKey)
+                .formDataString(jsonString(formData))
+                .build();
         val transformationTemplate = callbackTemplateProvider.getTemplate(callcenter, TranslationTemplateType.OBD_CALL_RESP)
                 .orElse(null);
         if(null == transformationTemplate) {
             log.warn("No matching obd call resp translation template found for callcenter {}. Key: {}. node: {} ",
                      callcenter, tmplLookupKey, formData);
+            ingressCallbackEvent.setErrorMessage(TRANSLATOR_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val tmpl = toOneShotTmpl(transformationTemplate);
         if (null == tmpl) {
             log.warn("No matching obd call resp transformation template found for callcenter: {}, context: {}",
                      callcenter, formData);
+            ingressCallbackEvent.setErrorMessage(COULD_NOT_TRANSLATE);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), formData);
@@ -277,6 +342,8 @@ public class IngressHandler {
                 .orElse(null);
         if (null == wfTemplate) {
             log.warn("No matching workflow template found for provider: {}, context: {}", callcenter, stdPayload);
+            ingressCallbackEvent.setErrorMessage(WORKFLOW_TEMPLATE_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         var wfId = extractWorkflowId(formData, transformationTemplate);
@@ -296,6 +363,9 @@ public class IngressHandler {
                 .handle(dataUpdate);
         log.debug("Workflow: {} with template: {} went through transitions: {}",
                   wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        ingressCallbackEvent.setWorkflowId(dataUpdate.getWorkflowId());
+        ingressCallbackEvent.setSmEngineTriggered(true);
+        eventBus.get().publish(ingressCallbackEvent);
         return true;
     }
 
@@ -390,6 +460,11 @@ public class IngressHandler {
                 .findFirst()
                 .orElse(null);
     }
+
+    private String jsonString(JsonNode body) throws IOException {
+        return body == null ? null : mapper.writeValueAsString(body);
+    }
+
 
     @VisibleForTesting
     public static boolean isDroppedCallSingleShot(

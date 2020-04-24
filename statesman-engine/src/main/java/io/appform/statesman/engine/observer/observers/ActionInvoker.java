@@ -7,6 +7,7 @@ import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.observer.ObservableEvent;
 import io.appform.statesman.engine.observer.ObservableEventBusSubscriber;
 import io.appform.statesman.engine.observer.ObservableEventVisitor;
+import io.appform.statesman.engine.observer.events.IngressCallbackEvent;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
 import io.appform.statesman.engine.observer.events.WorkflowInitEvent;
 import lombok.val;
@@ -44,6 +45,12 @@ public class ActionInvoker extends ObservableEventBusSubscriber {
 
             @Override
             public Void visit(WorkflowInitEvent workflowInitEvent) {
+                //NOOP
+                return null;
+            }
+
+            @Override
+            public Void visit(IngressCallbackEvent ingressCallbackEvent) {
                 //NOOP
                 return null;
             }
