@@ -87,15 +87,15 @@ public class Callbacks {
     }
 
     @POST
-    @Path("/ingress/form/{callcenter}")
+    @Path("/ingress/form/{provider}")
     @Consumes(MediaType.APPLICATION_JSON)
     @SneakyThrows
     public Response stepIngressForm(
-            @PathParam("callcenter") final String callcenter, final JsonNode data) {
+            @PathParam("provider") final String provider, final IngressCallback ingressCallback) {
         final boolean status = ingressHandler.get()
-                .invokeEngineForFormPost(callcenter, data);
+                .invokeEngineForFormPost(provider, ingressCallback);
         if(!status) {
-            log.warn("Ignored ingress form post callback from callcenter {} callback: {}", callcenter, data);
+            log.warn("Ignored ingress form post callback from provider {} callback: {}", provider, ingressCallback);
         }
         return Response.ok()
                 .entity(ImmutableMap.of("success", status))

@@ -308,20 +308,20 @@ public class IngressHandler {
         return true;
     }
 
-    public boolean invokeEngineForFormPost(String callcenter, JsonNode formData) throws IOException {
-        log.debug("Processing form post from: {}: Payload: {}", callcenter, formData);
-        final String tmplLookupKey = callcenter + "_" + StringUtils.normalize(formData.at("/state").asText());
+    public boolean invokeEngineForFormPost(String callcenter, IngressCallback callback) throws IOException {
+        log.debug("Processing form post from: {}: Payload: {}", callcenter, callback);
+        final String tmplLookupKey = callcenter + "_" + StringUtils.normalize(callback.getBody().at("/state").asText());
         val ingressCallbackEvent = IngressCallbackEvent.builder()
-                .callbackType("OBDCalls")
+                .callbackType("formData")
                 .ivrProvider(callcenter)
                 .translatorId(tmplLookupKey)
-                .formDataString(jsonString(formData))
+                .formDataString(jsonString(callback.getBody()))
                 .build();
-        val transformationTemplate = callbackTemplateProvider.getTemplate(callcenter, TranslationTemplateType.OBD_CALL_RESP)
+        val transformationTemplate = callbackTemplateProvider.getTemplate(tmplLookupKey, TranslationTemplateType.INGRESS)
                 .orElse(null);
         if(null == transformationTemplate) {
-            log.warn("No matching obd call resp translation template found for callcenter {}. Key: {}. node: {} ",
-                     callcenter, tmplLookupKey, formData);
+            log.warn("No matching form translation template found for key: {}. node: {} ",
+                     tmplLookupKey, callback);
             ingressCallbackEvent.setErrorMessage(TRANSLATOR_NOT_FOUND);
             eventBus.get().publish(ingressCallbackEvent);
             return false;
@@ -329,12 +329,12 @@ public class IngressHandler {
         val tmpl = toOneShotTmpl(transformationTemplate);
         if (null == tmpl) {
             log.warn("No matching obd call resp transformation template found for callcenter: {}, context: {}",
-                     callcenter, formData);
+                     callcenter, callback);
             ingressCallbackEvent.setErrorMessage(COULD_NOT_TRANSLATE);
             eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
-        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), formData);
+        val stdPayload = handleBarsService.transform(JsonNodeValueResolver.INSTANCE, tmpl.getTemplate(), callback.getBody());
         log.info("stdPayload:{}", stdPayload);
         val update = mapper.readTree(stdPayload);
         val wfTemplate = templateSelector.get()
@@ -346,7 +346,7 @@ public class IngressHandler {
             eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
-        var wfId = extractWorkflowId(formData, transformationTemplate);
+        var wfId = UUID.randomUUID().toString();
         val wfp = this.workflowProvider.get();
         while (wfp.workflowExists(wfId)) {
             wfId = UUID.randomUUID().toString();
