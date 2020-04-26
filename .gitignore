@@ -81,6 +81,8 @@ buildNumber.properties
 ### Maven template
 .mvn/timing.properties
 .DS_Store
-.sw*
+.*.sw*
 out
 dep
+out.*
+.out.*
