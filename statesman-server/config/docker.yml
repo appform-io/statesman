@@ -394,6 +394,10 @@ ivrDropDetection:
       - "payload.*"
     kaleyra_karnataka:
       - "Question4.*"
+    kaleyra_chhattisgarh:
+      - "Question4.*"
+    kaleyra_madhyapradesh:
+      - "Question4.*"
 
 metrics:
   reporters:
