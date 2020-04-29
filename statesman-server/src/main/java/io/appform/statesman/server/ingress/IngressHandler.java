@@ -411,7 +411,7 @@ public class IngressHandler {
             ((ObjectNode) update).put("callDropped",
                                       droppedCallDetector.detectDroppedCall(transformationTemplate, update));
         }
-        log.info("stdPayload:{}", stdPayload);
+        log.info("stdPayload:{}", update);
         return update;
     }
 

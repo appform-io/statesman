@@ -15,6 +15,7 @@ import lombok.val;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -30,6 +31,7 @@ public class HopeRuleDroppedCallDetector implements DroppedCallDetector {
             .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
             .build();
         ruleCache = Caffeine.newBuilder()
+            .maximumSize(10_000)
             .build(new CacheLoader<String, Evaluatable>() {
                 @Nullable
                 @Override
