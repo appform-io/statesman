@@ -31,7 +31,7 @@ public class HopeRuleDroppedCallDetector implements DroppedCallDetector {
             .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
             .build();
         ruleCache = Caffeine.newBuilder()
-            .maximumSize(10_000)
+            .maximumSize(1_000)
             .build(new CacheLoader<String, Evaluatable>() {
                 @Nullable
                 @Override
