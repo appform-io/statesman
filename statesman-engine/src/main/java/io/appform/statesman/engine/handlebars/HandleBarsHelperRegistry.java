@@ -74,6 +74,7 @@ public class HandleBarsHelperRegistry {
         registerEmpty();
         registerNotEmpty();
         registerParseToInt();
+        registerParseToIntPtr();
     }
 
     private Object compareGte(int lhs) {
@@ -722,6 +723,30 @@ public class HandleBarsHelperRegistry {
                         return Integer.parseInt(context);
                     } catch (NumberFormatException e) {
                         log.error("Count not parse string value: {}", context);
+                    }
+                }
+                return -1;
+            }
+        });
+    }
+
+    private void registerParseToIntPtr() {
+        handlebars.registerHelper("toIntPtr", new Helper<JsonNode>() {
+            @Override
+            public Object apply(JsonNode node, Options options) throws IOException {
+                final String pointer = options.hash("pointer");
+                if(!Strings.isNullOrEmpty(pointer) && null != node && !node.isNull() && !node.isMissingNode()) {
+                    val intNode = node.at(pointer);
+                    if(intNode.isIntegralNumber()) {
+                        return intNode.asLong();
+                    }
+                    if(intNode.isTextual()) {
+                        try {
+                            return Integer.parseInt(intNode.asText());
+                        }
+                        catch (NumberFormatException e) {
+                            log.error("Count not parse value: {} at: {}", node, pointer);
+                        }
                     }
                 }
                 return -1;
