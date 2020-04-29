@@ -25,6 +25,7 @@ public class CallbackTemplateUtils {
                         .idPath(oneShotTransformationTemplate.getIdPath())
                         .translationTemplateType(oneShotTransformationTemplate.getTranslationTemplateType())
                         .template(MapperUtils.serialize(oneShotTransformationTemplate.getTemplate()))
+                        .dropDetectionRule(transformationTemplate.getDropDetectionRule())
                         .build();
             }
 
@@ -36,6 +37,7 @@ public class CallbackTemplateUtils {
                         .idPath(stepByStepTransformationTemplate.getIdPath())
                         .translationTemplateType(stepByStepTransformationTemplate.getTranslationTemplateType())
                         .template(MapperUtils.serialize(stepByStepTransformationTemplate.getTemplates()))
+                        .dropDetectionRule(transformationTemplate.getDropDetectionRule())
                         .build();
             }
         });
@@ -52,6 +54,7 @@ public class CallbackTemplateUtils {
                                 .idPath(template.getIdPath())
                                 .translationTemplateType(template.getTranslationTemplateType())
                                 .template(MapperUtils.deserialize(template.getTemplate(),String.class))
+                                .dropDetectionRule(template.getDropDetectionRule())
                                 .build();
 
                     }
@@ -64,6 +67,7 @@ public class CallbackTemplateUtils {
                                 .idPath(template.getIdPath())
                                 .translationTemplateType(template.getTranslationTemplateType())
                                 .templates(MapperUtils.deserialize(template.getTemplate(),new TypeReference<List<StepByStepTransformationTemplate.StepSelection>>() {}))
+                                .dropDetectionRule(template.getDropDetectionRule())
                                 .build();
                     }
                 });

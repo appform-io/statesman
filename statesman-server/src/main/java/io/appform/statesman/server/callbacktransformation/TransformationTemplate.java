@@ -25,12 +25,19 @@ public abstract class TransformationTemplate {
     private final TransformationTemplateType type;
     private final String idPath;
     private final TranslationTemplateType translationTemplateType;
+    private final String dropDetectionRule;
 
-    protected TransformationTemplate(TransformationTemplateType type, String idPath, TranslationTemplateType translationTemplateType, String provider) {
+    protected TransformationTemplate(
+            TransformationTemplateType type,
+            String idPath,
+            TranslationTemplateType translationTemplateType,
+            String provider,
+            String dropDetectionRule) {
         this.provider = provider;
         this.type = type;
         this.idPath = idPath;
         this.translationTemplateType = translationTemplateType;
+        this.dropDetectionRule = dropDetectionRule;
     }
 
     public abstract <T> T accept(TransformationTemplateVisitor<T> visitor);

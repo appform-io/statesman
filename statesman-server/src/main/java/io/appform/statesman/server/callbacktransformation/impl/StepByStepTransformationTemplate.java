@@ -40,8 +40,9 @@ public class StepByStepTransformationTemplate extends TransformationTemplate  {
             @JsonProperty("provider") String provider,
             @JsonProperty("idPath") String idPath,
             @JsonProperty("translationTemplateType") TranslationTemplateType translationTemplateType,
-            @JsonProperty("templates") List<StepSelection> templates) {
-        super(TransformationTemplateType.STEP_BY_STEP, idPath, translationTemplateType, provider);
+            @JsonProperty("templates") List<StepSelection> templates,
+            @JsonProperty("dropDetectionRule") String dropDetectionRule) {
+        super(TransformationTemplateType.STEP_BY_STEP, idPath, translationTemplateType, provider, dropDetectionRule);
         this.templates = templates;
     }
 
