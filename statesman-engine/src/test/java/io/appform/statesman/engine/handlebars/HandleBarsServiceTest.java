@@ -492,4 +492,17 @@ public class HandleBarsServiceTest {
 
     }
 
+    @Test
+    @SneakyThrows
+    public void testParseToIntWeird() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+
+        Assert.assertEquals("1", hb.transform("{{toIntPtr pointer='/value[xx]/0'}}",
+                                              mapper.createObjectNode().set("value[xx]", mapper.createArrayNode().add("1"))));
+
+
+    }
+
 }
