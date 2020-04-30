@@ -15,7 +15,6 @@ import lombok.val;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.inject.Singleton;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -31,7 +30,7 @@ public class HopeRuleDroppedCallDetector implements DroppedCallDetector {
             .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
             .build();
         ruleCache = Caffeine.newBuilder()
-            .maximumSize(1_000)
+            .maximumSize(100)
             .build(new CacheLoader<String, Evaluatable>() {
                 @Nullable
                 @Override
@@ -45,6 +44,9 @@ public class HopeRuleDroppedCallDetector implements DroppedCallDetector {
     public boolean detectDroppedCall(TransformationTemplate template, JsonNode node) {
         val rule = template.getDropDetectionRule();
         if(Strings.isNullOrEmpty(rule)) {
+            if(node.has("callDropped")) {
+                return node.get("callDropped").asBoolean();
+            }
             log.warn("No dropped call detection rule found for: {}. Node: {}", template.getProvider(), node);
             return false;
         }
