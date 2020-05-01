@@ -30,8 +30,9 @@ public class HopeRuleDroppedCallDetectorTest {
                                            "  \"requestType\": \"covid\",\n" +
                                            "  \"hasSymptoms\": false,\n" +
                                            "  \"contact\": true,\n" +
+                                           "  \"status\": \"answer\",\n" +
                                            "  \"Q1\": 2,\n" +
-                                           "  \"Q2\": 1,\n" +
+                                           "  \"Q2\": 3,\n" +
                                            "  \"Q3\": -1,\n" +
                                            "  \"Q4\": -1,\n" +
                                            "  \"callStartTime\": 1577604660000,\n" +
@@ -42,11 +43,11 @@ public class HopeRuleDroppedCallDetectorTest {
                                            "  \"allDataCollected\": true\n" +
                                            "}");
         val detector = new HopeRuleDroppedCallDetector();
-        Assert.assertTrue(detector.detectDroppedCall(
+        Assert.assertFalse((detector.detectDroppedCall(
                 OneShotTransformationTemplate.builder()
-                        .dropDetectionRule("\"$.Q4\" < 0")
+                        .dropDetectionRule("((\"$.Q2\" != 3) && (\"$.Q4\" < 0)) || ((\"$.Q2\" == 3) && (\"$.status\" != \"answer\"))")
                         .build(),
-                node));
+                node)));
         Assert.assertFalse(detector.detectDroppedCall(
                 OneShotTransformationTemplate.builder()
                         .dropDetectionRule("\"$.Q2\" < 0")
