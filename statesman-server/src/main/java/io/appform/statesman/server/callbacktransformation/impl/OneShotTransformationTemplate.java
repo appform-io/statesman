@@ -29,8 +29,9 @@ public class OneShotTransformationTemplate extends TransformationTemplate  {
             @JsonProperty("provider") String provider,
             @JsonProperty("idPath") String idPath,
             @JsonProperty("translationTemplateType") TranslationTemplateType translationTemplateType,
-            @JsonProperty("template") String template) {
-        super(TransformationTemplateType.ONE_SHOT, idPath, translationTemplateType, provider);
+            @JsonProperty("template") String template,
+            @JsonProperty("dropDetectionRule") String dropDetectionRule) {
+        super(TransformationTemplateType.ONE_SHOT, idPath, translationTemplateType, provider, dropDetectionRule);
         this.template = template;
     }
 

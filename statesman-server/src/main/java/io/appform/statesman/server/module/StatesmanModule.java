@@ -28,7 +28,8 @@ import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.dao.callback.CallbackTemplateProviderCommand;
 import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
-import io.appform.statesman.server.droppedcalldetector.IvrDropDetectionConfig;
+import io.appform.statesman.server.droppedcalldetector.DroppedCallDetector;
+import io.appform.statesman.server.droppedcalldetector.HopeRuleDroppedCallDetector;
 import io.appform.statesman.server.provider.ProviderSelectorImpl;
 import io.dropwizard.setup.Environment;
 
@@ -45,6 +46,7 @@ public class StatesmanModule extends AbstractModule {
         bind(ActionRegistry.class).to(MapBasedActionRegistry.class);
         bind(ProviderSelector.class).to(ProviderSelectorImpl.class);
         bind(ObservableEventBus.class).to(ObservableGuavaEventBus.class);
+        bind(DroppedCallDetector.class).to(HopeRuleDroppedCallDetector.class);
         bind(ObservableEventBusSubscriber.class)
                 .annotatedWith(Names.named("actionHandler"))
                 .to(ActionInvoker.class);
@@ -92,9 +94,4 @@ public class StatesmanModule extends AbstractModule {
         return config.getHttpActionDefaultConfig();
     }
 
-    @Provides
-    @Singleton
-    public IvrDropDetectionConfig ivrDropDetectionConfig(AppConfig appConfig) {
-        return appConfig.getIvrDropDetection();
-    }
 }

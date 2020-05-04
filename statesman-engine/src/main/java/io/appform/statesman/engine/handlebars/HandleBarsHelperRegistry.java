@@ -720,7 +720,7 @@ public class HandleBarsHelperRegistry {
             public Object apply(String context, Options options) throws IOException {
                 if(!Strings.isNullOrEmpty(context)) {
                     try {
-                        return Integer.parseInt(context);
+                        return Integer.parseInt(numericStr(context));
                     } catch (NumberFormatException e) {
                         log.error("Count not parse string value: {}", context);
                     }
@@ -742,7 +742,7 @@ public class HandleBarsHelperRegistry {
                     }
                     if(intNode.isTextual()) {
                         try {
-                            return Integer.parseInt(intNode.asText());
+                            return Integer.parseInt(numericStr(intNode.asText()));
                         }
                         catch (NumberFormatException e) {
                             log.error("Count not parse value: {} at: {}", node, pointer);

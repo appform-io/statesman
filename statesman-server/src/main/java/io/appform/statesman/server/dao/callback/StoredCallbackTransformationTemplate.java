@@ -12,7 +12,7 @@ import java.util.Date;
 
 @Entity
 @Table(name = "callback_templates", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"provider","translation_template_type"})
+        @UniqueConstraint(columnNames = {"provider", "translation_template_type"})
 })
 @Data
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -42,6 +42,9 @@ public abstract class StoredCallbackTransformationTemplate {
     @Column(name = "template", columnDefinition = "blob")
     private byte[] template;
 
+    @Column(name = "drop_detection_rule")
+    String dropDetectionRule;
+
     @Column(name = "created", columnDefinition = "datetime default current_timestamp", updatable = false, insertable = false)
     @Generated(value = GenerationTime.INSERT)
     private Date created;
@@ -50,16 +53,19 @@ public abstract class StoredCallbackTransformationTemplate {
     @Generated(value = GenerationTime.ALWAYS)
     private Date updated;
 
-    protected StoredCallbackTransformationTemplate(TransformationTemplateType type,
-                                                   String provider,
-                                                   String idPath,
-                                                   TranslationTemplateType translationTemplateType,
-                                                   byte[] template) {
+    protected StoredCallbackTransformationTemplate(
+            TransformationTemplateType type,
+            String provider,
+            String idPath,
+            TranslationTemplateType translationTemplateType,
+            byte[] template,
+            String dropDetectionRule) {
         this.type = type;
         this.provider = provider;
         this.idPath = idPath;
         this.translationTemplateType = translationTemplateType;
         this.template = template;
+        this.dropDetectionRule = dropDetectionRule;
     }
 
     public abstract <T> T visit(StoredCallbackTransformationTemplateVisitor<T> visitor);
