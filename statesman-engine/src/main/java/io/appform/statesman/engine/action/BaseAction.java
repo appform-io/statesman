@@ -2,6 +2,7 @@ package io.appform.statesman.engine.action;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
@@ -56,7 +57,7 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
         }
         publish(actionExecutedEvent(actionTemplate, workflow, status));
         return null == response
-                ? mapper.nullNode()
+                ? NullNode.getInstance()
                 : response;
     }
 

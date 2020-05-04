@@ -2,6 +2,7 @@ package io.appform.statesman.engine.action.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.base.Strings;
 import com.google.inject.name.Named;
 import io.appform.statesman.engine.ProviderSelector;
@@ -56,6 +57,6 @@ public class RoutedAction extends BaseAction<RoutedActionTemplate> {
                     ResponseCode.NO_PROVIDER_FOUND);
         }
         return actionExecutor.get().execute(routedActionTemplate.getProviderTemplates().get(provider), workflow)
-                .orElse(mapper.nullNode());
+                .orElse(NullNode.getInstance());
     }
 }

@@ -3,6 +3,7 @@ package io.appform.statesman.engine.action.impl;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import io.appform.statesman.engine.action.BaseAction;
@@ -76,7 +77,7 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
         try(Response httpResponse = executeRequest(actionData) ) {
             val responseBodyStr = HttpUtil.body(httpResponse);
             if (Strings.isNullOrEmpty(responseBodyStr)) {
-                return mapper.nullNode();
+                return NullNode.getInstance();
             }
             log.debug("HTTP Response: {}", responseBodyStr);
             List<String> contentType = Arrays.stream(
