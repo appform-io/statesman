@@ -3,6 +3,7 @@ package io.appform.statesman.engine;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.observer.ObservableEvent;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.model.*;
@@ -33,6 +34,7 @@ public class StateTransitionEngineTest {
     private static final String WFT_ID = "wft1";
     private static final String WF_ID = "wf1";
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private Provider<WorkflowProvider> workflowProvider;
 
     private interface States {
         State A = new State("A", false);
@@ -63,7 +65,7 @@ public class StateTransitionEngineTest {
                                                   true,
                                                   "\"$.update.Q3\" == 1",
                                                   States.D,
-                                                  null);
+                                                  "TEST_ACTION");
         StateTransition c2e = new StateTransition("T4",
                                                   StateTransition.Type.EVALUATED,
                                                   States.D.getName(),
@@ -83,7 +85,7 @@ public class StateTransitionEngineTest {
                               new DataObject(MAPPER.createObjectNode(), wft.getStartState(), new Date(), new Date()),
                               new Date(),
                               new Date());
-        final Provider<WorkflowProvider> workflowProvider = () -> {
+        workflowProvider = () -> {
             val provider = mock(WorkflowProvider.class);
             when(provider.getTemplate(anyString()))
                     .thenReturn(Optional.of(wft));
@@ -123,11 +125,15 @@ public class StateTransitionEngineTest {
         };
         final ObservableEventBus eventBus = mock(ObservableEventBus.class);
         doNothing().when(eventBus).publish(any(ObservableEvent.class));
+        ActionExecutor actionExecutor = mock(ActionExecutor.class);
+        when(actionExecutor.execute(anyString(), any(Workflow.class)))
+            .thenReturn(Optional.of(MAPPER.createObjectNode().put("message", "Test")));
         engine = new StateTransitionEngine(workflowProvider,
                                            transitionStore,
                                            MAPPER,
                                            new DataActionExecutor(MAPPER),
-                                           eventBus);
+                                           eventBus,
+                                           () -> actionExecutor);
     }
 
     @Test
@@ -186,5 +192,13 @@ public class StateTransitionEngineTest {
         Assert.assertEquals(States.C, transition.getTransitions().get(1).getNewState());
         Assert.assertEquals(States.C, transition.getTransitions().get(2).getOldState());
         Assert.assertEquals(States.D, transition.getTransitions().get(2).getNewState());
+        val dataObject = workflowProvider.get().getWorkflow(WF_ID).map(Workflow::getDataObject).orElse(null);
+        Assert.assertNotNull(dataObject);
+        val data = dataObject.getData();
+        Assert.assertFalse(data.isNull());
+        Assert.assertTrue(data.hasNonNull("actionResponse"));
+        Assert.assertTrue(data.get("actionResponse").hasNonNull("TEST_ACTION"));
+        Assert.assertTrue(data.get("actionResponse").get("TEST_ACTION").has("message"));
+        Assert.assertEquals("Test", data.get("actionResponse").get("TEST_ACTION").get("message").asText());
     }
 }

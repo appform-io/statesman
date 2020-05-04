@@ -16,7 +16,7 @@ public class ObservableGuavaEventBus implements ObservableEventBus {
     private final ObservableEventBusSubscriber subscriber;
 
     @Inject
-    public ObservableGuavaEventBus(@Named("actionHandler") final ObservableEventBusSubscriber subscriber) {
+    public ObservableGuavaEventBus(@Named("foxtrotEventSender") final ObservableEventBusSubscriber subscriber) {
         this.subscriber = subscriber;
         this.syncEventBus = new EventBus("events");
         this.syncEventBus.register(this);

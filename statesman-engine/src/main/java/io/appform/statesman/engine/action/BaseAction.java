@@ -2,7 +2,10 @@ package io.appform.statesman.engine.action;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.rholder.retry.*;
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import io.appform.statesman.engine.Constants;
 import io.appform.statesman.engine.events.ActionExecutedEvent;
 import io.appform.statesman.engine.events.EngineEventType;
@@ -52,7 +55,9 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
             log.error("Error while executing action", e);
         }
         publish(actionExecutedEvent(actionTemplate, workflow, status));
-        return response;
+        return null == response
+                ? mapper.nullNode()
+                : response;
     }
 
 

@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.inject.name.Named;
 import io.appform.statesman.engine.ProviderSelector;
-import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.action.BaseAction;
+import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.model.ActionImplementation;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.action.ActionType;
@@ -55,6 +55,7 @@ public class RoutedAction extends BaseAction<RoutedActionTemplate> {
             throw new StatesmanError("No provider found for action:" + routedActionTemplate.getTemplateId(),
                     ResponseCode.NO_PROVIDER_FOUND);
         }
-        return actionExecutor.get().execute(routedActionTemplate.getProviderTemplates().get(provider), workflow);
+        return actionExecutor.get().execute(routedActionTemplate.getProviderTemplates().get(provider), workflow)
+                .orElse(mapper.nullNode());
     }
 }

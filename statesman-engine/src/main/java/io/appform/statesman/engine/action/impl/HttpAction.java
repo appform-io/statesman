@@ -73,39 +73,11 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
     }
 
     private JsonNode handle(HttpActionData actionData) {
-        Response httpResponse = null;
-        try {
-            httpResponse = actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Response>() {
-                private final Map<String, String> headers = actionData.getHeaders();
-                private final String url = actionData.getUrl();
-
-                @Override
-                public Response visitPost() throws Exception {
-                    log.info("HTTP_ACTION POST Call url:{}", url);
-                    val payload = actionData.getPayload();
-                    Response response = client.post(url, payload, headers);
-                    if (!response.isSuccessful()) {
-                        log.error("unable to do post action, actionData: {} Response: {}",
-                                actionData, HttpUtil.body(response));
-                        throw new StatesmanError();
-                    }
-                    return response;
-                }
-
-                @Override
-                public Response visitGet() throws Exception {
-                    log.info("HTTP_ACTION GET Call url:{}", url);
-                    Response response = null;
-                    response = client.get(url, headers);
-                    if (!response.isSuccessful()) {
-                        log.error("unable to do get action, actionData: {} Response: {}",
-                                actionData, HttpUtil.body(response));
-                        throw new StatesmanError();
-                    }
-                    return response;
-                }
-            });
-            String responseBodyStr = HttpUtil.body(httpResponse);
+        try(Response httpResponse = executeRequest(actionData) ) {
+            val responseBodyStr = HttpUtil.body(httpResponse);
+            if (Strings.isNullOrEmpty(responseBodyStr)) {
+                return mapper.nullNode();
+            }
             log.debug("HTTP Response: {}", responseBodyStr);
             List<String> contentType = Arrays.stream(
                                                 httpResponse.header("Content-Type",APPLICATION_JSON)
@@ -115,14 +87,45 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
                     .anyMatch(value -> value.equalsIgnoreCase(APPLICATION_JSON))) {
                 return toJsonNode(responseBodyStr);
             }
-            return null;
+            return mapper.createObjectNode()
+                    .put("payload", responseBodyStr);
         } catch (final Exception e) {
             throw StatesmanError.propagate(e);
-        } finally {
-            if (null != httpResponse) {
-                httpResponse.close();
-            }
         }
+    }
+
+    @SneakyThrows
+    private Response executeRequest(HttpActionData actionData) {
+        return actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Response>() {
+            private final Map<String, String> headers = actionData.getHeaders();
+            private final String url = actionData.getUrl();
+
+            @Override
+            public Response visitPost() throws Exception {
+                log.info("HTTP_ACTION POST Call url:{}", url);
+                val payload = actionData.getPayload();
+                Response response = client.post(url, payload, headers);
+                if (!response.isSuccessful()) {
+                    log.error("unable to do post action, actionData: {} Response: {}",
+                              actionData, HttpUtil.body(response));
+                    throw new StatesmanError();
+                }
+                return response;
+            }
+
+            @Override
+            public Response visitGet() throws Exception {
+                log.info("HTTP_ACTION GET Call url:{}", url);
+                Response response = null;
+                response = client.get(url, headers);
+                if (!response.isSuccessful()) {
+                    log.error("unable to do get action, actionData: {} Response: {}",
+                            actionData, HttpUtil.body(response));
+                    throw new StatesmanError();
+                }
+                return response;
+            }
+        });
     }
 
     private JsonNode toJsonNode(String responseBodyStr) {
