@@ -20,11 +20,18 @@ import javax.persistence.Entity;
 public class StoredStepByStepCallbackTransformationTemplate extends StoredCallbackTransformationTemplate {
 
     @Builder
-    public StoredStepByStepCallbackTransformationTemplate(String provider,
-                                                          String idPath,
-                                                          TranslationTemplateType translationTemplateType,
-                                                          byte[] template) {
-        super(TransformationTemplateType.STEP_BY_STEP, provider, idPath, translationTemplateType,  template);
+    public StoredStepByStepCallbackTransformationTemplate(
+            String provider,
+            String idPath,
+            TranslationTemplateType translationTemplateType,
+            byte[] template,
+            String dropDetectionRule) {
+        super(TransformationTemplateType.STEP_BY_STEP,
+              provider,
+              idPath,
+              translationTemplateType,
+              template,
+              dropDetectionRule);
     }
 
     @Override

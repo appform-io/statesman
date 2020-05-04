@@ -77,6 +77,7 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
                                 return null;
                             }
                         });
+                        storedCallbackTransformationTemplate.setDropDetectionRule(transformationTemplate.getDropDetectionRule());
                         return storedCallbackTransformationTemplate;
                     });
             return updated ? getTemplateFromDb(transformationTemplate.getProvider(), transformationTemplate.getTranslationTemplateType()) : Optional.empty();

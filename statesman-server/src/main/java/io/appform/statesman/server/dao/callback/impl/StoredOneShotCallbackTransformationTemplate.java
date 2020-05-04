@@ -20,11 +20,18 @@ import javax.persistence.Entity;
 public class StoredOneShotCallbackTransformationTemplate extends StoredCallbackTransformationTemplate {
 
     @Builder
-    public StoredOneShotCallbackTransformationTemplate(String provider,
-                                                       String idPath,
-                                                       TranslationTemplateType translationTemplateType,
-                                                       byte[] template) {
-        super(TransformationTemplateType.ONE_SHOT, provider, idPath, translationTemplateType, template);
+    public StoredOneShotCallbackTransformationTemplate(
+            String provider,
+            String idPath,
+            TranslationTemplateType translationTemplateType,
+            byte[] template,
+            String dropDetectionRule) {
+        super(TransformationTemplateType.ONE_SHOT,
+              provider,
+              idPath,
+              translationTemplateType,
+              template,
+              dropDetectionRule);
     }
 
     @Override
