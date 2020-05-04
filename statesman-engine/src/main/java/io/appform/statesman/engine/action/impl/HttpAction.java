@@ -24,8 +24,11 @@ import okhttp3.Response;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Data
@@ -33,6 +36,7 @@ import java.util.Map;
 @ActionImplementation(name = "HTTP")
 public class HttpAction extends BaseAction<HttpActionTemplate> {
 
+    private static final String APPLICATION_JSON = "application/json";
     private HandleBarsService handleBarsService;
     private HttpClient client;
 
@@ -57,64 +61,76 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
     }
 
     @Override
-    public void execute(HttpActionTemplate actionTemplate, Workflow workflow) {
+    public JsonNode execute(HttpActionTemplate actionTemplate, Workflow workflow) {
+        String responseTranslator = actionTemplate.getResponseTranslator();
         HttpActionData httpActionData = transformPayload(workflow, actionTemplate);
         log.debug("Action call data: {}", httpActionData);
-        handle(httpActionData);
+        JsonNode httpResponse = handle(httpActionData);
+        if (httpResponse != null && !Strings.isNullOrEmpty(responseTranslator)) {
+            return toJsonNode(handleBarsService.transform(responseTranslator, httpResponse));
+        }
+        return null;
     }
 
-    private void handle(HttpActionData actionData) {
+    private JsonNode handle(HttpActionData actionData) {
+        Response httpResponse = null;
         try {
-            actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Void>() {
+            httpResponse = actionData.getMethod().visit(new HttpMethod.MethodTypeVisitor<Response>() {
                 private final Map<String, String> headers = actionData.getHeaders();
                 private final String url = actionData.getUrl();
 
                 @Override
-                public Void visitPost() throws Exception {
+                public Response visitPost() throws Exception {
                     log.info("HTTP_ACTION POST Call url:{}", url);
-                    Response response = null;
-                    try {
-                        val payload = actionData.getPayload();
-                        response = client.post(url, payload, headers);
-                        if (!response.isSuccessful()) {
-                            log.error("unable to do post action, actionData: {} Response: {}",
-                                      actionData, HttpUtil.body(response));
-                            throw new StatesmanError();
-                        }
-                        log.debug("HTTP Response: {}", HttpUtil.body(response));
-                        return null;
+                    val payload = actionData.getPayload();
+                    Response response = client.post(url, payload, headers);
+                    if (!response.isSuccessful()) {
+                        log.error("unable to do post action, actionData: {} Response: {}",
+                                actionData, HttpUtil.body(response));
+                        throw new StatesmanError();
                     }
-                    finally {
-                        if (null != response) {
-                            response.close();
-                        }
-                    }
+                    return response;
                 }
 
                 @Override
-                public Void visitGet() throws Exception {
+                public Response visitGet() throws Exception {
                     log.info("HTTP_ACTION GET Call url:{}", url);
                     Response response = null;
-                    try {
-                        response = client.get(url, headers);
-                        if (!response.isSuccessful()) {
-                            log.error("unable to do get action, actionData: {} Response: {}",
-                                      actionData, HttpUtil.body(response));
-                            throw new StatesmanError();
-                        }
-                        log.debug("HTTP Response: {}", HttpUtil.body(response));
-                        return null;
+                    response = client.get(url, headers);
+                    if (!response.isSuccessful()) {
+                        log.error("unable to do get action, actionData: {} Response: {}",
+                                actionData, HttpUtil.body(response));
+                        throw new StatesmanError();
                     }
-                    finally {
-                        if (null != response) {
-                            response.close();
-                        }
-                    }
+                    return response;
                 }
             });
-        }
-        catch (final Exception e) {
+            String responseBodyStr = HttpUtil.body(httpResponse);
+            log.debug("HTTP Response: {}", responseBodyStr);
+            List<String> contentType = Arrays.stream(
+                                                httpResponse.header("Content-Type",APPLICATION_JSON)
+                                                .split(";"))
+                                                .collect(Collectors.toList());
+            if (contentType.stream()
+                    .anyMatch(value -> value.equalsIgnoreCase(APPLICATION_JSON))) {
+                return toJsonNode(responseBodyStr);
+            }
+            return null;
+        } catch (final Exception e) {
             throw StatesmanError.propagate(e);
+        } finally {
+            if (null != httpResponse) {
+                httpResponse.close();
+            }
+        }
+    }
+
+    private JsonNode toJsonNode(String responseBodyStr) {
+        try {
+            return mapper.readTree(responseBodyStr);
+        } catch (Exception e) {
+            log.error("Error while converting to json:" + responseBodyStr, e);
+            return null;
         }
     }
 

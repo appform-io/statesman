@@ -1,5 +1,6 @@
 package io.appform.statesman.engine.action;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.rholder.retry.*;
 import io.appform.statesman.engine.Constants;
@@ -26,33 +27,32 @@ public abstract class BaseAction<T extends ActionTemplate> implements Action<T> 
     private static final String SUCCESS = "SUCCESS";
     private final EventPublisher publisher;
     protected final ObjectMapper mapper;
-    private final Retryer<Void> retryer;
+    private final Retryer<JsonNode> retryer;
 
     public BaseAction(EventPublisher publisher, ObjectMapper mapper) {
         this.publisher = publisher;
         this.mapper = mapper;
-        retryer = RetryerBuilder.<Void>newBuilder()
+        retryer = RetryerBuilder.<JsonNode>newBuilder()
                 .retryIfException()
                 .withWaitStrategy(WaitStrategies.exponentialWait(100, 5, TimeUnit.SECONDS))
                 .withStopStrategy(StopStrategies.stopAfterAttempt(5))
                 .build();
     }
 
-    protected abstract void execute(T actionTemplate, Workflow workflow);
+    protected abstract JsonNode execute(T actionTemplate, Workflow workflow);
 
     @Override
-    public void apply(T actionTemplate, Workflow workflow) {
+    public JsonNode apply(T actionTemplate, Workflow workflow) {
         String status = SUCCESS;
+        JsonNode response = null;
         try {
-            retryer.call(() -> {
-                execute(actionTemplate, workflow);
-                return null;
-            });
+            response = retryer.call(() -> execute(actionTemplate, workflow));
         } catch (Exception e) {
             status = FAILED;
             log.error("Error while executing action", e);
         }
         publish(actionExecutedEvent(actionTemplate, workflow, status));
+        return response;
     }
 
 

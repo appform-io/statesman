@@ -22,17 +22,27 @@ public class HttpActionTemplate extends ActionTemplate {
 
     private String headers;
 
+    private String responseTranslator;
+
     public HttpActionTemplate() {
         super(ActionType.HTTP);
     }
 
     @Builder
-    public HttpActionTemplate(String templateId, String name, boolean active, String method, String url, String payload, String headers) {
+    public HttpActionTemplate(String templateId,
+                              String name,
+                              boolean active,
+                              String method,
+                              String url,
+                              String payload,
+                              String headers,
+                              String responseTranslator) {
         super(ActionType.HTTP, templateId, name, active);
         this.method = method;
         this.url = url;
         this.payload = payload;
         this.headers = headers;
+        this.responseTranslator = responseTranslator;
     }
 
     @Override

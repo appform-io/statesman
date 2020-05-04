@@ -1,6 +1,8 @@
 package io.appform.statesman.engine.action.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.name.Named;
 import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.action.BaseAction;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import java.util.Objects;
 
 
 @Slf4j
@@ -40,8 +43,13 @@ public class CompoundAction extends BaseAction<CompoundActionTemplate> {
     }
 
     @Override
-    public void execute(CompoundActionTemplate compoundActionTemplate, Workflow workflow) {
-        compoundActionTemplate.getActionTemplates().forEach(actionTemplate -> actionExecutor.get().execute(actionTemplate, workflow));
+    public JsonNode execute(CompoundActionTemplate compoundActionTemplate, Workflow workflow) {
+        ObjectNode response = mapper.createObjectNode();
+        compoundActionTemplate.getActionTemplates().stream()
+                .map(actionTemplate -> actionExecutor.get().execute(actionTemplate, workflow))
+                .filter(Objects::nonNull)
+                .forEach(actionResponse -> response.setAll((ObjectNode) actionResponse));
+        return response;
     }
 
 }

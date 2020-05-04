@@ -1,5 +1,6 @@
 package io.appform.statesman.engine.action;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.appform.statesman.engine.ActionTemplateStore;
@@ -23,14 +24,16 @@ public class ActionExecutor {
         this.actionTemplateStore = actionTemplateStore;
     }
 
-    public void execute(String actionId, Workflow workflow) {
-        actionTemplateStore.get().get(actionId)
-                .ifPresent(actionTemplate -> execute(workflow, actionTemplate));
+    public JsonNode execute(String actionId, Workflow workflow) {
+        return actionTemplateStore.get().get(actionId)
+                .map(actionTemplate -> execute(workflow, actionTemplate))
+                .orElse(null);
     }
 
-    private void execute(Workflow workflow, ActionTemplate actionTemplate) {
-        actionRegistry.get().get(actionTemplate.getType().name())
-                .ifPresent(action -> action.apply(actionTemplate, workflow));
+    private JsonNode execute(Workflow workflow, ActionTemplate actionTemplate) {
+        return actionRegistry.get().get(actionTemplate.getType().name())
+                .map(action -> action.apply(actionTemplate, workflow))
+                .orElse(null);
     }
 
 }
