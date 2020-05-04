@@ -21,21 +21,12 @@ public class HopeRuleDroppedCallDetectorTest {
                                            "  \"type\": \"kaleyra\",\n" +
                                            "  \"wfSource\": \"ivr\",\n" +
                                            "  \"state\": \"madhyapradesh\",\n" +
-                                           "  \"phone\": \"9986032019\",\n" +
-                                           "  \"calledNumber\": \"8024480215\",\n" +
-                                           "  \"dialledNumber\": \"\",\n" +
-                                           "  \"billSecs\": \"0\",\n" +
-                                           "  \"language\": \"english\",\n" +
-                                           "  \"covidTest\": true,\n" +
-                                           "  \"requestType\": \"covid\",\n" +
-                                           "  \"hasSymptoms\": false,\n" +
-                                           "  \"contact\": true,\n" +
-                                           "  \"Q1\": 2,\n" +
-                                           "  \"Q2\": 1,\n" +
+                                           "  \"status\": \"\",\n" +
+                                           "  \"Q1\": -1,\n" +
+                                           "  \"Q2\": 2,\n" +
                                            "  \"Q3\": -1,\n" +
                                            "  \"Q4\": -1,\n" +
                                            "  \"callStartTime\": 1577604660000,\n" +
-                                           "  \"status\": \"\",\n" +
                                            "  \"callDropped\": false,\n" +
                                            "  \"providerCallbackId\": \"13630329385ea92d2cb1e2\",\n" +
                                            "  \"callDuration\": 28000,\n" +
@@ -44,7 +35,7 @@ public class HopeRuleDroppedCallDetectorTest {
         val detector = new HopeRuleDroppedCallDetector();
         Assert.assertTrue(detector.detectDroppedCall(
                 OneShotTransformationTemplate.builder()
-                        .dropDetectionRule("\"$.Q4\" < 0")
+                        .dropDetectionRule("((\"$.Q2\" == 1) && (\"$.Q4\" < 0)) || ((\"$.Q2\" != 1 ) && (\"$.status\" != \"answer\"))")
                         .build(),
                 node));
         Assert.assertFalse(detector.detectDroppedCall(
