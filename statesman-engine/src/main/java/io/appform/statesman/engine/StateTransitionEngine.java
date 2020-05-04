@@ -115,7 +115,7 @@ public class StateTransitionEngine {
                 .orElse(defaultTransition(transitions, alreadyVisited));
         if (null == selectedTransition) {
             log.debug("No matching transition for: {} for update: {}", workflowId, dataUpdate);
-            if(null != defaultAction) {
+            if (null != defaultAction) {
                 log.debug("Applying default action of type: {}", defaultAction.getType().name());
                 dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
                 workflowProvider.get().updateWorkflow(workflow);
@@ -136,24 +136,26 @@ public class StateTransitionEngine {
     private String applyAction(Workflow workflow, DataObject dataObject, StateTransition selectedTransition) {
         String workflowId = workflow.getId();
         val action = selectedTransition.getAction();
-        if(!Strings.isNullOrEmpty(action)) {
+        if (!Strings.isNullOrEmpty(action)) {
             JsonNode actionResponse = null;
-            boolean success = false;
             try {
                 actionResponse = actionExecutor.get()
                         .execute(action, workflow)
                         .orElse(null);
-                success = true;
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 log.error("Error executing action " + action + " for wfid: " + workflowId, e);
             }
-            val data = mapper.createObjectNode()
-                    .set("actionResponse",
-                         mapper.createObjectNode()
-                                 .put("actionId", action)
-                                 .put("success", success)
-                                 .set("response", actionResponse));
-            dataObject.setData(dataActionExecutor.apply(dataObject, new DataUpdate(workflowId, data, new MergeDataAction())));
+            if (null == actionResponse || actionResponse.isNull() || actionResponse.isMissingNode() || !actionResponse.isObject()) {
+                log.warn("Empty/Non object action response for action {} for workflow {}",
+                         action, workflowId);
+            }
+            else {
+                dataObject.setData(dataActionExecutor.apply(
+                        dataObject, new DataUpdate(workflowId, actionResponse, new MergeDataAction())));
+            }
+
+
         }
         return action;
     }
