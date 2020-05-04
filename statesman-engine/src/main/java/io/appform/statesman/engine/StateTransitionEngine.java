@@ -1,5 +1,6 @@
 package io.appform.statesman.engine;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -136,20 +137,23 @@ public class StateTransitionEngine {
         String workflowId = workflow.getId();
         val action = selectedTransition.getAction();
         if(!Strings.isNullOrEmpty(action)) {
-            val actionResponse = actionExecutor.get()
-                    .execute(action, workflow)
-                    .orElse(null);
-            if(null == actionResponse || actionResponse.isNull() || actionResponse.isMissingNode()) {
-                log.debug("No response for action: {} for transition {} of workflow: {}",
-                          action, selectedTransition.getId(), workflowId);
+            JsonNode actionResponse = null;
+            boolean success = false;
+            try {
+                actionResponse = actionExecutor.get()
+                        .execute(action, workflow)
+                        .orElse(null);
+                success = true;
+            } catch (Exception e) {
+                log.error("Error executing action " + action + " for wfid: " + workflowId, e);
             }
-            else {
-                val data = mapper.createObjectNode()
-                        .set("actionResponse",
-                             mapper.createObjectNode()
-                                .set(action, actionResponse));
-                dataObject.setData(dataActionExecutor.apply(dataObject, new DataUpdate(workflowId, data, new MergeDataAction())));
-            }
+            val data = mapper.createObjectNode()
+                    .set("actionResponse",
+                         mapper.createObjectNode()
+                                 .put("actionId", action)
+                                 .put("success", success)
+                                 .set("response", actionResponse));
+            dataObject.setData(dataActionExecutor.apply(dataObject, new DataUpdate(workflowId, data, new MergeDataAction())));
         }
         return action;
     }

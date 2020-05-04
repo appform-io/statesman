@@ -1,5 +1,6 @@
 package io.appform.statesman.engine;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -197,8 +198,9 @@ public class StateTransitionEngineTest {
         val data = dataObject.getData();
         Assert.assertFalse(data.isNull());
         Assert.assertTrue(data.hasNonNull("actionResponse"));
-        Assert.assertTrue(data.get("actionResponse").hasNonNull("TEST_ACTION"));
-        Assert.assertTrue(data.get("actionResponse").get("TEST_ACTION").has("message"));
-        Assert.assertEquals("Test", data.get("actionResponse").get("TEST_ACTION").get("message").asText());
+        final JsonNode actionResponse = data.get("actionResponse");
+        Assert.assertEquals("TEST_ACTION", actionResponse.get("actionId").asText());
+        Assert.assertTrue(actionResponse.get("success").asBoolean());
+        Assert.assertEquals("Test", actionResponse.get("response").get("message").asText());
     }
 }
