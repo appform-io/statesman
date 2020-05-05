@@ -238,8 +238,8 @@ def create_recon_payload_from_ticket_details(ticket_details, worklow_id):
     cf = ticket_details['custom_fields'] if ticket_details.has_key('custom_fields') else {}
     return create_recon_payload(id=get_or_default(ticket_details, "id", ""),
                                 url=get_or_default(ticket_details, "url", ""),
-                                tags=get_or_default(ticket_details, "tags", []),
-                                group_name=get_or_default(ticket_details, "group_id", ""),
+                                tags=','.join(get_or_default(ticket_details, "tags", [])),
+                                group_name=str(get_or_default(ticket_details, "group_id", "")),
                                 agent_email=get_or_default(ticket_details, "agent_email", ""),
                                 agent_name=get_or_default(ticket_details, "agent_name", ""),
                                 status=statusString(get_or_default(ticket_details, "status", 4)),
@@ -362,7 +362,7 @@ def statesman_db_based_recon():
                     payload = create_recon_payload_from_ticket_details(ticket_details,workflow_id)
                     recon_workflow(payload)
         except Exception, e:
-            print("Error for row:" + '|'.join(map(str, row)) + " Error" + str(e))
+            print("Error for row:" + ','.join(row) + " Error" + str(e))
 
 
 # delete_match(FILE_PATH_PREFIX + "*")
