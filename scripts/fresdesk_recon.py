@@ -28,7 +28,7 @@ PASSWORD = ''
 DATABASE = 'statesman_db_'
 SHARDS = 16
 
-PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_NEEDED_MENTAL_HEALTH') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) and workflow_id = '17004429755eb106bbac06' """
+PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_NEEDED_MENTAL_HEALTH') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
 
 
 ############ DATE HELPER ###########
