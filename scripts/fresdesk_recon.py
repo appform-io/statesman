@@ -1,3 +1,4 @@
+import MySQLdb
 import csv
 import datetime
 import glob
@@ -15,10 +16,19 @@ STATESMAN_WORKFLOW_GET_URL = "http://127.0.0.1:8080/v1/housekeeping/debug/workfl
 STATESMAN_RECON_URL = "https://127.0.0.1/callbacks/FRESHDESK"
 FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
 FRESHDESK_TICKETS_FILE_URL = "https://127.0.0.1/reports/scheduled_exports/4830771586540088/download_file.json"
+FRESHDESK_TICKET_URL = "https://127.0.0.1/api/v2/tickets/{}"
 HEADERS = {
     "Content-Type": "application/json",
-    "Authorization": "Basic =="
+    "Authorization": "Basic "
 }
+
+HOST = '127.0.0.1'
+USER = 'root'
+PASSWORD = ''
+DATABASE = 'statesman_db_'
+SHARDS = 16
+
+PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_NEEDED_MENTAL_HEALTH') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) and workflow_id = '17004429755eb106bbac06' """
 
 
 ############ DATE HELPER ###########
@@ -35,7 +45,38 @@ def str_current_time():
     return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
 
+#######################  MYSQL HELPER ##########################
+
+def connection(database):
+    db = MySQLdb.connect(HOST, USER, PASSWORD, database)
+    return db
+
+
+def execute_query(sql):
+    result = []
+    for i in range(SHARDS):
+        mainDb = connection(DATABASE + str(i))  # getting connection
+        cursor = mainDb.cursor(MySQLdb.cursors.SSCursor)  # fetch data in bactch not all at once
+        # executing Query
+        cursor.execute(sql)
+        for row in cursor:
+            result.append(row)
+        print("INFO COMPLETED SHARD: " + str(i))
+        mainDb.commit()
+        cursor.close()
+        mainDb.close()
+    return result
+
+
 ############ FRESHDESK HELPER ##########
+
+def fetch_freshdesk_ticket(ticket_id):
+    response = requests.get(url=FRESHDESK_TICKET_URL.format(ticket_id), headers=HEADERS)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
 
 def fetch_next_freshdesk_tickets(page, from_str_time):
     response = requests.get(url=FRESHDESK_URL.format(page, urllib.quote(from_str_time)), headers=HEADERS)
@@ -107,6 +148,7 @@ def recon_workflow(payload):
     try:
         print(json.dumps(payload))
         response = requests.post(url=STATESMAN_RECON_URL, data=json.dumps(payload), headers=HEADERS)
+        print(response.text)
         if response.status_code == 200:
             return response.json()
         else:
@@ -123,8 +165,13 @@ def create_recon_payload(patient_language,
                          patient_name,
                          patient_number,
                          patient_gender,
+                         patient_pincode,
+                         fsm_service_location,
+                         fsm_appointment_end_time,
+                         fsm_appointment_start_time,
                          foreign_travel_history,
                          contact,
+                         category,
                          agent_email,
                          state,
                          group_name,
@@ -144,8 +191,13 @@ def create_recon_payload(patient_language,
             "ticket_cf_patient_name": patient_name,
             "ticket_cf_fsm_phone_number": patient_number,
             "ticket_cf_patient_gender": patient_gender,
+            "ticket_cf_pin_code": patient_pincode,
+            "ticket_cf_fsm_service_location": fsm_service_location,
+            "ticket_cf_fsm_appointment_end_time": fsm_appointment_end_time,
+            "ticket_cf_fsm_appointment_start_time": fsm_appointment_start_time,
             "ticket_cf_foreign_travel_history": foreign_travel_history,
             "ticket_cf_contact": contact,
+            "ticket_cf_category": category,
             "ticket_agent_email": agent_email,
             "ticket_cf_state": state,
             "ticket_group_name": group_name,
@@ -161,9 +213,53 @@ def create_recon_payload(patient_language,
     return paylaod
 
 
-def recon_required(workflow):
+def recon_required_based_on_workflow(workflow):
     return workflow.has_key("dataObject") and workflow["dataObject"].has_key("currentState") and \
            workflow["dataObject"]["currentState"]["name"] == "CALL_NEEDED"
+
+
+def recon_required_based_on_ticket_details(ticket_details):
+    return get_or_default(ticket_details, "status", 0) >= 4
+
+
+def statusString(status):
+    if(status == 2):
+        return "open"
+    elif(status == 3):
+        return "pending"
+    elif(status == 4):
+        return "resolved"
+    elif(status == 5):
+        return "closed"
+    else:
+        return ""
+
+def create_recon_payload_from_ticket_details(ticket_details, worklow_id):
+    cf = ticket_details['custom_fields'] if ticket_details.has_key('custom_fields') else {}
+    return create_recon_payload(id=get_or_default(ticket_details, "id", ""),
+                                url=get_or_default(ticket_details, "url", ""),
+                                tags=get_or_default(ticket_details, "tags", []),
+                                group_name=get_or_default(ticket_details, "group_id", ""),
+                                agent_email=get_or_default(ticket_details, "agent_email", ""),
+                                agent_name=get_or_default(ticket_details, "agent_name", ""),
+                                status=statusString(get_or_default(ticket_details, "status", 4)),
+                                ticket_type=get_or_default(ticket_details, "type", ""),
+                                patient_language=get_or_default(cf, "cf_patient_language", ""),
+                                contact_name=get_or_default(cf, "cf_fsm_contact_name", ""),
+                                patient_age=get_or_default(cf, "cf_patient_age", ""),
+                                patient_name=get_or_default(cf, "cf_patient_name", ""),
+                                patient_number=get_or_default(cf, "cf_fsm_phone_number", ""),
+                                patient_gender=get_or_default(cf, "cf_patient_gender", ""),
+                                patient_pincode=get_or_default(cf, "cf_pin_code", ""),
+                                state=get_or_default(cf, "cf_state", ""),
+                                fsm_service_location=get_or_default(cf, "cf_fsm_service_location", ""),
+                                fsm_appointment_end_time=get_or_default(cf, "cf_fsm_appointment_end_time", ""),
+                                fsm_appointment_start_time=get_or_default(cf, "cf_fsm_appointment_start_time", ""),
+                                foreign_travel_history=get_or_default(cf, "cf_foreign_travel_history", ""),
+                                contact=get_or_default(cf, "cf_contact", ""),
+                                category=get_or_default(cf, "cf_category", ""),
+                                doctor_notes=get_or_default(cf, "cf_doctor_notes", ""),
+                                fsm_customer_signature=worklow_id)
 
 
 ############ COMMON UTILS #############
@@ -203,7 +299,7 @@ def api_based_recon():
                 "cf_fsm_customer_signature") and resolved_ticket["custom_fields"][
             "cf_fsm_customer_signature"] != ''):
             workflow = get_workflow(resolved_ticket["custom_fields"]["cf_fsm_customer_signature"])
-            recon_required(workflow)
+            recon_required_based_on_workflow(workflow)
 
 
 ############ FILE BASED RECON ###########
@@ -216,8 +312,13 @@ def create_recon_payload_from_csv_line(row):
                                 patient_name=get_or_default(row, "Patient Name", ""),
                                 patient_number=get_or_default(row, "Phone number", ""),
                                 patient_gender=get_or_default(row, "Patient Gender", ""),
+                                patient_pincode=get_or_default(row, "Patient Pincode", ""),
+                                fsm_service_location=get_or_default(row, "fsm_service_location", ""),
+                                fsm_appointment_end_time=get_or_default(row, "fsm_appointment_end_time", ""),
+                                fsm_appointment_start_time=get_or_default(row, "fsm_appointment_start_time", ""),
                                 foreign_travel_history=get_or_default(row, "Foreign Travel History", ""),
                                 contact=get_or_default(row, "Contact", ""),
+                                category=get_or_default(row, "Category", ""),
                                 agent_email=get_or_default(row, "Agent Email", ""),
                                 state=get_or_default(row, "State", ""),
                                 group_name=get_or_default(row, "Group", ""),
@@ -237,10 +338,34 @@ def file_based_recon():
         for row in input_file:
             if (row.has_key("Customer's signature") and (row['Status'] == 'Resolved' or row['Status'] == 'Closed')):
                 workflow = get_workflow(row["Customer's signature"])
-                if (recon_required(workflow)):
+                if (recon_required_based_on_workflow(workflow)):
                     payload = create_recon_payload_from_csv_line(row)
                     recon_workflow(payload)
 
 
-delete_match(FILE_PATH_PREFIX + "*")
-file_based_recon()
+############ STATESMAN DB BASED RECON ###########
+
+
+
+def statesman_db_based_recon():
+    result = execute_query(PENDING_WORKFLOW_SQL)
+    for row in result:
+        try:
+            workflow_id = row[0]
+            workflow_data = json.loads(row[1])
+            if (workflow_data.has_key('data') and workflow_data['data'].has_key('freshDeskActionCall') and
+                    workflow_data['data']['freshDeskActionCall'].has_key('ticketId')):
+                ticket_id = workflow_data['data']['freshDeskActionCall']['ticketId']
+                print(workflow_id + "," + ticket_id)
+                ticket_details = fetch_freshdesk_ticket(ticket_id)
+                if(recon_required_based_on_ticket_details(ticket_details)):
+                    payload = create_recon_payload_from_ticket_details(ticket_details,workflow_id)
+                    recon_workflow(payload)
+        except Exception, e:
+            print("Error for row:" + '|'.join(map(str, row)) + " Error" + str(e))
+
+
+# delete_match(FILE_PATH_PREFIX + "*")
+# file_based_recon()
+
+statesman_db_based_recon()
