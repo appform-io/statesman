@@ -84,3 +84,9 @@ eventPublisherConfig:
   batchSize: 50
   queuePath: /tmp/statesman
 
+ivrDropDetection:
+  enabled: true
+  detectionPatterns:
+    ozonetel_punjab:
+      - "payload.*"
+
