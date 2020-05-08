@@ -21,7 +21,7 @@ public class HopeRuleDroppedCallDetectorTest {
                                            "  \"type\": \"kaleyra\",\n" +
                                            "  \"wfSource\": \"ivr\",\n" +
                                            "  \"state\": \"madhyapradesh\",\n" +
-                                           "  \"status\": \"\",\n" +
+                                           "  \"status\": \"1\",\n" +
                                            "  \"Q1\": -1,\n" +
                                            "  \"Q2\": 2,\n" +
                                            "  \"Q3\": -1,\n" +
@@ -35,7 +35,7 @@ public class HopeRuleDroppedCallDetectorTest {
         val detector = new HopeRuleDroppedCallDetector();
         Assert.assertTrue(detector.detectDroppedCall(
                 OneShotTransformationTemplate.builder()
-                        .dropDetectionRule("((\"$.Q2\" == 1) && (\"$.Q4\" < 0)) || ((\"$.Q2\" != 1 ) && (\"$.status\" != \"answer\"))")
+                        .dropDetectionRule("str.match(\"^$\", \"$.status\") == false")
                         .build(),
                 node));
         Assert.assertFalse(detector.detectDroppedCall(
