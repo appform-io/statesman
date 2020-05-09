@@ -26,6 +26,12 @@
             <groupId>io.appform.hope</groupId>
             <artifactId>hope-lang</artifactId>
             <version>${hope.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

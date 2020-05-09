@@ -1,11 +1,13 @@
 package io.appform.statesman.engine.action.impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.base.Strings;
 import com.google.inject.name.Named;
 import io.appform.statesman.engine.ProviderSelector;
-import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.action.BaseAction;
+import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.model.ActionImplementation;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.action.ActionType;
@@ -48,12 +50,13 @@ public class RoutedAction extends BaseAction<RoutedActionTemplate> {
 
 
     @Override
-    public void execute(RoutedActionTemplate routedActionTemplate, Workflow workflow) {
+    public JsonNode execute(RoutedActionTemplate routedActionTemplate, Workflow workflow) {
         String provider = providerSelector.provider(routedActionTemplate.getUseCase(), routedActionTemplate.getProviderTemplates().keySet(), workflow);
         if (Strings.isNullOrEmpty(provider)) {
             throw new StatesmanError("No provider found for action:" + routedActionTemplate.getTemplateId(),
                     ResponseCode.NO_PROVIDER_FOUND);
         }
-        actionExecutor.get().execute(routedActionTemplate.getProviderTemplates().get(provider), workflow);
+        return actionExecutor.get().execute(routedActionTemplate.getProviderTemplates().get(provider), workflow)
+                .orElse(NullNode.getInstance());
     }
 }

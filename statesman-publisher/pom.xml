@@ -18,6 +18,10 @@
         </repository>
     </repositories>
 
+	<properties>
+		<function-metrics.version>1.0.6</function-metrics.version>
+	</properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -64,7 +68,7 @@
         <dependency>
             <groupId>io.appform.functionmetrics</groupId>
             <artifactId>function-metrics</artifactId>
-            <version>1.0.1</version>
+            <version>${function-metrics.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

@@ -9,12 +9,13 @@ import io.appform.statesman.engine.ActionTemplateStore;
 import io.appform.statesman.engine.ProviderSelector;
 import io.appform.statesman.engine.TransitionStore;
 import io.appform.statesman.engine.WorkflowProvider;
+import io.appform.statesman.engine.action.ActionExecutor;
+import io.appform.statesman.engine.action.ActionExecutorImpl;
 import io.appform.statesman.engine.action.ActionRegistry;
 import io.appform.statesman.engine.action.MapBasedActionRegistry;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.engine.observer.ObservableEventBusSubscriber;
 import io.appform.statesman.engine.observer.ObservableGuavaEventBus;
-import io.appform.statesman.engine.observer.observers.ActionInvoker;
 import io.appform.statesman.engine.observer.observers.FoxtrotEventSender;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.exception.StatesmanError;
@@ -47,9 +48,7 @@ public class StatesmanModule extends AbstractModule {
         bind(ProviderSelector.class).to(ProviderSelectorImpl.class);
         bind(ObservableEventBus.class).to(ObservableGuavaEventBus.class);
         bind(DroppedCallDetector.class).to(HopeRuleDroppedCallDetector.class);
-        bind(ObservableEventBusSubscriber.class)
-                .annotatedWith(Names.named("actionHandler"))
-                .to(ActionInvoker.class);
+        bind(ActionExecutor.class).to(ActionExecutorImpl.class);
         bind(ObservableEventBusSubscriber.class)
                 .annotatedWith(Names.named("foxtrotEventSender"))
                 .to(FoxtrotEventSender.class);

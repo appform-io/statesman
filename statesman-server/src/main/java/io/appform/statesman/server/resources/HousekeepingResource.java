@@ -74,7 +74,7 @@ public class HousekeepingResource {
     @GET
     @Timed
     @Path("/debug/workflow/{workflowId}")
-    @ApiOperation("Workflow")
+    @ApiOperation("Workflow debug")
     public Response getWorkflow(@PathParam("workflowId") String workflowId) {
 
         return Response.ok()
@@ -85,11 +85,11 @@ public class HousekeepingResource {
     @POST
     @Timed
     @Path("/trigger/action/{actionId}")
-    @ApiOperation("trigger Action")
+    @ApiOperation("Trigger Action")
     public Response triggerAction(@PathParam("actionId") String actionId,
                                   @Valid Workflow workflow) {
-        actionExecutor.get().execute(actionId, workflow);
         return Response.ok()
+                .entity(actionExecutor.get().execute(actionId, workflow))
                 .build();
     }
 
@@ -140,7 +140,7 @@ public class HousekeepingResource {
     @POST
     @Timed
     @Path("/ingress/translate/{translatorId}")
-    @ApiOperation("trigger Action")
+    @ApiOperation("Test ingress translator")
     public Response translateIngressPayload(@PathParam("translatorId") String translatorId,
                                      @Valid IngressCallback ingressCallback) throws Exception {
         return Response.ok()
@@ -174,7 +174,7 @@ public class HousekeepingResource {
     @POST
     @Timed
     @Path("/trigger/workflow/{workflowId}")
-    @ApiOperation("trigger workflow")
+    @ApiOperation("Trigger workflow")
     public Response triggerWorkflow(@PathParam("workflowId") String workflowId,
                                     @Valid JsonNode update) {
         Workflow wf = workflowProvider.get().getWorkflow(workflowId).orElse(null);
