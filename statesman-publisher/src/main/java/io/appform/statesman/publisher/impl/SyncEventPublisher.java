@@ -30,6 +30,7 @@ public class SyncEventPublisher implements EventPublisher {
     private final String endpoint;
     private final HttpClient client;
     private final ObjectMapper mapper;
+    private final boolean disabled;
 
     /**
      * Constructor
@@ -45,6 +46,7 @@ public class SyncEventPublisher implements EventPublisher {
                 ));
         this.endpoint = config.getEndpoint();
         this.mapper = mapper;
+        this.disabled = config.disabled;
     }
 
     @Override
@@ -74,6 +76,10 @@ public class SyncEventPublisher implements EventPublisher {
 
     //ingest via http
     private void ingest(final String topic, final List<Event> events) {
+        if(disabled) {
+            log.debug("Event ingestion disabled");
+            return;
+        }
         final KMessage message = convertToKMessage(events);
         final String url = String.format("%s/%s", this.endpoint, topic);
         log.trace("[KafkaPublisher] url: {}", url);

@@ -5,7 +5,6 @@ import io.appform.statesman.publisher.model.PublisherType;
 import lombok.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
 /**
  * @author shashank.g
@@ -18,7 +17,8 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class EventPublisherConfig {
 
-    @NotNull
+    boolean disabled;
+
     @Valid
     private HttpClientConfiguration httpClientConfiguration;
 
