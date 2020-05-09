@@ -3,6 +3,7 @@ package io.appform.statesman.engine.handlebars;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
+import com.google.common.base.Strings;
 import io.dropwizard.jackson.Jackson;
 import lombok.SneakyThrows;
 import lombok.val;
@@ -503,6 +504,33 @@ public class HandleBarsServiceTest {
                                               mapper.createObjectNode().set("value[xx]", mapper.createArrayNode().add("1"))));
 
 
+    }
+
+    @Test
+    @SneakyThrows
+    public void testParseHTML2Text() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+
+        final String value = hb.transform("{{html2Text value}}",
+                                          mapper.createObjectNode()
+                                                  .put("value",
+                                                       "<div style=\\\"font-family:-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif; font-size:14px\\\">\\n<div> </div>\\n<table border=\\\"0\\\" cellpadding=\\\"0\\\" cellspacing=\\\"0\\\" style=\\\"border-collapse:collapse;width:986.27pt\\\" width=\\\"1315\\\"><tbody><tr><td class=\\\"et2\\\" style=\\\"color:#000000;font-size:15px;font-weight:400;font-style:normal;text-decoration:none;font-family:Calibri;border:none;text-align:general;vertical-align:bottom;height:14.25pt;width:986.55pt\\\" width=\\\"100%\\\">Citizen called to request for medicines. Have informed them to call number 104 and press 2 </td></tr></tbody></table>\\n</div>"));
+        Assert.assertEquals("Citizen called to request for medicines. Have informed them to call number 104 and press 2", value);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testLocalTime() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+
+        final String value = hb.transform("{{{localTime 'Asia/Kolkata'}}}",
+                                          mapper.createObjectNode());
+        System.out.println(value);
+        Assert.assertFalse(Strings.isNullOrEmpty(value));
     }
 
 }

@@ -14,11 +14,14 @@ import io.appform.statesman.model.exception.StatesmanError;
 import io.dropwizard.jackson.Jackson;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.jsoup.Jsoup;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -75,6 +78,8 @@ public class HandleBarsHelperRegistry {
         registerNotEmpty();
         registerParseToInt();
         registerParseToIntPtr();
+        registerHTML2Text();
+        registerLocalTime();
     }
 
     private Object compareGte(int lhs) {
@@ -220,37 +225,37 @@ public class HandleBarsHelperRegistry {
 
             @Override
             public Object apply(String dateFormat, Options options) throws IOException {
-                if(null == options.params || options.params.length < 1) {
+                if (null == options.params || options.params.length < 1) {
                     return 0;
                 }
                 SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
                 val fromData = options.param(0);
                 Date fromDate = null;
-                if(fromData instanceof String) {
+                if (fromData instanceof String) {
                     try {
-                        fromDate = sdf.parse((String)fromData);
+                        fromDate = sdf.parse((String) fromData);
                     }
                     catch (ParseException e) {
                         log.error("Error parsing from date: " + fromData, e);
                     }
                 }
-                if(null == fromDate) {
+                if (null == fromDate) {
                     log.error("From date could not be extracted from {}", fromData);
                     return 0;
                 }
                 Date toDate = null;
-                if(options.params.length > 1) {
+                if (options.params.length > 1) {
                     val toData = options.param(1);
-                    if(toData instanceof String) {
+                    if (toData instanceof String) {
                         try {
-                            toDate = sdf.parse((String)toData);
+                            toDate = sdf.parse((String) toData);
                         }
                         catch (ParseException e) {
                             log.error("Error parsing to date: " + toData, e);
                         }
                     }
                 }
-                if(null == toDate) {
+                if (null == toDate) {
                     toDate = new Date();
                 }
                 return toDate.getTime() - fromDate.getTime();
@@ -280,7 +285,7 @@ public class HandleBarsHelperRegistry {
 
     private void registerStrNormalizeInitCap() {
         handlebars.registerHelper("normalize_init_cap",
-                (Helper<String>) (value, options) -> StringUtils.normalizeInitCap(value));
+                                  (Helper<String>) (value, options) -> StringUtils.normalizeInitCap(value));
     }
 
     private void registerDateFormat() {
@@ -306,7 +311,7 @@ public class HandleBarsHelperRegistry {
     private void registerToEpoch() {
         handlebars.registerHelper("toEpochTime", (Helper<String>) (context, options) -> {
             try {
-                if(null == options.params || options.params.length == 0) {
+                if (null == options.params || options.params.length == 0) {
                     return 0L;
                 }
                 if (null != context) {
@@ -664,13 +669,15 @@ public class HandleBarsHelperRegistry {
                 return null;
             }
             final String numericString = numericStr(context);
-            if(Strings.isNullOrEmpty(numericString)) {
+            if (Strings.isNullOrEmpty(numericString)) {
                 return null;
             }
-            if(numericString.length() == 10) {
+            if (numericString.length() == 10) {
                 return numericString;
             }
-            return numericString.length() > 10 ? numericString.substring(numericString.length() - 10) : null;
+            return numericString.length() > 10
+                   ? numericString.substring(numericString.length() - 10)
+                   : null;
         });
     }
 
@@ -678,16 +685,18 @@ public class HandleBarsHelperRegistry {
         handlebars.registerHelper("empty", new Helper<JsonNode>() {
             @Override
             public Object apply(JsonNode context, Options options) throws IOException {
-                if(context.isNull() || context.isMissingNode()) {
+                if (context.isNull() || context.isMissingNode()) {
                     return true;
                 }
-                if(context.size() == 0) {
+                if (context.size() == 0) {
                     return true;
                 }
 
-                if(context.isArray()) {
-                    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(context.elements(), Spliterator.ORDERED), false)
-                        .allMatch(node -> node.isNull() || node.isMissingNode() || (node.isTextual() && Strings.isNullOrEmpty(node.asText())));
+                if (context.isArray()) {
+                    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(context.elements(),
+                                                                                    Spliterator.ORDERED), false)
+                            .allMatch(node -> node.isNull() || node.isMissingNode() || (node.isTextual() && Strings.isNullOrEmpty(
+                                    node.asText())));
                 }
                 return false;
             }
@@ -698,16 +707,18 @@ public class HandleBarsHelperRegistry {
         handlebars.registerHelper("notEmpty", new Helper<JsonNode>() {
             @Override
             public Object apply(JsonNode context, Options options) throws IOException {
-                if(context.isNull() || context.isMissingNode()) {
+                if (context.isNull() || context.isMissingNode()) {
                     return false;
                 }
-                if(context.size() == 0) {
+                if (context.size() == 0) {
                     return false;
                 }
 
-                if(context.isArray()) {
-                    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(context.elements(), Spliterator.ORDERED), false)
-                        .noneMatch(node -> node.isNull() || node.isMissingNode() || (node.isTextual() && Strings.isNullOrEmpty(node.asText())));
+                if (context.isArray()) {
+                    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(context.elements(),
+                                                                                    Spliterator.ORDERED), false)
+                            .noneMatch(node -> node.isNull() || node.isMissingNode() || (node.isTextual() && Strings.isNullOrEmpty(
+                                    node.asText())));
                 }
                 return true;
             }
@@ -718,10 +729,11 @@ public class HandleBarsHelperRegistry {
         handlebars.registerHelper("toInt", new Helper<String>() {
             @Override
             public Object apply(String context, Options options) throws IOException {
-                if(!Strings.isNullOrEmpty(context)) {
+                if (!Strings.isNullOrEmpty(context)) {
                     try {
                         return Integer.parseInt(numericStr(context));
-                    } catch (NumberFormatException e) {
+                    }
+                    catch (NumberFormatException e) {
                         log.error("Count not parse string value: {}", context);
                     }
                 }
@@ -735,12 +747,12 @@ public class HandleBarsHelperRegistry {
             @Override
             public Object apply(JsonNode node, Options options) throws IOException {
                 final String pointer = options.hash("pointer");
-                if(!Strings.isNullOrEmpty(pointer) && null != node && !node.isNull() && !node.isMissingNode()) {
+                if (!Strings.isNullOrEmpty(pointer) && null != node && !node.isNull() && !node.isMissingNode()) {
                     val intNode = node.at(pointer);
-                    if(intNode.isIntegralNumber()) {
+                    if (intNode.isIntegralNumber()) {
                         return intNode.asLong();
                     }
-                    if(intNode.isTextual()) {
+                    if (intNode.isTextual()) {
                         try {
                             return Integer.parseInt(numericStr(intNode.asText()));
                         }
@@ -750,6 +762,32 @@ public class HandleBarsHelperRegistry {
                     }
                 }
                 return -1;
+            }
+        });
+    }
+
+    private void registerHTML2Text() {
+        handlebars.registerHelper("html2Text", new Helper<String>() {
+            @Override
+            public CharSequence apply(String htmlString, Options options) throws IOException {
+                final String text = Jsoup.parse(htmlString).text();
+                return Strings.isNullOrEmpty(text)
+                       ? ""
+                       : text.replace("\\n", "").trim();
+            }
+        });
+    }
+
+    private void registerLocalTime() {
+        handlebars.registerHelper("localTime", new Helper<String>() {
+            @Override
+            public CharSequence apply(String tz, Options options) throws IOException {
+                ZonedDateTime now = ZonedDateTime.now(ZoneId.of(tz));
+                return MAPPER.writeValueAsString(MAPPER.createObjectNode()
+                                                         .set("localTime", MAPPER.createObjectNode()
+                                                                 .put("hour", now.getHour())
+                                                                 .put("minutes", now.getMinute())
+                                                                 .put("seconds", now.getSecond())));
             }
         });
     }
