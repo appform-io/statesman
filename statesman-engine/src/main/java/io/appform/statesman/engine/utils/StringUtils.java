@@ -25,4 +25,8 @@ public class StringUtils {
         }
         return  WordUtils.capitalize(s);
     }
+
+    public static String removeNewLine(String s) {
+        return s.replaceAll("\\r\\n|\\r|\\n", " ");
+    }
 }
