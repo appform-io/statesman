@@ -58,6 +58,7 @@ public class HandleBarsHelperRegistry {
         registerToEpoch();
         registerStreq();
         registerStrNormalize();
+        registerStrSingleLineText();
         registerStrNormalizeUpper();
         registerStrNormalizeInitCap();
         registerCurrTime();
@@ -276,6 +277,11 @@ public class HandleBarsHelperRegistry {
     private void registerStrNormalize() {
         handlebars.registerHelper("normalize",
                                   (Helper<String>) (value, options) -> StringUtils.normalize(value));
+    }
+
+    private void registerStrSingleLineText() {
+        handlebars.registerHelper("singleLineText",
+                                  (Helper<String>) (value, options) -> StringUtils.removeNewLine(value));
     }
 
     private void registerStrNormalizeUpper() {
