@@ -1,17 +1,21 @@
 package io.appform.statesman.engine;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import io.appform.hope.core.Evaluatable;
 import io.appform.hope.core.exceptions.errorstrategy.InjectValueErrorHandlingStrategy;
 import io.appform.hope.lang.HopeLangEngine;
+import io.appform.statesman.engine.action.ActionExecutor;
 import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.engine.observer.events.StateTransitionEvent;
 import io.appform.statesman.model.*;
 import io.appform.statesman.model.dataaction.DataAction;
+import io.appform.statesman.model.dataaction.impl.MergeDataAction;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -31,6 +35,8 @@ public class StateTransitionEngine {
     private final ObjectMapper mapper;
     private final DataActionExecutor dataActionExecutor;
     private final ObservableEventBus eventBus;
+    private final Provider<ActionExecutor> actionExecutor;
+
     private final HopeLangEngine hopeLangEngine = HopeLangEngine.builder()
             .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
             .build();
@@ -45,12 +51,14 @@ public class StateTransitionEngine {
             Provider<TransitionStore> transitionStore,
             ObjectMapper mapper,
             DataActionExecutor dataActionExecutor,
-            ObservableEventBus eventBus) {
+            ObservableEventBus eventBus,
+            Provider<ActionExecutor> actionExecutor) {
         this.workflowProvider = workflowProvider;
         this.transitionStore = transitionStore;
         this.mapper = mapper;
         this.dataActionExecutor = dataActionExecutor;
         this.eventBus = eventBus;
+        this.actionExecutor = actionExecutor;
     }
 
     public AppliedTransitions handle(DataUpdate dataUpdate) {
@@ -107,7 +115,7 @@ public class StateTransitionEngine {
                 .orElse(defaultTransition(transitions, alreadyVisited));
         if (null == selectedTransition) {
             log.debug("No matching transition for: {} for update: {}", workflowId, dataUpdate);
-            if(null != defaultAction) {
+            if (null != defaultAction) {
                 log.debug("Applying default action of type: {}", defaultAction.getType().name());
                 dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
                 workflowProvider.get().updateWorkflow(workflow);
@@ -116,13 +124,40 @@ public class StateTransitionEngine {
         }
         dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
         dataObject.setCurrentState(selectedTransition.getToState());
-
+        val action = applyAction(workflow, dataObject, selectedTransition);
         workflowProvider.get().updateWorkflow(workflow);
         eventBus.publish(new StateTransitionEvent(
-                                template, workflow, dataUpdate, currentState, selectedTransition.getAction()));
+                template, workflow, dataUpdate, currentState, action));
         return Optional.of(new AppliedTransition(currentState,
                                                  selectedTransition.getToState(),
                                                  selectedTransition.getId()));
+    }
+
+    private String applyAction(Workflow workflow, DataObject dataObject, StateTransition selectedTransition) {
+        String workflowId = workflow.getId();
+        val action = selectedTransition.getAction();
+        if (!Strings.isNullOrEmpty(action)) {
+            JsonNode actionResponse = null;
+            try {
+                actionResponse = actionExecutor.get()
+                        .execute(action, workflow)
+                        .orElse(null);
+            }
+            catch (Exception e) {
+                log.error("Error executing action " + action + " for wfid: " + workflowId, e);
+            }
+            if (null == actionResponse || actionResponse.isNull() || actionResponse.isMissingNode() || !actionResponse.isObject()) {
+                log.warn("Empty/Non object action response for action {} for workflow {}",
+                         action, workflowId);
+            }
+            else {
+                dataObject.setData(dataActionExecutor.apply(
+                        dataObject, new DataUpdate(workflowId, actionResponse, new MergeDataAction())));
+            }
+
+
+        }
+        return action;
     }
 
     private StateTransition defaultTransition(

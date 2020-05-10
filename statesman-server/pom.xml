@@ -17,6 +17,7 @@
         <dropwizard.riemann.version>1.3.12-1</dropwizard.riemann.version>
         <dropwizard.sharding.version>1.3.13-6</dropwizard.sharding.version>
         <mariadb.driver.version>2.2.0</mariadb.driver.version>
+		<function-metrics.version>1.0.6</function-metrics.version>
     </properties>
 
     <dependencies>
@@ -115,7 +116,7 @@
         <dependency>
             <groupId>io.appform.functionmetrics</groupId>
             <artifactId>function-metrics</artifactId>
-            <version>1.0.1</version>
+            <version>${function-metrics.version}</version>
         </dependency>
     </dependencies>
 

@@ -308,28 +308,34 @@ public class IngressHandler {
         return true;
     }
 
-    public boolean invokeEngineForFormPost(String callcenter, IngressCallback callback) throws IOException {
-        log.debug("Processing form post from: {}: Payload: {}", callcenter, callback);
-        final String tmplLookupKey = callcenter + "_" + StringUtils.normalize(callback.getBody().at("/state").asText());
+    public boolean invokeEngineForFormPost(String provider, IngressCallback callback) throws IOException {
+        log.debug("Processing form post from: {}: Payload: {}", provider, callback);
+        final String tmplLookupKey = provider + "_" + StringUtils.normalize(callback.getBody().at("/state").asText());
         val ingressCallbackEvent = IngressCallbackEvent.builder()
                 .callbackType("formData")
-                .ivrProvider(callcenter)
+                .ivrProvider(provider)
                 .translatorId(tmplLookupKey)
                 .formDataString(jsonString(callback.getBody()))
                 .build();
-        val transformationTemplate = callbackTemplateProvider.getTemplate(tmplLookupKey, TranslationTemplateType.INGRESS)
+        TransformationTemplate transformationTemplate
+                = callbackTemplateProvider.getTemplate(tmplLookupKey, TranslationTemplateType.INGRESS)
                 .orElse(null);
         if(null == transformationTemplate) {
-            log.warn("No matching form translation template found for key: {}. node: {} ",
-                     tmplLookupKey, callback);
-            ingressCallbackEvent.setErrorMessage(TRANSLATOR_NOT_FOUND);
-            eventBus.get().publish(ingressCallbackEvent);
-            return false;
+            log.debug("Did not find template for {}, trying with {}", tmplLookupKey, provider);
+            transformationTemplate = callbackTemplateProvider.getTemplate(provider, TranslationTemplateType.INGRESS)
+                    .orElse(null);
+            if(null == transformationTemplate) {
+                log.warn("No matching form translation template found for key: {} or {}. node: {} ",
+                         tmplLookupKey, provider, callback);
+                ingressCallbackEvent.setErrorMessage(TRANSLATOR_NOT_FOUND);
+                eventBus.get().publish(ingressCallbackEvent);
+                return false;
+            }
         }
         val tmpl = toOneShotTmpl(transformationTemplate);
         if (null == tmpl) {
-            log.warn("No matching obd call resp transformation template found for callcenter: {}, context: {}",
-                     callcenter, callback);
+            log.warn("Form data transformation template ineffective for provider: {}, context: {}",
+                     provider, callback);
             ingressCallbackEvent.setErrorMessage(COULD_NOT_TRANSLATE);
             eventBus.get().publish(ingressCallbackEvent);
             return false;
@@ -341,7 +347,7 @@ public class IngressHandler {
                 .determineTemplate(update)
                 .orElse(null);
         if (null == wfTemplate) {
-            log.warn("No matching workflow template found for provider: {}, context: {}", callcenter, stdPayload);
+            log.warn("No matching workflow template found for provider: {}, context: {}", provider, stdPayload);
             ingressCallbackEvent.setErrorMessage(WORKFLOW_TEMPLATE_NOT_FOUND);
             eventBus.get().publish(ingressCallbackEvent);
             return false;
