@@ -462,7 +462,7 @@ public class HandleBarsServiceTest {
                 "      \"ticket_cf_patient_name\": \"Name\",\n" +
                 "      \"ticket_ticket_type\": \"Non - Covid Home Lockdown\",\n" +
                 "      \"ticket_cf_fsm_contact_name\": null,\n" +
-                "      \"ticket_cf_fsm_service_location\": \"arogya_setu\",\n" +
+                "      \"ticket_cf_fsm_service_location\": \"bp\",\n" +
                 "      \"ticket_cf_patient_language\": \"Hindi\",\n" +
                 "      \"ticket_cf_fsm_phone_number\": null,\n" +
                 "      \"ticket_group_name\": \"32423\",\n" +
