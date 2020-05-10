@@ -19,11 +19,11 @@ HEADERS = {
 ############ DATE HELPER ###########
 
 def formatted_date_time(epoch):
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(epoch / 1000))
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.localtime(epoch / 1000))
 
 
 def epoch_time(str_time):
-    return (int(time.mktime(time.strptime(str_time, "%Y-%m-%dT%H:%M:%SZ"))) + 19800) * 1000
+    return (int(time.mktime(time.strptime(str_time, "%Y-%m-%dT%H:%M:%SZ")))) * 1000
 
 
 def str_current_time():
@@ -49,6 +49,7 @@ def fetch_next_freshdesk_tickets(page, from_str_time):
 
 
 def fetch_next_freshdesk_tickets_till_date_changes(from_time_till_date_change):
+    print("FETCHING from date :"+formatted_date_time(from_time_till_date_change))
     page = 1
     last_ticket_time_till_date_change = from_time_till_date_change
     all_tickets = []
@@ -74,7 +75,10 @@ def fetch_freshdesk_tickets(from_time, to_time):
         else:
             from_time = last_ticket_time
         all_tickets = tickets + all_tickets
-    return all_tickets
+    tickets_dict = dict()
+    for ticket in all_tickets:
+        tickets_dict[ticket['id']] = ticket
+    return tickets_dict.values()           #returning uniq list
 
 
 ############ COMMON UTILS #############
