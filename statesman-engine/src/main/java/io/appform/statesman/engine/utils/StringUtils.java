@@ -27,6 +27,9 @@ public class StringUtils {
     }
 
     public static String removeNewLine(String s) {
+        if(Strings.isNullOrEmpty(s)) {
+            return "";
+        }
         return s.replaceAll("\\r\\n|\\r|\\n", " ");
     }
 }
