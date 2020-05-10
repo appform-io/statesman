@@ -426,6 +426,75 @@ public class HandleBarsServiceTest {
         Assert.assertEquals("Punjab", hb.transform("{{normalize_init_cap state}}", node));
     }
 
+    
+    @Test
+    public void testSingleLine() throws Exception {
+        val template = "{\n" +
+                "  \"provider\": \"freshdesk\",\n" +
+                "  \"providerTicketId\": \"{{body.freshdesk_webhook.ticket_id}}\",\n" +
+                "  \"providerTicketUrl\": \"{{body.freshdesk_webhook.ticket_url}}\",\n" +
+                "  \"providerTicketTags\": \"{{body.freshdesk_webhook.ticket_tags}}\",\n" +
+                "  \"providerTicketGroupName\": \"{{normalize body.freshdesk_webhook.ticket_group_name}}\",\n" +
+                "  \"providerTicketAgentName\": \"{{normalize body.freshdesk_webhook.ticket_agent_name}}\",\n" +
+                "  \"providerTicketAgentEmail\": \"{{body.freshdesk_webhook.ticket_agent_email}}\",\n" +
+                "  \"providerTicketStatus\": \"{{normalize body.freshdesk_webhook.ticket_status}}\",\n" +
+                "  \"providerTicketForeignTravelHistory\": \"{{normalize body.freshdesk_webhook.ticket_cf_foreign_travel_history}}\",\n" +
+                "  \"providerTicketPatientName\": \"{{body.freshdesk_webhook.ticket_cf_patient_name}}\",\n" +
+                "  \"providerTicketPincode\": \"{{body.freshdesk_webhook.ticket_cf_pin_code}}\",\n" +
+                "  \"providerTicketState\": \"{{normalize body.freshdesk_webhook.ticket_cf_state}}\",\n" +
+                "  \"providerTicketContact\": \"{{normalize body.freshdesk_webhook.ticket_cf_contact}}\",\n" +
+                "  \"providerTicketType\": \"{{normalize body.freshdesk_webhook.ticket_ticket_type}}\",\n" +
+                "  \"providerTicketFsmPhoneNumber\": \"{{body.freshdesk_webhook.ticket_cf_fsm_phone_number}}\",\n" +
+                "  \"providerTicketDoctorNotes\": \"{{singleLineText body.freshdesk_webhook.ticket_cf_doctor_notes}}\",\n" +
+                "  \"providerTicketRecommendation\": \"{{normalize body.freshdesk_webhook.ticket_cf_category}}\",\n" +
+                "  \"providerTicketFsmServiceLocation\": \"{{body.freshdesk_webhook.ticket_cf_fsm_service_location}}\",\n" +
+                "  \"providerTicketFsmAppointmentEndTime\": \"{{body.freshdesk_webhook.ticket_cf_fsm_appointment_end_time}}\",\n" +
+                "  \"providerTicketPatientLanguage\": \"{{normalize body.freshdesk_webhook.ticket_cf_patient_language}}\",\n" +
+                "  \"providerTicketFsmAppointmentStartTime\": \"{{body.freshdesk_webhook.ticket_cf_fsm_appointment_start_time}}\",\n" +
+                "  \"providerTicketPatientAge\": \"{{body.freshdesk_webhook.ticket_cf_patient_age}}\",\n" +
+                "  \"providerTicketPatientGender\": \"{{normalize body.freshdesk_webhook.ticket_cf_patient_gender}}\"\n" +
+                "}";
+
+        val payload = "{\n" +
+                "  \"apiPath\": \"/callbacks/FRESHDESK\",\n" +
+                "  \"body\": {\n" +
+                "    \"freshdesk_webhook\": {\n" +
+                "      \"ticket_cf_patient_name\": \"Name\",\n" +
+                "      \"ticket_ticket_type\": \"Non - Covid Home Lockdown\",\n" +
+                "      \"ticket_cf_fsm_contact_name\": null,\n" +
+                "      \"ticket_cf_fsm_service_location\": \"arogya_setu\",\n" +
+                "      \"ticket_cf_patient_language\": \"Hindi\",\n" +
+                "      \"ticket_cf_fsm_phone_number\": null,\n" +
+                "      \"ticket_group_name\": \"32423\",\n" +
+                "      \"ticket_id\": 111,\n" +
+                "      \"ticket_cf_fsm_appointment_end_time\": null,\n" +
+                "      \"ticket_cf_fsm_appointment_start_time\": null,\n" +
+                "      \"ticket_url\": \"\",\n" +
+                "      \"ticket_cf_foreign_travel_history\": \"No\",\n" +
+                "      \"ticket_cf_patient_gender\": \"Other\",\n" +
+                "      \"ticket_tags\": \"\",\n" +
+                "      \"ticket_cf_fsm_customer_signature\": \"233232423\",\n" +
+                "      \"ticket_cf_doctor_notes\": \"fatigue since 2 days.\\n mild sore throat.  mild headache. \\nNo other symptoms \\nRED FLAGS EXPLAINED \\nHome isolation Adviced.\",\n" +
+                "      \"ticket_cf_patient_age\": 45,\n" +
+                "      \"ticket_status\": \"resolved\",\n" +
+                "      \"ticket_agent_name\": \"\",\n" +
+                "      \"ticket_cf_pin_code\": null,\n" +
+                "      \"ticket_cf_state\": null,\n" +
+                "      \"ticket_agent_email\": \"\",\n" +
+                "      \"ticket_cf_category\": null,\n" +
+                "      \"ticket_cf_contact\": null\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"id\": \"FRESHDESK\"\n" +
+                "}";
+        val mapper = Jackson.newObjectMapper();
+        val hb = new HandleBarsService();
+        val node = mapper.readTree(payload);
+        val translatedPayload = mapper.readTree(hb.transform(template, node));
+        Assert.assertTrue(translatedPayload.get("providerTicketDoctorNotes").asText().equals("fatigue since 2 days.  mild sore throat.  mild headache.  No other symptoms  RED FLAGS EXPLAINED  Home isolation Adviced."));
+
+    }
+
     @Test
     public void testElapsedTime() {
         val hb = new HandleBarsService();
