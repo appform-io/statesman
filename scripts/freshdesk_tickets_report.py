@@ -31,12 +31,8 @@ STATE_EMAIL_LIST = {
 }
 
 FILE_PATH_PREFIX = "/var/tmp/reports/FRESHDESK_"
-EMAIL_STATIC_CONTENT = """<html lang="en">
-                            <body>
-                            <p>Please find the attached : %s </p>
-                            </body>
-                            </html>
-                       """
+EMAIL_STATIC_CONTENT = """Please find the attached : %s """
+
 
 
 ############ DATE HELPER ###########
