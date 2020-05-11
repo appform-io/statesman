@@ -1,10 +1,14 @@
 import datetime
 import glob
+import json
 import os
 import requests
+import smtplib
 import time
 import urllib
-import json
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 FROM = 1588735390129
 TO = 1588771374705
 
@@ -13,6 +17,21 @@ FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type
 HEADERS = {
     "Content-Type": "application/json",
     "Authorization": ""
+}
+
+SMTP_HOST = ""
+SMTP_PORT = ""
+SMTP_LOGIN_USER = ""
+SMTP_LOGIN_PASSWORD = ""
+EMAIL_SENDER = "no-reply@gmail.com"
+STATE_EMAIL_LIST = {
+    "karnataka": ["me@gmail.com"],
+    "maharashtra": ["me@gmail.com"],
+    "punjab": ["me@gmail.com"],
+    "orissa": ["me@gmail.com"],
+    "chhattisgarh": ["me@gmail.com"],
+    "nagaland": ["me@gmail.com"],
+    "madhya pradesh": ["me@gmail.com"]
 }
 
 
@@ -28,6 +47,34 @@ def epoch_time(str_time):
 
 def str_current_time():
     return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+
+############ EMAIL HELPER ##########
+
+
+def send_email_with_files(to, subject, content, files, mime_sub_type='html'):
+    smtp_obj = None
+    msg = MIMEMultipart()
+    msg['Subject'] = subject
+    msg['From'] = EMAIL_SENDER
+    msg['To'] = ", ".join(to)
+    msg.attach(MIMEText(content, mime_sub_type))
+
+    for output_file in files:
+        attachment = MIMEText(output_file['data'], 'plain', 'utf-8')
+        attachment.add_header('Content-Disposition', 'attachment', filename=output_file['name'])
+        msg.attach(attachment)
+    try:
+        smtp_obj = smtplib.SMTP()
+        smtp_obj.connect(SMTP_HOST, SMTP_PORT)
+        smtp_obj.starttls()
+        smtp_obj.login(SMTP_LOGIN_USER, SMTP_LOGIN_PASSWORD)
+        smtp_obj.sendmail(EMAIL_SENDER, to, msg.as_string())
+    except smtplib.SMTPException:
+        print("ERROR:While sending email")
+    finally:
+        if (not smtp_obj is None):
+            smtp_obj.quit()
 
 
 ############ FRESHDESK HELPER ##########
@@ -49,7 +96,7 @@ def fetch_next_freshdesk_tickets(page, from_str_time):
 
 
 def fetch_next_freshdesk_tickets_till_date_changes(from_time_till_date_change):
-    print("FETCHING from date :"+formatted_date_time(from_time_till_date_change))
+    print("FETCHING from date :" + formatted_date_time(from_time_till_date_change))
     page = 1
     last_ticket_time_till_date_change = from_time_till_date_change
     all_tickets = []
@@ -78,7 +125,7 @@ def fetch_freshdesk_tickets(from_time, to_time):
     tickets_dict = dict()
     for ticket in all_tickets:
         tickets_dict[ticket['id']] = ticket
-    return tickets_dict.values()           #returning uniq list
+    return tickets_dict.values()  # returning uniq list
 
 
 ############ COMMON UTILS #############
@@ -109,7 +156,7 @@ def filter_resolved(tickets):
 
 
 def resolved_tickets():
-    resolved_tickets  = filter_resolved(fetch_freshdesk_tickets(FROM, TO))
+    resolved_tickets = filter_resolved(fetch_freshdesk_tickets(FROM, TO))
     for resolved_ticket in resolved_tickets:
         print json.dumps(resolved_ticket)
     return resolved_tickets
