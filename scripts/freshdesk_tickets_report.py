@@ -1,31 +1,25 @@
 import csv
-import datetime
 import glob
 import os
 import requests
 import smtplib
-import sys
 import time
-import urllib
+import urllib.parse
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from io import StringIO
 
-FROM = 1589184341515
-TO = 1589191532195
-FILE_PATH_PREFIX = "/var/tmp/reports/FRESHDESK_"
-
 FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
 HEADERS = {
     "Content-Type": "application/json",
-    "Authorization": ""
+    "Authorization": "Basic =="
 }
 
-SMTP_HOST = ""
-SMTP_PORT = ""
+SMTP_HOST = "127.0.0.1"
+SMTP_PORT = 25
 SMTP_LOGIN_USER = ""
 SMTP_LOGIN_PASSWORD = ""
-EMAIL_SENDER = "no-reply@gmail.com"
+EMAIL_SENDER = "noreply@gmail.com"
 STATE_EMAIL_LIST = {
     "karnataka": ["me@gmail.com"],
     "maharashtra": ["me@gmail.com"],
@@ -35,6 +29,14 @@ STATE_EMAIL_LIST = {
     "nagaland": ["me@gmail.com"],
     "madhya pradesh": ["me@gmail.com"]
 }
+
+FILE_PATH_PREFIX = "/var/tmp/reports/FRESHDESK_"
+EMAIL_STATIC_CONTENT = """<html lang="en">
+                            <body>
+                            <p>Please find the attached : %s </p>
+                            </body>
+                            </html>
+                       """
 
 
 ############ DATE HELPER ###########
@@ -47,8 +49,8 @@ def epoch_time(str_time):
     return (int(time.mktime(time.strptime(str_time, "%Y-%m-%dT%H:%M:%SZ")))) * 1000
 
 
-def str_current_time():
-    return datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+def epoch_time_till_last_hr():
+    return epoch_time(time.strftime("%Y-%m-%dT%H:00:00Z", time.localtime()))
 
 
 ############ COMMON UTILS #############
@@ -70,22 +72,21 @@ def remove_old_files():
     delete_match(FILE_PATH_PREFIX + "*")
 
 
-def to_csv(data_dict):
+def to_csv(data):
     csv_file = StringIO()
-    writer = csv.writer(csv_file)
-    writer.writerow(data_dict.keys())
-    for row in data_dict.values():
-        writer.writerow(row)
+    writer = csv.DictWriter(csv_file, data[0].keys())
+    writer.writeheader()
+    writer.writerows(data)
     return csv_file.getvalue()
 
 
 def get_or_default(data, key, default_value):
-    return data[key] if data.has_key(key) and data[key] is not None else default_value
+    return data[key] if key in data and data[key] is not None else default_value
 
 
 def get_custom_field(ticket, field):
-    return str(ticket["custom_fields"][field]) if ticket.has_key("custom_fields") and ticket["custom_fields"].has_key(
-        field) and ticket["custom_fields"][field] is not None else ""
+    return str(ticket["custom_fields"][field]) if "custom_fields" in ticket and field in ticket["custom_fields"] and \
+                                                  ticket["custom_fields"][field] is not None else ""
 
 
 def statusString(status):
@@ -139,10 +140,10 @@ def filter_resolved(tickets):
 
 ############ EMAIL HELPER ##########
 
-def attach_csv_file(file_name, data_dict):
+def attach_csv_file(file_name, data):
     return {
         "name": file_name,
-        "data": to_csv(data_dict)
+        "data": to_csv(data)
     }
 
 
@@ -182,7 +183,7 @@ def fetch_freshdesk_ticket(ticket_id):
 
 
 def fetch_next_freshdesk_tickets(page, from_str_time):
-    response = requests.get(url=FRESHDESK_URL.format(page, urllib.quote(from_str_time)), headers=HEADERS)
+    response = requests.get(url=FRESHDESK_URL.format(page, urllib.parse.quote(from_str_time)), headers=HEADERS)
     if response.status_code == 200:
         return response.json()
     else:
@@ -222,27 +223,44 @@ def fetch_freshdesk_tickets(from_time, to_time):
     return tickets_dict.values()  # returning uniq list
 
 
-def generate_report():
+def state_wise_report(from_epoch, to_epoch):
     state_wise_tickets = {}
-    resolved_tickets = filter_resolved(fetch_freshdesk_tickets(FROM, TO))
+    resolved_tickets = filter_resolved(fetch_freshdesk_tickets(from_epoch, to_epoch))
     for resolved_ticket in resolved_tickets:
         state = get_custom_field(resolved_ticket, "cf_state")
         if (state is None or state == ''):
             print("Not state for ticket:" + str(resolved_ticket["id"]))
             continue
         state = state.lower()
-        if (not state_wise_tickets.has_key(state)):
+        if (not state in state_wise_tickets):
             state_wise_tickets[state] = list()
         state_wise_tickets[state].append(format_report_dict(resolved_ticket))
-    print state_wise_tickets
+    # print state_wise_tickets
+    return state_wise_tickets
+
+
+def send_email_report(state, data):
+    report_name = state.capitalize() + " step one report"
+    print("SENDING_REPORT:" + report_name)
+    send_email_with_files(to=STATE_EMAIL_LIST[state],
+                          subject=report_name,
+                          content=EMAIL_STATIC_CONTENT % report_name,
+                          files=[attach_csv_file(report_name, data)])
 
 
 def run():
-    generate_report()
+    to_epoch = epoch_time_till_last_hr()
+    from_epoch = to_epoch - 3600000
+    print(to_epoch)
+    print(from_epoch)
+    state_tickets_data = state_wise_report(from_epoch, to_epoch)
+    for state in STATE_EMAIL_LIST.keys():
+        if (state in state_tickets_data):
+            send_email_report(state, state_tickets_data[state])
+        else:
+            print("No data for state:" + state)
 
 
 if __name__ == "__main__":
-    reload(sys)
-    sys.setdefaultencoding('UTF8')
     remove_old_files()
     run()
