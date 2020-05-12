@@ -2,6 +2,7 @@ package io.appform.statesman.engine.action.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.name.Named;
 import io.appform.statesman.engine.action.BaseAction;
 import io.appform.statesman.engine.action.ActionExecutor;
@@ -50,7 +51,7 @@ public class CompoundAction extends BaseAction<CompoundActionTemplate> {
                                  actionExecutor.get()
                                          .execute(actionId, workflow)
                                          .filter(jsonNode -> !jsonNode.isNull() && !jsonNode.isMissingNode())
-                                         .ifPresent(jsonNode -> response.set(actionId, jsonNode)));
+                                         .ifPresent(jsonNode -> response.setAll((ObjectNode) jsonNode)));
         return response;
     }
 
