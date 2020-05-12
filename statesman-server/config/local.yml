@@ -17,6 +17,8 @@ logging:
     deprecation: ERROR
     org.hibernate: ERROR
     QueuedSender: WARN
+    com.codahale.metrics.collectd: ERROR
+    io.appform.statesman: DEBUG
   appenders:
     - type: console
       threshold: TRACE
@@ -27,8 +29,8 @@ shards:
   shards:
     - driverClass: org.mariadb.jdbc.Driver
       user: root
-      password: root
-      url: jdbc:mariadb://127.0.0.1/statesman_shard1?createDatabaseIfNotExist=true
+      password: password 
+      url: jdbc:mariadb://mariadb_1/statesman_shard1?createDatabaseIfNotExist=true
       properties:
         charSet: UTF-8
         hibernate.dialect: org.hibernate.dialect.MariaDBDialect
@@ -43,8 +45,8 @@ shards:
 
     - driverClass: org.mariadb.jdbc.Driver
       user: root
-      password: root
-      url: jdbc:mariadb://127.0.0.1/statesman_shard2?createDatabaseIfNotExist=true
+      password: password
+      url: jdbc:mariadb://mariadb_2/statesman_shard2?createDatabaseIfNotExist=true
       properties:
         charSet: UTF-8
         hibernate.dialect: org.hibernate.dialect.MariaDBDialect
@@ -62,8 +64,6 @@ swagger:
   title: Statesman
   description: Statesman Backend
 
-
-
 httpActionDefaultConfig:
   connections: 10
   idleTimeOutSeconds: 30
@@ -71,6 +71,7 @@ httpActionDefaultConfig:
   opTimeoutMs: 10000
 
 eventPublisherConfig:
+  disabled: true
   httpClientConfiguration:
     connections: 10
     idleTimeOutSeconds: 30
@@ -80,9 +81,3 @@ eventPublisherConfig:
   batchSize: 50
   queuePath: /tmp/statesman
 
-
-ivrDropDetection:
-  enabled: true
-  detectionPatterns:
-    ozonetel_punjab:
-      - "payload.*"

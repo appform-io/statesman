@@ -24,7 +24,7 @@ services:
     - /var/log/statesman-server
     environment:
       SHARD1_CONNECTION_STRING: jdbc:mariadb://mariadb_1/statesman_db_1?createDatabaseIfNotExist=true
-      SHARD2_CONNECTION_STRING: jdbc:mariadb://mariadb_2statesman_db_2?createDatabaseIfNotExist=true
+      SHARD2_CONNECTION_STRING: jdbc:mariadb://mariadb_2/statesman_db_2?createDatabaseIfNotExist=true
       DB_USER: root
       DB_PASSWORD: password
       SHARDS: 2
