@@ -3,6 +3,7 @@ package io.appform.statesman.engine.action;
 import io.appform.statesman.engine.action.impl.CompoundAction;
 import io.appform.statesman.engine.action.impl.HttpAction;
 import io.appform.statesman.engine.action.impl.RoutedAction;
+import io.appform.statesman.engine.action.impl.TranslatorAction;
 import io.appform.statesman.model.Action;
 
 import javax.inject.Inject;
@@ -20,11 +21,12 @@ public class MapBasedActionRegistry implements ActionRegistry {
     private Map<String, Action> registry;
 
     @Inject
-    public MapBasedActionRegistry(HttpAction httpAction, CompoundAction compoundAction, RoutedAction routedAction) {
+    public MapBasedActionRegistry(HttpAction httpAction, CompoundAction compoundAction, RoutedAction routedAction, TranslatorAction translatorAction) {
         registry = new ConcurrentHashMap<>();
         register(httpAction);
         register(compoundAction);
         register(routedAction);
+        register(translatorAction);
     }
 
     @Override
