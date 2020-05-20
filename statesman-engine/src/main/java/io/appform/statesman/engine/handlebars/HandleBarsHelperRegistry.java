@@ -136,6 +136,9 @@ public class HandleBarsHelperRegistry {
     private void registerGt() {
         handlebars.registerHelper("gt", (Helper<Number>) (aNumber, options) -> {
             val option = options.param(0);
+            if (option instanceof Long) {
+                return compareGt(Long.compare(aNumber.longValue(), (Long) option));
+            }
             if (option instanceof Integer) {
                 return compareGt(Integer.compare(aNumber.intValue(), (Integer) option));
             }
