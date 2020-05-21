@@ -81,6 +81,7 @@ public class HandleBarsHelperRegistry {
         registerParseToIntPtr();
         registerHTML2Text();
         registerLocalTime();
+        registerAdd();
     }
 
     private Object compareGte(int lhs) {
@@ -271,6 +272,25 @@ public class HandleBarsHelperRegistry {
                 return "true";
             }
             return null;
+        });
+    }
+
+    private void registerAdd() {
+        handlebars.registerHelper("add", (Helper<Number>) (aNumber, options) -> {
+            val option = options.param(0);
+            if (option instanceof Long) {
+                return aNumber.longValue() + (Long) option;
+            }
+            if (option instanceof Integer) {
+                return aNumber.intValue() + (Integer) option;
+            }
+            if (option instanceof Double) {
+                return aNumber.doubleValue() + (Double) option;
+            }
+            if (option instanceof String) {
+                return aNumber.doubleValue() + Double.valueOf((String) option);
+            }
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
     }
 

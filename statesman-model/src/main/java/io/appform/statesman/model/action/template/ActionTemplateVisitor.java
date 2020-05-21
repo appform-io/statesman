@@ -6,4 +6,6 @@ public interface ActionTemplateVisitor<T> {
     T visit(RoutedActionTemplate routedActionTemplate);
 
     T visit(CompoundActionTemplate compoundActionTemplate);
+
+    T visit(TranslatorActionTemplate translatorActionTemplate);
 }

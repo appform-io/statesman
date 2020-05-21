@@ -262,6 +262,16 @@ public class HandleBarsServiceTest {
 
     @Test
     @SneakyThrows
+    public void testAdd() {
+        val hb = new HandleBarsService();
+        val node = Jackson.newObjectMapper()
+                .createObjectNode()
+                .put("days", 2);
+        Assert.assertEquals("7", hb.transform("{{add days 5}}", node));
+    }
+
+    @Test
+    @SneakyThrows
     public void translateInt() {
         final String template = "{\"language\" : {{{ translate op_1='Resolved' op_2='Closed' pointer='/ticket.cf_resolved'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
@@ -426,6 +436,7 @@ public class HandleBarsServiceTest {
         Assert.assertEquals("DR_JEYKLL_MR_HYDE", hb.transform("{{normalize_upper name}}", node));
         Assert.assertEquals("Punjab", hb.transform("{{normalize_init_cap state}}", node));
     }
+
 
     
     @Test
