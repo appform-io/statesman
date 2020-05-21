@@ -2,6 +2,7 @@ package io.appform.statesman.engine.action.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.name.Named;
 import io.appform.statesman.engine.action.BaseAction;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.model.ActionImplementation;
@@ -13,7 +14,6 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 
 @Slf4j
@@ -34,8 +34,9 @@ public class TranslatorAction extends BaseAction<TranslatorActionTemplate> {
 
     @Override
     protected JsonNode execute(TranslatorActionTemplate actionTemplate, Workflow workflow) {
+        String translator = actionTemplate.getTranslator();
         JsonNode workflowNode = mapper.valueToTree(workflow);
-        return toJsonNode(handleBarsService.transform(actionTemplate.getTemplate(), workflowNode));
+        return toJsonNode(handleBarsService.transform(translator, workflowNode));
     }
 
     @Override
@@ -51,5 +52,4 @@ public class TranslatorAction extends BaseAction<TranslatorActionTemplate> {
             return null;
         }
     }
-
 }

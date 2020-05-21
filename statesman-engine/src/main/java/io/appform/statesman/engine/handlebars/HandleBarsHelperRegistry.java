@@ -152,6 +152,17 @@ public class HandleBarsHelperRegistry {
         });
     }
 
+
+    private void registerAdd() {
+        handlebars.registerHelper("add", (Helper<Number>) (aNumber, options) -> {
+            val option = options.param(0);
+            if (option instanceof Integer) {
+                return aNumber.intValue() + (Integer) option;
+            }
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
+        });
+    }
+
     private void registerLte() {
         handlebars.registerHelper("lte", (Helper<Number>) (aNumber, options) -> {
             val option = options.param(0);

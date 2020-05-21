@@ -12,19 +12,16 @@ public class TranslatorActionTemplate extends ActionTemplate {
 
     @NotNull
     @NotEmpty
-    private String template;
+    private String translator;
 
     public TranslatorActionTemplate() {
         super(ActionType.TRANSLATOR);
     }
 
     @Builder
-    public TranslatorActionTemplate(String templateId,
-                                    String name,
-                                    boolean active,
-                                    String template) {
-        super(ActionType.HTTP, templateId, name, active);
-        this.template = template;
+    public TranslatorActionTemplate(String templateId, String name, boolean active, String translator) {
+        super(ActionType.TRANSLATOR, templateId, name, active);
+        this.translator = translator;
     }
 
     @Override

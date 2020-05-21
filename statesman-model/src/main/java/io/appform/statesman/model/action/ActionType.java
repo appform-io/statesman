@@ -5,5 +5,6 @@ public enum  ActionType {
     HTTP,
     ROUTED,
     COMPOUND,
+    TRANSLATOR,
     ;
 }
