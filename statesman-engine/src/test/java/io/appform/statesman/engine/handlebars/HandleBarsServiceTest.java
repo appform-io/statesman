@@ -262,7 +262,7 @@ public class HandleBarsServiceTest {
 
     @Test
     @SneakyThrows
-    public void translateAdd() {
+    public void testAdd() {
         val hb = new HandleBarsService();
         val node = Jackson.newObjectMapper()
                 .createObjectNode()
@@ -437,14 +437,6 @@ public class HandleBarsServiceTest {
         Assert.assertEquals("Punjab", hb.transform("{{normalize_init_cap state}}", node));
     }
 
-    @Test
-    public void testAdd() {
-        val hb = new HandleBarsService();
-        val node = Jackson.newObjectMapper()
-                .createObjectNode()
-                .put("counter", 10);
-        Assert.assertEquals("13", hb.transform("{{add 3 counter}}", node));
-    }
 
     
     @Test
