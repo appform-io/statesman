@@ -117,12 +117,16 @@ public class StateTransitionEngine {
             log.debug("No matching transition for: {} for update: {}", workflowId, dataUpdate);
             if (null != defaultAction) {
                 log.debug("Applying default action of type: {}", defaultAction.getType().name());
-                dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
-                workflowProvider.get().updateWorkflow(workflow);
+                if(alreadyVisited == null || alreadyVisited.isEmpty()) {
+                    dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
+                    workflowProvider.get().updateWorkflow(workflow);
+                }
             }
             return Optional.empty();
         }
-        dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
+        if(alreadyVisited == null || alreadyVisited.isEmpty()) {
+            dataObject.setData(dataActionExecutor.apply(dataObject, dataUpdate));
+        }
         dataObject.setCurrentState(selectedTransition.getToState());
         val action = applyAction(workflow, dataObject, selectedTransition);
         workflowProvider.get().updateWorkflow(workflow);
