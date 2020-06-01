@@ -102,6 +102,23 @@ public class Callbacks {
                 .build();
     }
 
+
+    @POST
+    @Path("/ingress/raw/{provider}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @SneakyThrows
+    public Response ingressRaw(
+            @PathParam("provider") final String provider, final IngressCallback ingressCallback) {
+        final boolean status = ingressHandler.get()
+                .invokeEngineForRaw(provider, ingressCallback);
+        if(!status) {
+            log.warn("Ignored ingress form post callback from provider {} callback: {}", provider, ingressCallback);
+        }
+        return Response.ok()
+                .entity(ImmutableMap.of("success", status))
+                .build();
+    }
+
     @POST
     @Path("/provider/{serviceProvider}")
     @Consumes(MediaType.APPLICATION_JSON)

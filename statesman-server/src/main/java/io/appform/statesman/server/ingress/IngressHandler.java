@@ -375,6 +375,48 @@ public class IngressHandler {
         return true;
     }
 
+    public boolean invokeEngineForRaw(String provider, IngressCallback callback) throws IOException {
+        log.debug("Processing raw post from: {}: Payload: {}", provider, callback);
+        val ingressCallbackEvent = IngressCallbackEvent.builder()
+                .callbackType("raw")
+                .ivrProvider(provider)
+                .translatorId("_NONE_")
+                .formDataString(jsonString(callback.getBody()))
+                .build();
+        val update = callback.getBody();
+        log.info("stdPayload:{}", update);
+        val wfTemplate = templateSelector.get()
+                .determineTemplate(update)
+                .orElse(null);
+        if (null == wfTemplate) {
+            log.warn("No matching workflow template found for provider: {}, context: {}", provider, update);
+            ingressCallbackEvent.setErrorMessage(WORKFLOW_TEMPLATE_NOT_FOUND);
+            eventBus.get().publish(ingressCallbackEvent);
+            return false;
+        }
+        var wfId = UUID.randomUUID().toString();
+        val wfp = this.workflowProvider.get();
+        while (wfp.workflowExists(wfId)) {
+            wfId = UUID.randomUUID().toString();
+        }
+
+        val date = new Date();
+        val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
+        val workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
+        wfp.saveWorkflow(workflow);
+        final DataUpdate dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
+        eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
+        final AppliedTransitions appliedTransitions
+                = engine.get()
+                .handle(dataUpdate);
+        log.debug("Workflow: {} with template: {} went through transitions: {}",
+                  wfId, wfTemplate.getId(), appliedTransitions.getTransitions());
+        ingressCallbackEvent.setWorkflowId(dataUpdate.getWorkflowId());
+        ingressCallbackEvent.setSmEngineTriggered(true);
+        eventBus.get().publish(ingressCallbackEvent);
+        return true;
+    }
+
     public JsonNode translateIngressIvrPayload(String providerKey,
                                                IngressCallback ingressCallback) throws IOException {
         val queryParams = parseQueryParams(ingressCallback);
