@@ -17,6 +17,7 @@ import lombok.val;
 import org.jsoup.Jsoup;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -80,6 +81,7 @@ public class HandleBarsHelperRegistry {
         registerParseToInt();
         registerParseToIntPtr();
         registerHTML2Text();
+        registerURLEncode();
         registerLocalTime();
         registerAdd();
     }
@@ -800,6 +802,16 @@ public class HandleBarsHelperRegistry {
                 return Strings.isNullOrEmpty(text)
                        ? ""
                        : text.replace("\\n", "").trim();
+            }
+        });
+    }
+
+    private void registerURLEncode() {
+        handlebars.registerHelper("URLEncode", new Helper<String>() {
+            @Override
+            public CharSequence apply(String str, Options options) throws IOException {
+                return URLEncoder.encode(str,"UTF-8");
+
             }
         });
     }

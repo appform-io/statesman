@@ -272,6 +272,16 @@ public class HandleBarsServiceTest {
 
     @Test
     @SneakyThrows
+    public void testURLEncode() {
+        val hb = new HandleBarsService();
+        val node = Jackson.newObjectMapper()
+                .createObjectNode()
+                .put("name", "Blah Blah");
+        Assert.assertEquals("Blah+Blah", hb.transform("{{URLEncode name}}", node));
+    }
+
+    @Test
+    @SneakyThrows
     public void translateInt() {
         final String template = "{\"language\" : {{{ translate op_1='Resolved' op_2='Closed' pointer='/ticket.cf_resolved'}}} }";
         final ObjectMapper objectMapper = Jackson.newObjectMapper();
