@@ -20,7 +20,7 @@ for csvFileName in csvFileNames:
             for row in reader:
                 try:
                     convrow = dict((k.lower().replace(' ', '_'), v) for k,v in row.iteritems())
-                    convrow['body']['wfSource'] = 'delhi_covid_positive_csv'
+                    convrow['wfSource'] = 'delhi_covid_positive_csv'
                     body = { 'id' : 'delhi_csv', 'body' : convrow, 'apiPath' : csvFileName }
                     jobQueue.put(json.dumps(body))
                     print('Queued job: ' + convrow['icmr_id'])
