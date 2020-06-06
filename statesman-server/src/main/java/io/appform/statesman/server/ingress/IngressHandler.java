@@ -138,14 +138,23 @@ public class IngressHandler {
             eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
-        val wfp = this.workflowProvider.get();
-        while (wfp.workflowExists(wfId)) {
-            wfId = UUID.randomUUID().toString();
-        }
         val date = new Date();
         val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
-        val workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
-        wfp.saveWorkflow(workflow);
+        val wfp = this.workflowProvider.get();
+        Workflow workflow = workflowProvider.get()
+                .getWorkflow(wfId)
+                .orElse(null);
+        if(workflow == null) {
+            workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
+            wfp.saveWorkflow(workflow);
+        }
+        else if (workflow.getDataObject().getCurrentState().isTerminal()) {
+            do {
+                wfId = UUID.randomUUID().toString();
+            } while (wfp.workflowExists(wfId));
+            workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
+            wfp.saveWorkflow(workflow);
+        }
         final DataUpdate dataUpdate = new DataUpdate(wfId, update, new MergeDataAction());
         eventBus.get().publish(new StateTransitionEvent(wfTemplate, workflow, dataUpdate, null, null));
         final AppliedTransitions appliedTransitions
