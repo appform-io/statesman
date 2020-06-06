@@ -18,6 +18,7 @@ CREATE TABLE `callback_templates` (
   `type` varchar(45) NOT NULL,
   `translation_template_type` varchar(64) DEFAULT NULL,
   `id_path` varchar(255) DEFAULT NULL,
+  `fql_path` varchar(1024) DEFAULT NULL,  
   `template` blob DEFAULT NULL,
   `created` datetime(3) DEFAULT current_timestamp(3),
   `updated` datetime(3) NOT NULL DEFAULT current_timestamp(3) ON UPDATE current_timestamp(3),
