@@ -59,9 +59,10 @@ public class FqlIdExtractor implements IdExtractor {
         val fqlQuery = handleBarsProvider.get()
                 .transform(JsonNodeValueResolver.INSTANCE, template.getFqlPath(), payload);
         log.debug("FQL Query: {}", fqlQuery);
+        val headers = ImmutableMap.of("Authorization", "Bearer " + foxtrotClientConfig.getAccessToken(),
+                        "Accept", "application/json");
         try (final Response response = httpClientProvider.get()
-                .get(foxtrotClientConfig.getEndpoint() + "/foxtrot/v1/fql",
-                     ImmutableMap.of("Authorization", "Bearer " + foxtrotClientConfig.getAccessToken()))) {
+                .post(foxtrotClientConfig.getEndpoint() + "/foxtrot/v1/fql", fqlQuery, headers)) {
             if(response.code() == HttpStatus.NO_CONTENT_204) {
                 log.debug("No results found for query: {}",  fqlQuery);
                 return Optional.empty();
