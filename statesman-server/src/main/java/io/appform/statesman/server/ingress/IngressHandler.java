@@ -128,7 +128,7 @@ public class IngressHandler {
             eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
-        var wfId = null;
+        String wfId = null;
         try {
             wfId = extractWorkflowId(node, transformationTemplate);
         }
