@@ -403,4 +403,4 @@ metrics:
 
 foxtrot:
   endpoint: ${FOXTROT_ENDPOINT}
-  accessTOken: ${FOXTROT_TOKEN}
+  accessToken: ${FOXTROT_TOKEN}
