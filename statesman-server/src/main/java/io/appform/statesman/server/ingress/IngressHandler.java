@@ -141,8 +141,7 @@ public class IngressHandler {
         val date = new Date();
         val dataObject = new DataObject(mapper.createObjectNode(), wfTemplate.getStartState(), date, date);
         val wfp = this.workflowProvider.get();
-        Workflow workflow = workflowProvider.get()
-                .getWorkflow(wfId)
+        Workflow workflow = wfp.getWorkflow(wfId)
                 .orElse(null);
         if(workflow == null) {
             workflow = new Workflow(wfId, wfTemplate.getId(), dataObject, new Date(), new Date());
