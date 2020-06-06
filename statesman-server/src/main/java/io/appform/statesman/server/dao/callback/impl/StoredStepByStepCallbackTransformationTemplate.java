@@ -23,12 +23,14 @@ public class StoredStepByStepCallbackTransformationTemplate extends StoredCallba
     public StoredStepByStepCallbackTransformationTemplate(
             String provider,
             String idPath,
+            String fqlPath,
             TranslationTemplateType translationTemplateType,
             byte[] template,
             String dropDetectionRule) {
         super(TransformationTemplateType.STEP_BY_STEP,
               provider,
               idPath,
+              fqlPath,
               translationTemplateType,
               template,
               dropDetectionRule);

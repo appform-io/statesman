@@ -66,6 +66,7 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
                             @Override
                             public Object visit(OneShotTransformationTemplate oneShotTransformationTemplate) {
                                 storedCallbackTransformationTemplate.setIdPath(oneShotTransformationTemplate.getIdPath());
+                                storedCallbackTransformationTemplate.setFqlPath(oneShotTransformationTemplate.getFqlPath());
                                 storedCallbackTransformationTemplate.setTemplate(MapperUtils.serialize(oneShotTransformationTemplate.getTemplate()));
                                 return null;
                             }
@@ -73,6 +74,7 @@ public class CallbackTemplateProviderCommand implements CallbackTemplateProvider
                             @Override
                             public Object visit(StepByStepTransformationTemplate stepByStepTransformationTemplate) {
                                 storedCallbackTransformationTemplate.setIdPath(stepByStepTransformationTemplate.getIdPath());
+                                storedCallbackTransformationTemplate.setFqlPath(stepByStepTransformationTemplate.getFqlPath());
                                 storedCallbackTransformationTemplate.setTemplate(MapperUtils.serialize(stepByStepTransformationTemplate.getTemplates()));
                                 return null;
                             }

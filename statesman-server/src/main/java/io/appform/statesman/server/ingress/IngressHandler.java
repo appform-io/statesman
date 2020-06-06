@@ -53,6 +53,7 @@ public class IngressHandler {
     private final String TRANSLATOR_NOT_FOUND = "TRANSLATOR_NOT_FOUND";
     private final String COULD_NOT_TRANSLATE = "COULD_NOT_TRANSLATE";
     private final String WORKFLOW_TEMPLATE_NOT_FOUND = "WORKFLOW_TEMPLATE_NOT_FOUND";
+    private final String FQL_ERROR = "FQL_ERROR";
     private final CallbackTemplateProvider callbackTemplateProvider;
     private final ObjectMapper mapper;
     private final HandleBarsService handleBarsService;
@@ -132,7 +133,9 @@ public class IngressHandler {
             wfId = extractWorkflowId(node, transformationTemplate);
         }
         catch (IllegalStateException e) {
-            log.debug("Got illegal state exception. Mostly fql failure", e); //TODO::ADD EVENT FOR THIS
+            log.debug("Got illegal state exception. Mostly fql failure context: "+mapper.writeValueAsString(update), e);
+            ingressCallbackEvent.setErrorMessage(FQL_ERROR);
+            eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
         val wfp = this.workflowProvider.get();
@@ -503,7 +506,7 @@ public class IngressHandler {
     private static String templateLookupKey(String ivrProvider, JsonNode node) {
         val state = StringUtils.normalize(node.at("/state/0").asText());
         val flowType = StringUtils.normalize(node.at("/flowtype/0").asText());
-        val flowTypeAddnl = Strings.isNullOrEmpty(flowType) ? ("_" + flowType) : "";
+        val flowTypeAddnl = !Strings.isNullOrEmpty(flowType) ? ("_" + flowType) : "";
         if(Strings.isNullOrEmpty(state)) {
             return ivrProvider + flowTypeAddnl;
         }

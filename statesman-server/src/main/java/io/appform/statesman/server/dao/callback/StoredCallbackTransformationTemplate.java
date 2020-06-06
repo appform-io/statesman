@@ -39,6 +39,9 @@ public abstract class StoredCallbackTransformationTemplate {
     @Column(name = "id_path")
     private String idPath;
 
+    @Column(name = "fql_path")
+    private String fqlPath;
+
     @Column(name = "template", columnDefinition = "blob")
     private byte[] template;
 
@@ -57,12 +60,14 @@ public abstract class StoredCallbackTransformationTemplate {
             TransformationTemplateType type,
             String provider,
             String idPath,
+            String fqlPath,
             TranslationTemplateType translationTemplateType,
             byte[] template,
             String dropDetectionRule) {
         this.type = type;
         this.provider = provider;
         this.idPath = idPath;
+        this.fqlPath = fqlPath;
         this.translationTemplateType = translationTemplateType;
         this.template = template;
         this.dropDetectionRule = dropDetectionRule;

@@ -23,12 +23,14 @@ public class StoredOneShotCallbackTransformationTemplate extends StoredCallbackT
     public StoredOneShotCallbackTransformationTemplate(
             String provider,
             String idPath,
+            String fqlPath,
             TranslationTemplateType translationTemplateType,
             byte[] template,
             String dropDetectionRule) {
         super(TransformationTemplateType.ONE_SHOT,
               provider,
               idPath,
+              fqlPath,
               translationTemplateType,
               template,
               dropDetectionRule);
