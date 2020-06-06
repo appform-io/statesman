@@ -27,6 +27,7 @@ import io.appform.statesman.server.callbacktransformation.impl.StepByStepTransfo
 import io.appform.statesman.server.dao.callback.CallbackTemplateProvider;
 import io.appform.statesman.server.droppedcalldetector.DroppedCallDetector;
 import io.appform.statesman.server.evaluator.WorkflowTemplateSelector;
+import io.appform.statesman.server.idextractor.IdExtractor;
 import io.appform.statesman.server.requests.IngressCallback;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -60,6 +61,7 @@ public class IngressHandler {
     private final Provider<WorkflowTemplateSelector> templateSelector;
     private final Provider<ObservableEventBus> eventBus;
     private final DroppedCallDetector droppedCallDetector;
+    private final IdExtractor idExtractor;
     private final HopeLangEngine hopeLangEngine;
     private final LoadingCache<String, Evaluatable> hopeRuleCache;
 
@@ -72,7 +74,7 @@ public class IngressHandler {
             Provider<WorkflowProvider> workflowProvider,
             Provider<WorkflowTemplateSelector> templateSelector,
             Provider<ObservableEventBus> eventBus,
-            DroppedCallDetector droppedCallDetector) {
+            DroppedCallDetector droppedCallDetector, IdExtractor idExtractor) {
         this.callbackTemplateProvider = callbackTemplateProvider;
         this.mapper = mapper;
         this.handleBarsService = handleBarsService;
@@ -81,6 +83,7 @@ public class IngressHandler {
         this.templateSelector = templateSelector;
         this.eventBus = eventBus;
         this.droppedCallDetector = droppedCallDetector;
+        this.idExtractor = idExtractor;
         this.hopeLangEngine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())
                 .build();
@@ -477,16 +480,17 @@ public class IngressHandler {
         });
     }
 
+
+    private String extractWorkflowId(JsonNode node, TransformationTemplate transformationTemplate) {
+        val wfId = idExtractor.extractId(transformationTemplate, node). orElse(null);
+        return Strings.isNullOrEmpty(wfId)
+               ? UUID.randomUUID().toString()
+               : wfId;
+    }
+
     public static MultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
         return new ImmutableMultivaluedMap<>(
                 UriComponent.decodeQuery(ingressCallback.getQueryString(), true));
-    }
-
-    private static String extractWorkflowId(JsonNode node, TransformationTemplate transformationTemplate) {
-        val wfIdNode = node.at(transformationTemplate.getIdPath());
-        return Strings.isNullOrEmpty(transformationTemplate.getIdPath()) || !isValid(node)
-               ? UUID.randomUUID().toString()
-               : wfIdNode.asText();
     }
 
     private static boolean isValid(final JsonNode node) {

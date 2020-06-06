@@ -130,8 +130,7 @@ public class StateTransitionEngine {
         dataObject.setCurrentState(selectedTransition.getToState());
         val action = applyAction(workflow, dataObject, selectedTransition);
         workflowProvider.get().updateWorkflow(workflow);
-        eventBus.publish(new StateTransitionEvent(
-                template, workflow, dataUpdate, currentState, action));
+        eventBus.publish(new StateTransitionEvent(template, workflow, dataUpdate, currentState, action));
         return Optional.of(new AppliedTransition(currentState,
                                                  selectedTransition.getToState(),
                                                  selectedTransition.getId()));

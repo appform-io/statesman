@@ -24,15 +24,18 @@ public abstract class TransformationTemplate {
     private final String provider;
     private final TransformationTemplateType type;
     private final String idPath;
+    private final String fqlPath;
     private final TranslationTemplateType translationTemplateType;
     private final String dropDetectionRule;
 
     protected TransformationTemplate(
             TransformationTemplateType type,
             String idPath,
+            String fqlPath,
             TranslationTemplateType translationTemplateType,
             String provider,
             String dropDetectionRule) {
+        this.fqlPath = fqlPath;
         this.provider = provider;
         this.type = type;
         this.idPath = idPath;

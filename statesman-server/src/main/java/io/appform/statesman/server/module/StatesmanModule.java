@@ -31,6 +31,8 @@ import io.appform.statesman.server.dao.transition.TransitionStoreCommand;
 import io.appform.statesman.server.dao.workflow.WorkflowProviderCommand;
 import io.appform.statesman.server.droppedcalldetector.DroppedCallDetector;
 import io.appform.statesman.server.droppedcalldetector.HopeRuleDroppedCallDetector;
+import io.appform.statesman.server.idextractor.CompoundIdExtractor;
+import io.appform.statesman.server.idextractor.IdExtractor;
 import io.appform.statesman.server.provider.ProviderSelectorImpl;
 import io.dropwizard.setup.Environment;
 
@@ -52,6 +54,7 @@ public class StatesmanModule extends AbstractModule {
         bind(ObservableEventBusSubscriber.class)
                 .annotatedWith(Names.named("foxtrotEventSender"))
                 .to(FoxtrotEventSender.class);
+        bind(IdExtractor.class).to(CompoundIdExtractor.class);
     }
 
     @Singleton
