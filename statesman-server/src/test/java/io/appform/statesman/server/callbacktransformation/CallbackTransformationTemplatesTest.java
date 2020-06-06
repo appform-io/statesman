@@ -54,7 +54,7 @@ public class CallbackTransformationTemplatesTest {
                 "              \"symptoms\": {{{ map_lookup_arr op_1='fever' op_2='cough' op_3='throatpain' op_4='wheezing' op_5='others' op_6='none' pointer='/digits'}}}\n" +
                 "            }"));
 
-                StepByStepTransformationTemplate template = new StepByStepTransformationTemplate("exotel", "/CallSid/0", TranslationTemplateType.INGRESS, steps, "");
+                StepByStepTransformationTemplate template = new StepByStepTransformationTemplate("exotel", "/CallSid/0", "", TranslationTemplateType.INGRESS, steps, "");
         final ObjectMapper mapper = Jackson.newObjectMapper();
         val engine = HopeLangEngine.builder()
                 .errorHandlingStrategy(new InjectValueErrorHandlingStrategy())

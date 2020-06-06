@@ -23,8 +23,8 @@ services:
     volumes:
     - /var/log/statesman-server
     environment:
-      SHARD1_CONNECTION_STRING: jdbc:mariadb://mariadb_1/statesman_db_1?createDatabaseIfNotExist=true
-      SHARD2_CONNECTION_STRING: jdbc:mariadb://mariadb_2/statesman_db_2?createDatabaseIfNotExist=true
+      SHARD0_CONNECTION_STRING: jdbc:mariadb://mariadb_1/statesman_db_1?createDatabaseIfNotExist=true
+      SHARD1_CONNECTION_STRING: jdbc:mariadb://mariadb_2/statesman_db_2?createDatabaseIfNotExist=true
       DB_USER: root
       DB_PASSWORD: password
       SHARDS: 2
@@ -33,6 +33,8 @@ services:
       INFLUXDB_PORT: "8086"
       METRIC_PUSH_FREQUENCY: 1min
       CONFIG_ENV: local
+      FOXTROT_ENDPOINT: https://foxtrot.telemed-ind.appform.io
+      FOXTROT_TOKEN: INV_TOKEN_
     depends_on:
       - mariadb_1
       - mariadb_2

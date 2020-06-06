@@ -1,6 +1,7 @@
 package io.appform.statesman.server;
 
 import io.appform.dropwizard.sharding.config.ShardedHibernateFactory;
+import io.appform.statesman.model.FoxtrotClientConfig;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.publisher.impl.EventPublisherConfig;
 import io.dropwizard.Configuration;
@@ -38,5 +39,9 @@ public class AppConfig extends Configuration {
     @NotNull
     @Valid
     private HttpClientConfiguration httpActionDefaultConfig;
+
+    @NotNull
+    @Valid
+    public FoxtrotClientConfig foxtrot;
 
 }

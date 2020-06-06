@@ -400,3 +400,7 @@ metrics:
         - jvm.attribute.name
         - jvm.attribute.vendor
       defaultMeasurementMappings: {}
+
+foxtrot:
+  endpoint: ${FOXTROT_ENDPOINT}
+  accessTOken: ${FOXTROT_TOKEN}

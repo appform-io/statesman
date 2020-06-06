@@ -17,9 +17,12 @@ import io.appform.statesman.engine.observer.ObservableEventBus;
 import io.appform.statesman.engine.observer.ObservableEventBusSubscriber;
 import io.appform.statesman.engine.observer.ObservableGuavaEventBus;
 import io.appform.statesman.engine.observer.observers.FoxtrotEventSender;
+import io.appform.statesman.model.FoxtrotClientConfig;
 import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
+import io.appform.statesman.publisher.http.HttpClient;
+import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.publisher.impl.QueueEventPublisher;
 import io.appform.statesman.publisher.impl.SyncEventPublisher;
 import io.appform.statesman.publisher.model.PublisherType;
@@ -96,4 +99,18 @@ public class StatesmanModule extends AbstractModule {
         return config.getHttpActionDefaultConfig();
     }
 
+    @Provides
+    @Singleton
+    public HttpClient httpClient(Environment environment, AppConfig appConfig) {
+        return new HttpClient(environment.getObjectMapper(),
+                              HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(),
+                                                     environment.metrics(),
+                                                     appConfig.getHttpActionDefaultConfig()));
+    }
+
+    @Provides
+    @Singleton
+    public FoxtrotClientConfig foxtrotClientConfig(AppConfig appConfig) {
+        return appConfig.getFoxtrot();
+    }
 }

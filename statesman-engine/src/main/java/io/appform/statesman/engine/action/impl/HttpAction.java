@@ -1,6 +1,5 @@
 package io.appform.statesman.engine.action.impl;
 
-import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.NullNode;
@@ -9,7 +8,6 @@ import com.google.common.base.Strings;
 import io.appform.statesman.engine.action.BaseAction;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.model.ActionImplementation;
-import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.model.Workflow;
 import io.appform.statesman.model.action.ActionType;
 import io.appform.statesman.model.action.template.HttpActionTemplate;
@@ -17,13 +15,13 @@ import io.appform.statesman.model.exception.StatesmanError;
 import io.appform.statesman.publisher.EventPublisher;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
-import io.appform.statesman.publisher.impl.SyncEventPublisher;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,20 +37,16 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
 
     private static final String APPLICATION_JSON = "application/json";
     private HandleBarsService handleBarsService;
-    private HttpClient client;
+    private Provider<HttpClient> client;
 
     @Inject
     public HttpAction(
             HandleBarsService handleBarsService,
-            MetricRegistry registry,
-            @Named("httpActionDefaultConfig") HttpClientConfiguration config,
+            Provider<HttpClient> client,
             @Named("eventPublisher") final EventPublisher publisher,
             ObjectMapper mapper) {
         super(publisher, mapper);
-        this.client = new HttpClient(mapper,
-                                     HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(),
-                                                            registry,
-                                                            config));
+        this.client = client;
         this.handleBarsService = handleBarsService;
     }
 
@@ -105,7 +99,7 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
             public Response visitPost() throws Exception {
                 log.info("HTTP_ACTION POST Call url:{}", url);
                 val payload = actionData.getPayload();
-                Response response = client.post(url, payload, headers);
+                Response response = client.get().post(url, payload, headers);
                 if (!response.isSuccessful()) {
                     log.error("unable to do post action, actionData: {} Response: {}",
                               actionData, HttpUtil.body(response));
@@ -118,7 +112,7 @@ public class HttpAction extends BaseAction<HttpActionTemplate> {
             public Response visitGet() throws Exception {
                 log.info("HTTP_ACTION GET Call url:{}", url);
                 Response response = null;
-                response = client.get(url, headers);
+                response = client.get().get(url, headers);
                 if (!response.isSuccessful()) {
                     log.error("unable to do get action, actionData: {} Response: {}",
                             actionData, HttpUtil.body(response));

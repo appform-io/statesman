@@ -7,7 +7,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import io.appform.statesman.engine.handlebars.HandleBarsService;
 import io.appform.statesman.model.FoxtrotClientConfig;
-import io.appform.statesman.model.HttpClientConfiguration;
 import io.appform.statesman.publisher.http.HttpClient;
 import io.appform.statesman.publisher.http.HttpUtil;
 import io.appform.statesman.server.callbacktransformation.TransformationTemplate;
@@ -31,7 +30,6 @@ public class FqlIdExtractor implements IdExtractor {
 
     private final Provider<HandleBarsService> handleBarsProvider;
     private final FoxtrotClientConfig foxtrotClientConfig;
-    private final HttpClientConfiguration clientConfiguration;
     private final Provider<HttpClient> httpClientProvider;
     private final ObjectMapper mapper;
 
@@ -39,11 +37,10 @@ public class FqlIdExtractor implements IdExtractor {
     public FqlIdExtractor(
             Provider<HandleBarsService> handleBarsProvider,
             FoxtrotClientConfig foxtrotClientConfig,
-            HttpClientConfiguration clientConfiguration,
-            Provider<HttpClient> httpClientProvider, ObjectMapper mapper) {
+            Provider<HttpClient> httpClientProvider,
+            ObjectMapper mapper) {
         this.handleBarsProvider = handleBarsProvider;
         this.foxtrotClientConfig = foxtrotClientConfig;
-        this.clientConfiguration = clientConfiguration;
         this.httpClientProvider = httpClientProvider;
         this.mapper = mapper;
     }
