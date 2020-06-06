@@ -127,7 +127,14 @@ public class IngressHandler {
             eventBus.get().publish(ingressCallbackEvent);
             return false;
         }
-        var wfId = extractWorkflowId(node, transformationTemplate);
+        var wfId = null;
+        try {
+            wfId = extractWorkflowId(node, transformationTemplate);
+        }
+        catch (IllegalStateException e) {
+            log.debug("Got illegal state exception. Mostly fql failure", e); //TODO::ADD EVENT FOR THIS
+            return false;
+        }
         val wfp = this.workflowProvider.get();
         while (wfp.workflowExists(wfId)) {
             wfId = UUID.randomUUID().toString();
