@@ -97,7 +97,7 @@ public class IngressHandler {
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
         log.info("Processing node: {}", node);
-        val tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
+        String tmplLookupKey = templateLookupKey(ivrProvider, node);
         val ingressCallbackEvent = IngressCallbackEvent.builder()
                 .callbackType("OneShot")
                 .ivrProvider(ivrProvider)
@@ -155,7 +155,7 @@ public class IngressHandler {
         val queryParams = parseQueryParams(ingressCallback);
         val node = mapper.valueToTree(queryParams);
         log.info("Processing node: {}", node);
-        final String tmplLookupKey = ivrProvider + "_" + StringUtils.normalize(node.at("/state/0").asText());
+        final String tmplLookupKey = templateLookupKey(ivrProvider, node);
         val ingressCallbackEvent = IngressCallbackEvent.builder()
                 .callbackType("MultiStep")
                 .ivrProvider(ivrProvider)
@@ -488,9 +488,19 @@ public class IngressHandler {
                : wfId;
     }
 
-    public static MultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
+    private static MultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
         return new ImmutableMultivaluedMap<>(
                 UriComponent.decodeQuery(ingressCallback.getQueryString(), true));
+    }
+
+    private static String templateLookupKey(String ivrProvider, JsonNode node) {
+        val state = StringUtils.normalize(node.at("/state/0").asText());
+        val flowType = StringUtils.normalize(node.at("/flowtype/0").asText());
+        val flowTypeAddnl = Strings.isNullOrEmpty(flowType) ? ("_" + flowType) : "";
+        if(Strings.isNullOrEmpty(state)) {
+            return ivrProvider + flowTypeAddnl;
+        }
+        return ivrProvider + "_" + state + flowTypeAddnl;
     }
 
     private static boolean isValid(final JsonNode node) {
