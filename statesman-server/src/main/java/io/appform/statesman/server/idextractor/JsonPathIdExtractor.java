@@ -22,6 +22,10 @@ public class JsonPathIdExtractor implements IdExtractor {
             log.debug("No template specified");
             return Optional.empty();
         }
+        if (null == payload) {
+            log.debug("No json payload");
+            return Optional.empty();
+        }
         val idPath = template.getIdPath();
         if(Strings.isNullOrEmpty(idPath)) {
             log.debug("No id path specified in template for provider: {}", template.getProvider());

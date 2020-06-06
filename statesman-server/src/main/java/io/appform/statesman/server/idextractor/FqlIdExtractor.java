@@ -52,6 +52,10 @@ public class FqlIdExtractor implements IdExtractor {
             log.debug("Empty template provided");
             return Optional.empty();
         }
+        if(null == payload) {
+            log.debug("Empty payload");
+            return Optional.empty();
+        }
         if(Strings.isNullOrEmpty(template.getFqlPath())) {
             log.debug("Empty fql path provided");
             return Optional.empty();
@@ -63,9 +67,14 @@ public class FqlIdExtractor implements IdExtractor {
                         "Accept", "application/json");
         try (final Response response = httpClientProvider.get()
                 .post(foxtrotClientConfig.getEndpoint() + "/foxtrot/v1/fql", fqlQuery, headers)) {
-            if(response.code() == HttpStatus.NO_CONTENT_204) {
+            val responseCode = response.code();
+            if(responseCode == HttpStatus.NO_CONTENT_204) {
                 log.debug("No results found for query: {}",  fqlQuery);
-                return Optional.empty();
+                throw new IllegalStateException("No record found for the given query");
+            }
+            if(responseCode != HttpStatus.OK_200) {
+                log.error("Error running fql query: {}. Status: {}", fqlQuery, responseCode);
+                throw new IllegalStateException("Could not execute foxtrot query.");
             }
             val responseBody = HttpUtil.body(response);
             log.debug("Response: {}", responseBody);
@@ -76,7 +85,8 @@ public class FqlIdExtractor implements IdExtractor {
                 return Optional.empty();
             }
             val dataNode = rows.get(0);
-            if(null == dataNode || dataNode.isMissingNode() || !dataNode.get(0).isTextual()) {
+            if(null == dataNode
+                    || dataNode.isMissingNode()) {
                 log.debug("Row 0 does not contain valid data for: {}", fqlQuery);
                 return Optional.empty();
             }

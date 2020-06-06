@@ -103,7 +103,7 @@ public class StatesmanModule extends AbstractModule {
     @Singleton
     public HttpClient httpClient(Environment environment, AppConfig appConfig) {
         return new HttpClient(environment.getObjectMapper(),
-                              HttpUtil.defaultClient(SyncEventPublisher.class.getSimpleName(),
+                              HttpUtil.defaultClient("common-http",
                                                      environment.metrics(),
                                                      appConfig.getHttpActionDefaultConfig()));
     }
