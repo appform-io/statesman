@@ -17,6 +17,7 @@ HEADERS = {
 }
 
 STATE_CALLBACK_PAYLOAD = {
+    "CALL_NEEDED_SPAM_CHECK_RETRY_3" : {"notReachable": True},
     "CALL_NEEDED_SPAM_CHECK_RETRY_2": {"retryAttempt3": True},
     "CALL_NEEDED_SPAM_CHECK" : {"retryAttempt2": True},
     "HOME_QUARANTINE" : {"callTrigger": True},
