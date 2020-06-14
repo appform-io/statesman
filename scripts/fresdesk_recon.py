@@ -28,7 +28,7 @@ PASSWORD = ''
 DATABASE = 'statesman_db_'
 SHARDS = 16
 
-PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_NEEDED_MENTAL_HEALTH') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
+PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_NEEDED_MENTAL_HEALTH','CALL_NEEDED_COVID_POSITIVE') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
 
 
 ############ DATE HELPER ###########
@@ -181,7 +181,29 @@ def create_recon_payload(patient_language,
                          tags,
                          fsm_customer_signature,
                          doctor_notes,
-                         ticket_type):
+                         ticket_type,
+                         cf_hq_doctor_notes,
+                         cf_delhi_patient_mobile_no,
+                         cf_2nd_mobile_number,
+                         cf_clinical_status,
+                         cf_comoribities_diabetes,
+                         cf_comorbidity_hypertension,
+                         cf_comorbidity_cancer,
+                         cf_stepone_doctor_suggestion,
+                         cf_hq_doctor_recommendation,
+                         cf_is_the_above_address_correct,
+                         cf_if_above_address_is_wrong_enter_correct_address,
+                         cf_district,
+                         cf_comorbidity_other_immunodeficiency_inducing_syndromedisease,
+                         cf_tele_agent_input,
+                         cf_covid_care_center_name,
+                         cf_hospital_name,
+                         cf_tele_agent_notes,
+                         cf_symptom_difficulty_in_breathing,
+                         cf_symptom_fever_above_101_since_3_days,
+                         cf_symptom_severe_cough,
+                         cf_symptom_diarrhoea_above_4_times_a_day,
+                         cf_symptom_loss_of_smell_taste):
     paylaod = {
         "freshdesk_webhook": {
             "ticket_cf_patient_language": patient_language,
@@ -207,7 +229,29 @@ def create_recon_payload(patient_language,
             "ticket_tags": tags,
             "ticket_cf_fsm_customer_signature": fsm_customer_signature,
             "ticket_cf_doctor_notes": doctor_notes,
-            "ticket_ticket_type": ticket_type
+            "ticket_ticket_type": ticket_type,
+            "ticket_cf_hq_doctor_notes": cf_hq_doctor_notes,
+            "ticket_cf_delhi_patient_mobile_no": cf_delhi_patient_mobile_no,
+            "ticket_cf_2nd_mobile_number": cf_2nd_mobile_number,
+            "ticket_cf_clinical_status": cf_clinical_status,
+            "ticket_cf_comoribities_diabetes": cf_comoribities_diabetes,
+            "ticket_cf_comorbidity_hypertension": cf_comorbidity_hypertension,
+            "ticket_cf_comorbidity_cancer": cf_comorbidity_cancer,
+            "ticket_cf_stepone_doctor_suggestion": cf_stepone_doctor_suggestion,
+            "ticket_cf_hq_doctor_recommendation": cf_hq_doctor_recommendation,
+            "ticket_cf_is_the_above_address_correct": cf_is_the_above_address_correct,
+            "ticket_cf_if_above_address_is_wrong_enter_correct_address": cf_if_above_address_is_wrong_enter_correct_address,
+            "ticket_cf_district": cf_district,
+            "ticket_cf_comorbidity_other_immunodeficiency_inducing_syndromedisease": cf_comorbidity_other_immunodeficiency_inducing_syndromedisease,
+            "ticket_cf_tele_agent_input": cf_tele_agent_input,
+            "ticket_cf_covid_care_center_name": cf_covid_care_center_name,
+            "ticket_cf_hospital_name": cf_hospital_name,
+            "ticket_cf_tele_agent_notes": cf_tele_agent_notes,
+            "ticket_cf_symptom_difficulty_in_breathing": cf_symptom_difficulty_in_breathing,
+            "ticket_cf_symptom_fever_above_101_since_3_days": cf_symptom_fever_above_101_since_3_days,
+            "ticket_cf_symptom_severe_cough": cf_symptom_severe_cough,
+            "ticket_cf_symptom_diarrhoea_above_4_times_a_day": cf_symptom_diarrhoea_above_4_times_a_day,
+            "ticket_cf_symptom_loss_of_smell_taste": cf_symptom_loss_of_smell_taste
         }
     }
     return paylaod
@@ -219,7 +263,7 @@ def recon_required_based_on_workflow(workflow):
 
 
 def recon_required_based_on_ticket_details(ticket_details):
-    return get_or_default(ticket_details, "status", 0) >= 4
+    return ticket_details is not None and get_or_default(ticket_details, "status", 0) >= 4
 
 
 def statusString(status):
@@ -259,6 +303,28 @@ def create_recon_payload_from_ticket_details(ticket_details, worklow_id):
                                 contact=get_or_default(cf, "cf_contact", ""),
                                 category=get_or_default(cf, "cf_category", ""),
                                 doctor_notes=get_or_default(cf, "cf_doctor_notes", ""),
+                                cf_hq_doctor_notes=get_or_default(cf, "cf_hq_doctor_notes", ""),
+                                cf_delhi_patient_mobile_no=get_or_default(cf, "cf_delhi_patient_mobile_no", ""),
+                                cf_2nd_mobile_number=get_or_default(cf, "cf_2nd_mobile_number", ""),
+                                cf_clinical_status=get_or_default(cf, "cf_clinical_status", ""),
+                                cf_comoribities_diabetes=get_or_default(cf, "cf_comoribities_diabetes", ""),
+                                cf_comorbidity_hypertension=get_or_default(cf, "cf_comorbidity_hypertension", ""),
+                                cf_comorbidity_cancer=get_or_default(cf, "cf_comorbidity_cancer", ""),
+                                cf_stepone_doctor_suggestion=get_or_default(cf, "cf_stepone_doctor_suggestion", ""),
+                                cf_hq_doctor_recommendation=get_or_default(cf, "cf_hq_doctor_recommendation", ""),
+                                cf_is_the_above_address_correct=get_or_default(cf, "cf_is_the_above_address_correct", ""),
+                                cf_if_above_address_is_wrong_enter_correct_address=get_or_default(cf, "cf_if_above_address_is_wrong_enter_correct_address", ""),
+                                cf_district=get_or_default(cf, "cf_district", ""),
+                                cf_comorbidity_other_immunodeficiency_inducing_syndromedisease=get_or_default(cf, "cf_comorbidity_other_immunodeficiency_inducing_syndromedisease", ""),
+                                cf_tele_agent_input=get_or_default(cf, "cf_tele_agent_input", ""),
+                                cf_covid_care_center_name=get_or_default(cf, "cf_covid_care_center_name", ""),
+                                cf_hospital_name=get_or_default(cf, "cf_hospital_name", ""),
+                                cf_tele_agent_notes=get_or_default(cf, "cf_tele_agent_notes", ""),
+                                cf_symptom_difficulty_in_breathing=get_or_default(cf, "cf_symptom_difficulty_in_breathing", ""),
+                                cf_symptom_fever_above_101_since_3_days=get_or_default(cf, "cf_symptom_fever_above_101_since_3_days", ""),
+                                cf_symptom_severe_cough=get_or_default(cf, "cf_symptom_severe_cough", ""),
+                                cf_symptom_diarrhoea_above_4_times_a_day=get_or_default(cf, "cf_symptom_diarrhoea_above_4_times_a_day", ""),
+                                cf_symptom_loss_of_smell_taste=get_or_default(cf, "cf_symptom_loss_of_smell_taste", ""),
                                 fsm_customer_signature=worklow_id)
 
 
