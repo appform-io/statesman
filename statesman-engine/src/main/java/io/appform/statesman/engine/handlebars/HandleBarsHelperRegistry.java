@@ -61,6 +61,7 @@ public class HandleBarsHelperRegistry {
         registerStrNormalize();
         registerStrSingleLineText();
         registerStrNormalizeUpper();
+        registerStrAlphaNumeric();
         registerStrNormalizeInitCap();
         registerCurrTime();
         registerElapsedTime();
@@ -294,6 +295,11 @@ public class HandleBarsHelperRegistry {
             }
             throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
+    }
+
+    private void registerStrAlphaNumeric() {
+        handlebars.registerHelper("alphaNumeric",
+                                  (Helper<String>) (value, options) -> StringUtils.alphaNumeric(value));
     }
 
     private void registerStrNormalize() {
