@@ -447,6 +447,16 @@ public class HandleBarsServiceTest {
         Assert.assertEquals("Punjab", hb.transform("{{normalize_init_cap state}}", node));
     }
 
+    @Test
+    public void testAlphaNumeric() {
+        val hb = new HandleBarsService();
+        val node = Jackson.newObjectMapper()
+                .createObjectNode()
+                .put("name", "Dr. Jeykll \\ Mr. Hyde")
+                .put("state", "punjab");
+        Assert.assertEquals("Dr Jeykll Mr Hyde", hb.transform("{{alphaNumeric name}}", node));
+    }
+
 
     
     @Test
