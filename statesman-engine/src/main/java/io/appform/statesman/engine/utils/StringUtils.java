@@ -10,6 +10,16 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StringUtils {
+
+    public static String alphaNumeric(String s) {
+        if(Strings.isNullOrEmpty(s)) {
+            return "";
+        }
+        return s.replaceAll("[^ \\s\\w]+", " ")
+                .replaceAll("\\s{2,}", " ")
+                .trim();
+    }    
+
     public static String normalize(String s) {
         if(Strings.isNullOrEmpty(s)) {
             return "";
