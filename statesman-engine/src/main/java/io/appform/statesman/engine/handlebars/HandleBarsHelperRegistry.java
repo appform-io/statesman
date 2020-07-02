@@ -576,13 +576,18 @@ public class HandleBarsHelperRegistry {
                 }
 
                 final String arrayOrderCsv = options.hash("op_" + key1String);
+                if ( null == arrayOrderCsv || arrayOrderCsv.isEmpty() ) {
+                    return res[0];
+                }
+
                 String[] arrayOrder = arrayOrderCsv.split(",");
                 if (key2Value.asInt() > 0 && key2Value.asInt() <= arrayOrder.length) {
                     String arrayLookupIndexStr = arrayOrder[key2Value.asInt() - 1];
                     int arrayLookupIndex = Integer.parseInt(arrayLookupIndexStr);
-                    return (res[arrayLookupIndex - 1]);
+                    if ( arrayLookupIndex > 1 && arrayLookupIndex <= res.length ) {
+                        return (res[arrayLookupIndex - 1]);
+                    }
                 }
-
 
                 return res.length > 0 ? res[0] : empty();
             }

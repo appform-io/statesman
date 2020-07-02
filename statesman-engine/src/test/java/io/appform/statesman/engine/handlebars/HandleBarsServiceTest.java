@@ -2,7 +2,9 @@ package io.appform.statesman.engine.handlebars;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.jknack.handlebars.JsonNodeValueResolver;
+import com.github.jknack.handlebars.Template;
 import com.google.common.base.Strings;
 import io.dropwizard.jackson.Jackson;
 import lombok.SneakyThrows;
@@ -10,8 +12,10 @@ import lombok.val;
 import org.junit.Assert;
 import org.junit.Test;
 
+import javax.management.ObjectName;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Objects;
 
 /**
@@ -632,5 +636,98 @@ public class HandleBarsServiceTest {
         System.out.println(value);
         Assert.assertFalse(Strings.isNullOrEmpty(value));
     }
+
+    @Test
+    @SneakyThrows
+    public void testMapArrLookup() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "karnataka");
+            obj.put("language", 1);
+            String template = "{{map_arr_lookup array='english,hindi,tamil,bengali,kannada' op_karnataka='2,3,1' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-1:" + res);
+            Assert.assertEquals("hindi", res);
+        }
+
+
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "karnataka");
+            obj.put("language", 6);
+            String template = "{{map_arr_lookup array='english,hindi,tamil,bengali,kannada' op_karnataka='2,3,1' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-2:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+
+            String template = "{{map_arr_lookup array='english,hindi,tamil,bengali,kannada' op_karnataka='2,3,1' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-3:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "wrongstate");
+            obj.put("language", 1);
+
+            String template = "{{map_arr_lookup array='english,hindi,tamil,bengali,kannada' op_karnataka='2,3,1' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-4:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "karnataka");
+            obj.put("language", 1);
+            String template = "{{map_arr_lookup array='english,hindi,tamil,bengali,kannada' op_karnataka='2,3,1' op_tamilnadu='3,2,1' }}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-5:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "karnataka");
+            obj.put("language", 1);
+            String template = "{{map_arr_lookup array='english,hindi,tamil,bengali,kannada' op_karnataka='20,30,11' op_tamilnadu='30,24,11' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-6:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "karnataka");
+            obj.put("language", 1);
+            String template = "{{map_arr_lookup op_karnataka='20,30,11' op_tamilnadu='30,24,11' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-7:" + res);
+            Assert.assertEquals("", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "karnataka");
+            obj.put("language", 1);
+            String template = "{{map_arr_lookup}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-8:" + res);
+            Assert.assertEquals("", res);
+        }
+        
+    }
+
 
 }
