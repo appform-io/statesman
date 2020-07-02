@@ -2,20 +2,22 @@ import MySQLdb
 import json
 import requests
 import argparse
+from multiprocessing import Queue
+import threading
+import time
 
 HOST = '127.0.0.1'
 USER = 'root'
 PASSWORD = ''
 DATABASE = 'statesman_db_'
 SHARDS = 16
-
-STATE_WORKFLOW_SQL = """ select workflow_id,current_state from workflow_instances where current_state IN ('%s') and updated < DATE_SUB(NOW(), INTERVAL 15 MINUTE) """
-
+WORKING_THREADS = 8
+EXIT_FLAG = 0
+STATE_WORKFLOW_SQL = """ select workflow_id,current_state from workflow_instances where current_state IN ('%s') and updated < DATE_SUB(NOW(), INTERVAL 15 MINUTE)"""
 STATESMAN_RECON_URL = "http://statesman.telemed-ind.appform.io:8080/v1/housekeeping/trigger/workflow/{}"
 HEADERS = {
     "Content-Type": "application/json"
 }
-
 STATE_CALLBACK_PAYLOAD = {
     "CALL_NEEDED_SPAM_CHECK_RETRY_3" : {"notReachable": True},
     "CALL_NEEDED_SPAM_CHECK_RETRY_2": {"retryAttempt3": True},
@@ -26,6 +28,68 @@ STATE_CALLBACK_PAYLOAD = {
     "IVR_ATTEMPT_3" : {"status": "noanswer"},
     "HQ_VOILATION": {"dayEnd": True}
 }
+
+queueLock = threading.Lock()
+workQueue = Queue()
+threads = []
+
+#######################  THREAD HELPER #########################
+
+class ProcessingThread (threading.Thread):
+    def __init__(self, threadId, name, q):
+        threading.Thread.__init__(self)
+        self.threadId = threadId
+        self.name = name
+        self.q = q
+
+    def run(self):
+        print("INFO: STARTING " + self.name)
+        processDataByThread(self.q)
+        print("INFO: EXISTING " + self.name)
+
+def processDataByThread(q):
+    global EXIT_FLAG
+    global queueLock
+    while not EXIT_FLAG:
+        queueLock.acquire()
+        if not q.empty():
+            row = q.get()
+            queueLock.release()
+            process(row)
+        else:
+            queueLock.release()
+            time.sleep(1)
+
+def initThreads():
+    for x in range(0,WORKING_THREADS):
+        thread = ProcessingThread(x, "Thread-"+str(x), workQueue)
+        thread.start()
+        threads.append(thread)
+
+
+def waitForCompleteion():
+    global EXIT_FLAG
+    # Wait for queue to empty
+    try:
+        while workQueue.qsize() > 0:
+            print("INFO: SIZE :" + str(workQueue.qsize()))
+            time.sleep(5)
+            pass
+    except KeyboardInterrupt:
+        print("INFO: Ctrl-c PRESSED ...")
+
+    # Notify threads it's time to exit
+    EXIT_FLAG = 1
+
+    # Wait for all threads to complete
+    try:
+        for thread in threads:
+            thread.join()
+        print("INFO: EXITING MAIN THREAD")
+    except KeyboardInterrupt:
+        print("INFO: Ctrl-c PRESSED ...")
+
+
 
 #######################  MYSQL HELPER ##########################
 
@@ -74,13 +138,18 @@ def statesman_callback(states):
     result = execute_query(sql)
     for row in result:
         try:
-            state = row[1]
-            workflow_id = row[0]
-            callback(workflow_id,STATE_CALLBACK_PAYLOAD[state])
+            jobData = dict()
+            jobData['state'] = row[1]
+            jobData['workflow_id'] = row[0]
+            workQueue.put(jobData.copy())
         except:
             print("ERROR: Processing row:" + str(",".join(row)))
+    print("INFO: SQL result pushed to queue")
 
 
+def process(jobData):
+    #print("INFO: workflow_id:" + jobData['workflow_id'] + " state:" + jobData['state'])
+    callback(jobData['workflow_id'], STATE_CALLBACK_PAYLOAD[jobData['state']])
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s",   "--state", action='append', required=True,  help="State for which callback needs to be triggered")
@@ -92,4 +161,7 @@ for state in states:
         print("ERROR: Invalid state:" + state)
         exit(1)
 
+initThreads()
 statesman_callback(states)
+waitForCompleteion()
+exit(0)
