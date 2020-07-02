@@ -72,6 +72,7 @@ public class HandleBarsHelperRegistry {
         registerGte();
         registerMapLookup();
         registerMapLookupArray();
+        registerMapArrLookup();
         registerStrTranslate();
         registerStrTranslateArr();
         registerStrTranslateTxt();
@@ -540,6 +541,63 @@ public class HandleBarsHelperRegistry {
         });
     }
 
+    /*
+    Example Usage:
+            JsonNode obj <- {"state" : "karnataka","language" : 2 }
+            defaults to english under error cases
+            Template template = handlebars.compileInline("{{map_arr_lookup array='english,hindi,tamil,bengali,kannada' op_karnataka='2,3,1' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}" );
+     */
+    private void registerMapArrLookup() {
+        handlebars.registerHelper("map_arr_lookup", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+
+                final String key = options.hash("array");
+                if (Strings.isNullOrEmpty(key)) {
+                    return empty();
+                }
+
+                String[] res = key.split(",");
+                if (res.length == 1) {
+                    return res[0];
+                }
+
+                final String key1 = options.hash("key1");
+                val key1Data = node.at(key1);
+                if (null == key1Data || key1Data.isNull() || !key1Data.isTextual()) {
+                    return res[0];
+                }
+                String key1String = key1Data.asText();
+
+                final String key2 = options.hash("key2");
+                val key2Value = node.at(key2);
+                if (null == key2Value || key2Value.isNull()) {
+                    return res[0];
+                }
+
+                final String arrayOrderCsv = options.hash("op_" + key1String);
+                if ( null == arrayOrderCsv || arrayOrderCsv.isEmpty() ) {
+                    return res[0];
+                }
+
+                String[] arrayOrder = arrayOrderCsv.split(",");
+                if (key2Value.asInt() > 0 && key2Value.asInt() <= arrayOrder.length) {
+                    String arrayLookupIndexStr = arrayOrder[key2Value.asInt() - 1];
+                    int arrayLookupIndex = Integer.parseInt(arrayLookupIndexStr);
+                    if ( arrayLookupIndex > 1 && arrayLookupIndex <= res.length ) {
+                        return (res[arrayLookupIndex - 1]);
+                    }
+                }
+
+                return res.length > 0 ? res[0] : empty();
+            }
+
+            private CharSequence empty() {
+                return "";
+            }
+        });
+    }
+
     private void registerStrTranslate() {
         handlebars.registerHelper("translate", new Helper<JsonNode>() {
             @Override
@@ -775,6 +833,8 @@ public class HandleBarsHelperRegistry {
             }
         });
     }
+
+
 
     private void registerParseToIntPtr() {
         handlebars.registerHelper("toIntPtr", new Helper<JsonNode>() {
