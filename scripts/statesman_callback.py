@@ -22,7 +22,9 @@ STATE_CALLBACK_PAYLOAD = {
     "CALL_NEEDED_SPAM_CHECK" : {"retryAttempt2": True},
     "HOME_QUARANTINE" : {"callTrigger": True},
     "IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
-    "IVR_ATTEMPT_2" : {"retryCallAttempt3": True}
+    "IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
+    "IVR_ATTEMPT_3" : {"status": "noanswer"},
+    "HQ_VOILATION": {"dayEnd": True}
 }
 
 #######################  MYSQL HELPER ##########################
