@@ -5,6 +5,7 @@ import argparse
 from multiprocessing import Queue
 import threading
 import time
+import datetime
 
 HOST = '127.0.0.1'
 USER = 'root'
@@ -18,11 +19,13 @@ STATESMAN_RECON_URL = "http://statesman.telemed-ind.appform.io:8080/v1/housekeep
 HEADERS = {
     "Content-Type": "application/json"
 }
+CURRENT_DATE = datetime.date.today()
+DAY_START_TIME = (int(datetime.datetime(CURRENT_DATE.year, CURRENT_DATE.month, CURRENT_DATE.day, 0, 0, 0).strftime('%s'))) * 1000
 STATE_CALLBACK_PAYLOAD = {
     "CALL_NEEDED_SPAM_CHECK_RETRY_3" : {"notReachable": True},
     "CALL_NEEDED_SPAM_CHECK_RETRY_2": {"retryAttempt3": True},
     "CALL_NEEDED_SPAM_CHECK" : {"retryAttempt2": True},
-    "HOME_QUARANTINE" : {"callTrigger": True},
+    "HOME_QUARANTINE" : {"callTrigger": True, "now": DAY_START_TIME},
     "IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
     "IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
     "IVR_ATTEMPT_3" : {"status": "noanswer"},
