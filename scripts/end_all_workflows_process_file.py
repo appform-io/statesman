@@ -32,7 +32,8 @@ def day_diff(from_epoch, till_epoch):
 
 def get_workflow(phone):
     workflows =list()
-    fql = """select distinct(eventData.workflowId) from statesman where eventData.workflowTemplateId = '3efd0e4b-a6cc-4e59-9f88-bb0141a66142' and eventData.data.mobile_number = '%s' """ % (str(phone))
+    phoneStr = str(phone)
+    fql = """select distinct(eventData.workflowId) from statesman where eventData.data.mobile_number = '%s' or eventData.data.contact_number = '%s' or eventData.data.phone = '%s' """ % (phoneStr,phoneStr,phoneStr)
     r = requests.post('https://localhost/foxtrot/v1/fql', data=fql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':''})
     if(r.status_code != 200):
         return workflows
