@@ -10,12 +10,15 @@ import time
 import calendar
 import math
 
-scanpath='/home/ganesh/upload_end_covid_monitoring'
-processedPath='/home/ganesh/processed_end_covid_monitoring'
+scanpath='upload_end_all_workflows'
+processedPath='processed_end_all_workflows'
 rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
-jobQueue = persistqueue.UniqueAckQ('end-covid-monitoring')
-
+jobQueue = persistqueue.UniqueAckQ('end-all-workflows')
+fqls = ["""select distinct(eventData.workflowId) from statesman where eventData.data.mobile_number = '%s'""",
+        """select distinct(eventData.workflowId) from statesman where eventData.data.contact_number = '%s'""",
+        """select distinct(eventData.workflowId) from statesman where eventData.data.phone = '%s'"""
+        ]
 
 def now():
     return calendar.timegm(time.gmtime()) * 1000
@@ -32,12 +35,13 @@ def day_diff(from_epoch, till_epoch):
 
 def get_workflow(phone):
     workflows =list()
-    fql = """select distinct(eventData.workflowId) from statesman where eventData.workflowTemplateId = '3efd0e4b-a6cc-4e59-9f88-bb0141a66142' and eventData.data.mobile_number = '%s' """ % (str(phone))
-    r = requests.post('https://localhost/foxtrot/v1/fql', data=fql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':''})
-    if(r.status_code != 200):
-        return workflows
-    for row in r.json()['rows']:
-        workflows.append(row['eventData.workflowId'])
+    phoneStr = str(phone)
+    for fql in fqls:
+        finalFql = fql % (phoneStr)
+        r = requests.post('https://localhost/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':''})
+        if(r.status_code == 200):
+            for row in r.json()['rows']:
+                workflows.append(row['eventData.workflowId'])
     return workflows
 
 
@@ -54,7 +58,7 @@ for csvFileName in csvFileNames:
                     for w in workflows:
                         jobData = {"mobile_number":convrow['mobile_number'],
                                    "workflowId": w,
-                                   "state": "END",
+                                   "name": "FORCE_END",
                                    "terminal": True}
                         print('Queuing job workflow: ' + w)
                         jobQueue.put(json.dumps(jobData))
@@ -87,5 +91,5 @@ while jobQueue.size > 0:
                 print('Retrying for mobileNumber: ' + mobileNumber)
                 jobQueue.nack(payload)
                 break
-shutil.rmtree('end-covid-monitoring')
+shutil.rmtree('end-all-workflows')
 print('Processing complete')
