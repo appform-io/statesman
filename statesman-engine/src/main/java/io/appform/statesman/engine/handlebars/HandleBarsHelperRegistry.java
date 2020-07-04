@@ -8,6 +8,7 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Helper;
 import com.github.jknack.handlebars.Options;
 import com.google.common.base.Strings;
+import com.google.common.collect.Maps;
 import io.appform.statesman.engine.utils.StringUtils;
 import io.appform.statesman.model.exception.ResponseCode;
 import io.appform.statesman.model.exception.StatesmanError;
@@ -73,6 +74,7 @@ public class HandleBarsHelperRegistry {
         registerMapLookup();
         registerMapLookupArray();
         registerMapArrLookup();
+        registerMultiMapLookup();
         registerStrTranslate();
         registerStrTranslateArr();
         registerStrTranslateTxt();
@@ -590,6 +592,60 @@ public class HandleBarsHelperRegistry {
                 }
 
                 return res.length > 0 ? res[0] : empty();
+            }
+
+            private CharSequence empty() {
+                return "";
+            }
+        });
+    }
+
+    /*
+Example Usage:
+        JsonNode obj <- {"state" : "KA","language" : 41 }
+        defaults to english under error cases
+        Template template = handlebars.compileInline("{{map_arr_lookup default='english' op_ka='1:kannada,2:hindi,3:english,41:tamil,42:telugu,43:malayalam' op_tn='3:tamil' key1='/state' key2='/language'}}" );
+ */
+    private void registerMultiMapLookup() {
+        handlebars.registerHelper("multi_map_lookup", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+
+                String defFeched = options.hash("default");
+                final String defaultValue = ( null == defFeched || defFeched.isEmpty() ) ? "" : defFeched;
+
+                final String key1 = options.hash("key1");
+                if ( null == key1 || key1.isEmpty() ) return defaultValue;
+                val key1Data = node.at(key1);
+                if (null == key1Data || key1Data.isNull() || !key1Data.isTextual()) return defaultValue;
+                String key1String = normalizedKey(key1Data.asText());
+
+                final String key2 = options.hash("key2");
+                if ( null == key2 || key2.isEmpty() ) return defaultValue;
+                val key2Data = node.at(key2);
+                if (null == key2Data || key2Data.isNull() ) return defaultValue;
+                String key2String = key2Data.asText();
+
+                Map<String,String> kvMap = Maps.newHashMap();
+                {
+                    final String kvPairs = options.hash(key1String);
+                    if (null == kvPairs || kvPairs.isEmpty()) return defaultValue;
+
+                    String[] pairs = kvPairs.split(",");
+
+                    for (String pair : pairs) {
+                        String[] tuple = pair.split(":");
+                        if (tuple.length == 2) {
+                            kvMap.put(tuple[0], tuple[1]);
+                        }
+                    }
+                }
+
+                if ( kvMap.containsKey(key2String) ) {
+                    return kvMap.get(key2String);
+                }
+
+                return defaultValue;
             }
 
             private CharSequence empty() {
