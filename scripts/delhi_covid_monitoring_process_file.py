@@ -10,8 +10,8 @@ import time
 import calendar
 import math
 
-scanpath='/home/ganesh/upload_covid_monitoring'
-processedPath='/home/ganesh/processed_covid_monitoring'
+scanpath='upload_covid_monitoring'
+processedPath='processed_covid_monitoring'
 rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')

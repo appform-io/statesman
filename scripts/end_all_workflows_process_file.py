@@ -10,11 +10,11 @@ import time
 import calendar
 import math
 
-scanpath='/home/ganesh/upload_end_covid_monitoring'
-processedPath='/home/ganesh/processed_end_covid_monitoring'
+scanpath='upload_end_all_workflows'
+processedPath='processed_end_all_workflows'
 rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
-jobQueue = persistqueue.UniqueAckQ('end-covid-monitoring')
+jobQueue = persistqueue.UniqueAckQ('end-all-workflows')
 
 
 def now():
@@ -88,5 +88,5 @@ while jobQueue.size > 0:
                 print('Retrying for mobileNumber: ' + mobileNumber)
                 jobQueue.nack(payload)
                 break
-shutil.rmtree('end-covid-monitoring')
+shutil.rmtree('end-all-workflows')
 print('Processing complete')
