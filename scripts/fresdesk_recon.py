@@ -28,7 +28,7 @@ PASSWORD = ''
 DATABASE = 'statesman_db_'
 SHARDS = 16
 
-PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_NEEDED_MENTAL_HEALTH','CALL_NEEDED_COVID_POSITIVE') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
+PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_NEEDED_MENTAL_HEALTH','CALL_NEEDED_COVID_POSITIVE','DOCTOR_FOLLOW','FINAL_DOCTOR_FOLLOW','SYMPTOMS_DOCTOR_FOLLOW','INTENDED_PLASMA_DONATION') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
 
 
 ############ DATE HELPER ###########
@@ -203,7 +203,9 @@ def create_recon_payload(patient_language,
                          cf_symptom_fever_above_101_since_3_days,
                          cf_symptom_severe_cough,
                          cf_symptom_diarrhoea_above_4_times_a_day,
-                         cf_symptom_loss_of_smell_taste):
+                         cf_symptom_loss_of_smell_taste,
+                         cf_screeners_decision,
+                         cf_plasma_counsellors_decision):
     paylaod = {
         "freshdesk_webhook": {
             "ticket_cf_patient_language": patient_language,
@@ -251,7 +253,9 @@ def create_recon_payload(patient_language,
             "ticket_cf_symptom_fever_above_101_since_3_days": cf_symptom_fever_above_101_since_3_days,
             "ticket_cf_symptom_severe_cough": cf_symptom_severe_cough,
             "ticket_cf_symptom_diarrhoea_above_4_times_a_day": cf_symptom_diarrhoea_above_4_times_a_day,
-            "ticket_cf_symptom_loss_of_smell_taste": cf_symptom_loss_of_smell_taste
+            "ticket_cf_symptom_loss_of_smell_taste": cf_symptom_loss_of_smell_taste,
+            "ticket_cf_screeners_decision": cf_screeners_decision,
+            "ticket_cf_plasma_counsellors_decision": cf_plasma_counsellors_decision
         }
     }
     return paylaod
@@ -325,6 +329,8 @@ def create_recon_payload_from_ticket_details(ticket_details, worklow_id):
                                 cf_symptom_severe_cough=get_or_default(cf, "cf_symptom_severe_cough", ""),
                                 cf_symptom_diarrhoea_above_4_times_a_day=get_or_default(cf, "cf_symptom_diarrhoea_above_4_times_a_day", ""),
                                 cf_symptom_loss_of_smell_taste=get_or_default(cf, "cf_symptom_loss_of_smell_taste", ""),
+                                cf_plasma_counsellors_decision=get_or_default(cf, "cf_plasma_counsellors_decision", ""),
+                                cf_screeners_decision=get_or_default(cf, "cf_screeners_decision", ""),
                                 fsm_customer_signature=worklow_id)
 
 

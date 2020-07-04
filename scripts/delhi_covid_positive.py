@@ -6,8 +6,8 @@ import json
 import persistqueue
 import requests
 import shutil
-scanpath='/home/ganesh/uploads'
-processedPath='/home/ganesh/processed'
+scanpath='uploads'
+processedPath='processed'
 rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('csv-processor')
@@ -19,10 +19,10 @@ for csvFileName in csvFileNames:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
-                    convrow = dict((k.lower().replace(' ', '_'), v) for k,v in row.iteritems())
+                    convrow = dict((k.lower().strip().replace(' ', '_'), v.strip()) for k,v in row.iteritems())
+                    if(convrow.has_key("")):
+                        del convrow[""]
                     convrow['wfSource'] = 'delhi_covid_positive_csv'
-                    body = { 'id' : 'delhi_csv', 'body' : convrow, 'apiPath' : csvFileName }
-                    jobQueue.put(json.dumps(body))
                     print('Queued job: ' + convrow['icmr_id'])
                 except:
                     print('Error processing row: ' + str(row))

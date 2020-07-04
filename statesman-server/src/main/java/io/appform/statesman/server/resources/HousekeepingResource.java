@@ -189,4 +189,24 @@ public class HousekeepingResource {
                 .build();
     }
 
+    @PUT
+    @Timed
+    @Path("/update/workflow/{workflowId}/state/")
+    @ApiOperation("Update workflow state")
+    public Response updateState(@PathParam("workflowId") String workflowId, @Valid State state) {
+        WorkflowProvider wp = workflowProvider.get();
+        Workflow wf = wp.getWorkflow(workflowId).orElse(null);
+        if (wf == null) {
+            return Response.noContent()
+                    .build();
+        }
+        State currentState = wf.getDataObject().getCurrentState();
+        currentState.setName(state.getName());
+        currentState.setTerminal(state.isTerminal());
+        wp.updateWorkflow(wf);
+        return Response.ok()
+                .entity(wf)
+                .build();
+    }
+
 }
