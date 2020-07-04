@@ -503,7 +503,7 @@ public class IngressHandler {
         val wfId = idExtractor.extractId(transformationTemplate, node). orElse(null);
         return Strings.isNullOrEmpty(wfId)
                ? UUID.randomUUID().toString()
-               : wfId;
+               : wfId.replaceAll("[^\\p{ASCII}]", "");
     }
 
     private static MultivaluedMap<String, String> parseQueryParams(IngressCallback ingressCallback) {
