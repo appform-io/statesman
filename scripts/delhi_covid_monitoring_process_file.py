@@ -15,7 +15,7 @@ processedPath='processed_covid_monitoring'
 rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
-
+statesmanUrl = "http://localhost:8080"
 
 def now():
     return calendar.timegm(time.gmtime()) * 1000
@@ -30,6 +30,52 @@ def day_diff(from_epoch, till_epoch):
     return int (math.ceil( (float)(till_epoch - from_epoch) / 86400000))
 
 
+def trigger_new_workflow(payload,mobileNumber):
+    for i in range(3):
+        r = requests.post(statesmanUrl + '/callbacks/ingress/raw/delhi_hq_monitoring_csv', data=payload, headers = {'content-type': 'application/json'})
+        if r.status_code == 200:
+            print('successfully posted data for mobileNumber: ' + mobileNumber)
+            return True
+        else:
+            print(str(i) + ': could not post data for mobileNumber: ' + mobileNumber + ' status:' + str(r.status_code))
+    return False
+
+
+def existing_workflow(phone):
+    finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId = '3efd0e4b-a6cc-4e59-9f88-bb0141a66142' and eventType = 'STATE_CHANGED' and eventData.newState = 'HOME_QUARANTINE' and eventData.data.mobile_number = '%s' limit 1  """ % (str(phone))
+    r = requests.post('https://localhost/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':''})
+    if(r.status_code == 200):
+        for row in r.json()['rows']:
+            return row['eventData.workflowId']
+    return None
+
+
+def update_workflow(w,payload,mobileNumber):
+    for i in range(3):
+        r = requests.get(statesmanUrl + '/v1/housekeeping/debug/workflow/'+w, headers = {'content-type': 'application/json'})
+        if(r.status_code != 200):
+            print(str(i) + ': could not get data for mobileNumber: ' + mobileNumber + ' workflowId '+ w +  ' status:' + str(r.status_code))
+        else:
+            workflow = r.json()
+            wd = workflow['dataObject']['data']
+            if(wd["endTime"] >= payload['body']["endTime"]):
+                print("Nothing to update for mobileNumber:" + mobileNumber + ' workflowId:'+ w )
+                return True
+            else:
+                wd["endTime"] = payload['body']["endTime"]
+                wd["end_date"] = payload['body']["end_date"]
+                wd["maxDays"] = day_diff(workflow['created'],wd["endTime"])
+                if(workflow['dataObject']['currentState']['name'] == "END"):
+                    workflow['dataObject']['currentState']['name'] = "HOME_QUARANTINE"
+                    workflow['dataObject']['currentState']['terminal'] = False
+
+                r = requests.put(statesmanUrl + '/v1/housekeeping/update/workflow',data = json.dumps(workflow) , headers = {'content-type': 'application/json'})
+                if(r.status_code == 200):
+                    print("Updated for mobileNumber:" + mobileNumber + ' workflowId:'+ w  )
+                    return True
+                else:
+                    print(str(i) + ': could not update data for mobileNumber: ' + mobileNumber + ' workflowId:'+ w +  ' status:' + str(r.status_code))
+    return False
 
 for csvFileName in csvFileNames:
     fqFileName=scanpath + '/' + csvFileName
@@ -58,23 +104,22 @@ for csvFileName in csvFileNames:
     shutil.move(fqFileName, fqDestFilename)
     print('Moved file ' + fqFileName + ' to ' + fqDestFilename)
 print('Total queue size: ' + str(jobQueue.size))
+
 while jobQueue.size > 0:
     payload = jobQueue.get()
-    mobileNumber = str(json.loads(payload)['body']['mobile_number'])
-    for i in range(3):
-        r = requests.post('http://localhost:8080/callbacks/ingress/raw/delhi_hq_monitoring_csv', data=payload, headers = {'content-type': 'application/json'})
-        if r.status_code == 200:
-            print('successfully posted data for mobileNumber: ' + mobileNumber)
+    payloadDict = json.loads(payload)
+    mobileNumber = str(payloadDict['body']['mobile_number'])
+    w = existing_workflow(mobileNumber)
+    if(w is None):
+        if(trigger_new_workflow(payload,mobileNumber)):
             jobQueue.ack(payload)
-            break
         else:
-            print(str(i) + ': could not post data for mobileNumber: ' + mobileNumber + ' status:' + str(r.status_code))
-            if i == 2:
-                print('Failing for mobileNumber: ' + mobileNumber)
-                jobQueue.ack_failed(payload)
-            else:
-                print('Retrying for mobileNumber: ' + mobileNumber)
-                jobQueue.nack(payload)
-                break
+            jobQueue.ack_failed(payload)
+    else:
+        if(update_workflow(w, payloadDict, mobileNumber)):
+            jobQueue.ack(payload)
+        else:
+            jobQueue.ack_failed(payload)
+
 shutil.rmtree('covid-monitoring')
 print('Processing complete')
