@@ -725,10 +725,78 @@ public class HandleBarsServiceTest {
                 .put("question2", 2)
                 .put("question3", 1);
 
-
         final String value = hb.transform(
                 "{{{count_if op_1=true op_2=false pointers='/question1,/question2,/question3,/question4'}}}",
-                                         node);
+                node);
         Assert.assertEquals("2", value);
     }
+
+    @Test
+    @SneakyThrows
+    public void testMultiMapLookup() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "Karnataka");
+            obj.put("language", 1);
+            String template = "{{multi_map_lookup default='english' op_karnataka='1:kannada,2:hindi,3:english,5:tamil' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-1:" + res);
+            Assert.assertEquals("kannada", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "Karnataka");
+            obj.put("language", 100);
+            String template = "{{multi_map_lookup default='english' op_karnataka='1:kannada,2:hindi,3:english,5:tamil' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-2:" + res);
+            Assert.assertEquals("english", res);
+        }
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "nonexistent");
+            obj.put("language", 100);
+            String template = "{{multi_map_lookup default='english' op_karnataka='1:kannada,2:hindi,3:english,5:tamil' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-3:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "Karnataka");
+            obj.put("language", 200);
+            String template = "{{multi_map_lookup default='english' op_karnataka='100:kannada,200:hindi,300:english,5:tamil' op_tamilnadu='3,2,1' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-4:" + res);
+            Assert.assertEquals("hindi", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "Karnataka");
+            obj.put("language", 200);
+            String template = "{{multi_map_lookup default='english' key1='/state' key2='/language'}}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-5:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+        {
+            ObjectNode obj = mapper.createObjectNode();
+            obj.put("state", "Karnataka");
+            obj.put("language", 200);
+            String template = "{{multi_map_lookup default='english' }}";
+            String res = hb.transform(template, obj);
+            System.out.println("case-5:" + res);
+            Assert.assertEquals("english", res);
+        }
+
+
+    }
+    
 }
