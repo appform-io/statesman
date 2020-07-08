@@ -16,6 +16,7 @@ rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
 statesmanUrl = "http://localhost:8080"
+stateWorkflows = {'delhi': '3efd0e4b-a6cc-4e59-9f88-bb0141a66142','punjab':'933bed6c-e6a6-4de4-9ea8-7a31d64a08dc'}
 
 def now():
     return calendar.timegm(time.gmtime()) * 1000
@@ -30,9 +31,9 @@ def day_diff(from_epoch, till_epoch):
     return int (math.ceil( (float)(till_epoch - from_epoch) / 86400000))
 
 
-def trigger_new_workflow(payload,mobileNumber):
+def trigger_new_workflow(payload,mobileNumber,wfSource):
     for i in range(3):
-        r = requests.post(statesmanUrl + '/callbacks/ingress/raw/delhi_hq_monitoring_csv', data=payload, headers = {'content-type': 'application/json'})
+        r = requests.post(statesmanUrl + '/callbacks/ingress/raw/'+wfSource, data=payload, headers = {'content-type': 'application/json'})
         if r.status_code == 200:
             print('successfully posted data for mobileNumber: ' + mobileNumber)
             return True
@@ -41,9 +42,9 @@ def trigger_new_workflow(payload,mobileNumber):
     return False
 
 
-def existing_workflow(phone):
-    finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId = '3efd0e4b-a6cc-4e59-9f88-bb0141a66142' and eventType = 'STATE_CHANGED' and eventData.newState = 'HOME_QUARANTINE' and eventData.data.mobile_number = '%s' limit 1  """ % (str(phone))
-    r = requests.post('https://localhost/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':''})
+def existing_workflow(phone,state):
+    finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId = '%s' and eventType = 'STATE_CHANGED' and eventData.newState = 'HOME_QUARANTINE' and eventData.data.mobile_number = '%s' limit 1  """ % (stateWorkflows[state], str(phone))
+    r = requests.post('https://foxtrot.telemed-ind.appform.io/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':'Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmb3h0cm90LXNlcnZlciIsImp0aSI6IjhiMDk0MzkxLWNhYWYtNDg5MC04NTg1LWYyYWY1Y2MyOTUxMCIsImlhdCI6MTU4Njc4Mjg5NCwibmJmIjoxNTg2NzgyNzc0LCJzdWIiOiJyZXBvcnRpbmciLCJhdWQiOiJTVEFUSUMifQ.xdqRera5ZhNhzbxYtLmk2L05n_iqyfVRZiU9NGodR8iH5nQOwMmJUXUeIb92JHd2ehVHmNF9v1L50CH_txLmYw'})
     if(r.status_code == 200):
         for row in r.json()['rows']:
             return row['eventData.workflowId']
@@ -88,16 +89,21 @@ for csvFileName in csvFileNames:
                     convrow = dict((k.lower().strip().replace(' ', '_'), v.strip()) for k,v in row.iteritems())
                     if(convrow.has_key("")):
                         del convrow[""]
-                    convrow['wfSource'] = 'delhi_hq_monitoring_csv'
+                    convrow['state'] = convrow['state'].lower().strip()
+                    if(not stateWorkflows.has_key(convrow['state'])):
+                        print("Error: Inavlid state mentioned skiping row:" + str(row))
+                        continue
+                    convrow['wfSource'] = convrow['state'] + '_hq_monitoring_csv'
                     endTime = epoch_time(convrow['end_date'])
                     convrow['maxDays'] = day_diff(now(),endTime)
                     convrow['endTime'] = endTime
-                    body = { 'id' : 'delhi_hq_monitoring_csv', 'body' : convrow, 'apiPath' : csvFileName }
+                    body = { 'id' : convrow['wfSource'] , 'body' : convrow, 'apiPath' : csvFileName }
                     print('Queuing job mobile_number: ' + convrow['mobile_number'] + " patient_name:"+convrow['patient_name'])
                     jobQueue.put(json.dumps(body))
                     print('Queued job mobile_number: ' + convrow['mobile_number'] + " patient_name:"+convrow['patient_name'])
-                except:
+                except Exception as e:
                     print('Error processing row: ' + str(row))
+                    print(e)
     except:
         print('Error processing file: ' + fqFileName)
     print('Items queued for file [' + csvFileName + ']: ' + str(jobQueue.size))
@@ -109,13 +115,16 @@ while jobQueue.size > 0:
     payload = jobQueue.get()
     payloadDict = json.loads(payload)
     mobileNumber = str(payloadDict['body']['mobile_number'])
-    w = existing_workflow(mobileNumber)
+    state = str(payloadDict['body']['state'])
+    wfSource = str(payloadDict['body']['wfSource'])
+    w = existing_workflow(mobileNumber,state)
     if(w is None):
-        if(trigger_new_workflow(payload,mobileNumber)):
+        if(trigger_new_workflow(payload,mobileNumber,wfSource)):
             jobQueue.ack(payload)
         else:
             jobQueue.ack_failed(payload)
     else:
+        print("Has workflow to update for mobile_number:"+ mobileNumber)
         if(update_workflow(w, payloadDict, mobileNumber)):
             jobQueue.ack(payload)
         else:
