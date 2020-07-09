@@ -89,6 +89,8 @@ for csvFileName in csvFileNames:
                     convrow = dict((k.lower().strip().replace(' ', '_'), v.strip()) for k,v in row.iteritems())
                     if(convrow.has_key("")):
                         del convrow[""]
+                    if(convrow.has_key("district")):
+                        convrow["district"] = convrow['district'].lower().strip()
                     convrow['state'] = convrow['state'].lower().strip()
                     if(not stateWorkflows.has_key(convrow['state'])):
                         print("Error: Inavlid state mentioned skiping row:" + str(row))
