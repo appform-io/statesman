@@ -16,6 +16,7 @@ rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
 statesmanUrl = "http://localhost:8080"
+phones = set()
 stateWorkflows = {'delhi': '3efd0e4b-a6cc-4e59-9f88-bb0141a66142','punjab':'933bed6c-e6a6-4de4-9ea8-7a31d64a08dc'}
 
 def now():
@@ -95,6 +96,9 @@ for csvFileName in csvFileNames:
                     if(not stateWorkflows.has_key(convrow['state'])):
                         print("Error: Inavlid state mentioned skiping row:" + str(row))
                         continue
+                    if(convrow['mobile_number'] in phones):
+                        print("INFO: Already processed the mobile_number:" + convrow['mobile_number'])
+                    phones.add(convrow['mobile_number'])
                     convrow['wfSource'] = convrow['state'] + '_hq_monitoring_csv'
                     endTime = epoch_time(convrow['end_date'])
                     convrow['maxDays'] = day_diff(now(),endTime)
