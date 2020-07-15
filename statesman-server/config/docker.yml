@@ -33,7 +33,7 @@ shards:
       url: ${SHARD0_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -54,7 +54,7 @@ shards:
       url: ${SHARD1_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -66,8 +66,6 @@ shards:
       checkConnectionWhileIdle: true
       checkConnectionOnConnect: true
       validationQueryTimeout: 1s
-      validationQueryTimeout: 1s
-      validationQueryTimeout: 1s
       removeAbandoned: true
       evictionInterval: 30s
       minIdleTime: 1m
@@ -77,7 +75,7 @@ shards:
       url: ${SHARD2_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -98,7 +96,7 @@ shards:
       url: ${SHARD3_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -119,7 +117,7 @@ shards:
       url: ${SHARD4_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -140,7 +138,7 @@ shards:
       url: ${SHARD5_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -161,7 +159,7 @@ shards:
       url: ${SHARD6_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -182,7 +180,7 @@ shards:
       url: ${SHARD7_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -203,7 +201,7 @@ shards:
       url: ${SHARD8_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -224,7 +222,7 @@ shards:
       url: ${SHARD9_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -245,7 +243,7 @@ shards:
       url: ${SHARD10_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -266,7 +264,7 @@ shards:
       url: ${SHARD11_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -287,7 +285,7 @@ shards:
       url: ${SHARD12_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -308,7 +306,7 @@ shards:
       url: ${SHARD13_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -329,7 +327,7 @@ shards:
       url: ${SHARD14_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
@@ -350,7 +348,7 @@ shards:
       url: ${SHARD15_CONNECTION_STRING}
       properties:
         charSet: UTF-8
-        hibernate.dialect: org.hibernate.dialect.MySQLDialect
+        hibernate.dialect: org.hibernate.dialect.MariaDBDialect
         #hibernate.hbm2ddl.auto: create
       maxWaitForConnection: 1s
       validationQuery: "/* MyApplication Health Check */ SELECT 1"
