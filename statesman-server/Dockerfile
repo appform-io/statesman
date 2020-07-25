@@ -13,5 +13,4 @@ ADD config/docker.yml config/docker.yml
 ADD target/statesman*.jar server.jar
 ADD startup.sh startup.sh
 
-# CMD sh -c "java -Ddb.shards=${SHARDS-2} -Dfile.encoding=utf-8 -XX:+${GC_ALGO-UseG1GC} -Xms${JAVA_PROCESS_MIN_HEAP-1g} -Xmx${JAVA_PROCESS_MAX_HEAP-1g} ${JAVA_OPTS} -jar server.jar server docker.yml"
 CMD ./startup.sh
