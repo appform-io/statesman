@@ -27,13 +27,7 @@ services:
       SHARD1_CONNECTION_STRING: jdbc:mariadb://mariadb_2/statesman_db_2?createDatabaseIfNotExist=true
       DB_USER: root
       DB_PASSWORD: password
-      SHARDS: 2
-      INFLUX_DB: test
-      INFLUXDB_HOST: localhost
-      INFLUXDB_PORT: "8086"
-      METRIC_PUSH_FREQUENCY: 1min
-      CONFIG_ENV: local
-      FOXTROT_ENDPOINT: https://foxtrot.telemed-ind.appform.io
+      FOXTROT_ENDPOINT: https://localhost:17000
       FOXTROT_TOKEN: INV_TOKEN_
     depends_on:
       - mariadb_1
