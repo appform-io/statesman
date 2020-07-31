@@ -205,6 +205,13 @@ def create_recon_payload(patient_language,
                          cf_symptom_diarrhoea_above_4_times_a_day,
                          cf_symptom_loss_of_smell_taste,
                          cf_screeners_decision,
+                         cf_if_your_current_blood_oxygen_level_is_below_95,
+                         cf_pulse_rate_range,
+                         cf_do_you_have_a_fever_today,
+                         cf_did_you_have_more_than_4_loose_motions_today,
+                         cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating,
+                         cf_do_you_have_any_breathing_difficulty,
+                         cf_do_you_have_cough_or_sore_throat_today,
                          cf_plasma_counsellors_decision):
     paylaod = {
         "freshdesk_webhook": {
@@ -255,6 +262,13 @@ def create_recon_payload(patient_language,
             "ticket_cf_symptom_diarrhoea_above_4_times_a_day": cf_symptom_diarrhoea_above_4_times_a_day,
             "ticket_cf_symptom_loss_of_smell_taste": cf_symptom_loss_of_smell_taste,
             "ticket_cf_screeners_decision": cf_screeners_decision,
+            "ticket_cf_if_your_current_blood_oxygen_level_is_below_95":cf_if_your_current_blood_oxygen_level_is_below_95,
+            "ticket_cf_pulse_rate_range":cf_pulse_rate_range,
+            "ticket_cf_do_you_have_a_fever_today":cf_do_you_have_a_fever_today,
+            "ticket_cf_did_you_have_more_than_4_loose_motions_today":cf_did_you_have_more_than_4_loose_motions_today,
+            "ticket_cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating":cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating,
+            "ticket_cf_do_you_have_any_breathing_difficulty":cf_do_you_have_any_breathing_difficulty,
+            "ticket_cf_do_you_have_cough_or_sore_throat_today":cf_do_you_have_cough_or_sore_throat_today,
             "ticket_cf_plasma_counsellors_decision": cf_plasma_counsellors_decision
         }
     }
@@ -331,6 +345,13 @@ def create_recon_payload_from_ticket_details(ticket_details, worklow_id):
                                 cf_symptom_loss_of_smell_taste=get_or_default(cf, "cf_symptom_loss_of_smell_taste", ""),
                                 cf_plasma_counsellors_decision=get_or_default(cf, "cf_plasma_counsellors_decision", ""),
                                 cf_screeners_decision=get_or_default(cf, "cf_screeners_decision", ""),
+                                cf_if_your_current_blood_oxygen_level_is_below_95=get_or_default(cf,"cf_if_your_current_blood_oxygen_level_is_below_95",""),
+                                cf_pulse_rate_range=get_or_default(cf,"cf_pulse_rate_range",""),
+                                cf_do_you_have_a_fever_today=get_or_default(cf,"cf_do_you_have_a_fever_today",""),
+                                cf_did_you_have_more_than_4_loose_motions_today=get_or_default(cf,"cf_did_you_have_more_than_4_loose_motions_today",""),
+                                cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating=get_or_default(cf,"cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating",""),
+                                cf_do_you_have_any_breathing_difficulty=get_or_default(cf,"cf_do_you_have_any_breathing_difficulty",""),
+                                cf_do_you_have_cough_or_sore_throat_today=get_or_default(cf,"cf_do_you_have_cough_or_sore_throat_today",""),
                                 fsm_customer_signature=worklow_id)
 
 

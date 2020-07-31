@@ -459,7 +459,7 @@ public class HandleBarsServiceTest {
     }
 
 
-    
+
     @Test
     public void testSingleLine() throws Exception {
         val template = "{\n" +
@@ -712,7 +712,6 @@ public class HandleBarsServiceTest {
             String res = hb.transform(template, obj);
             Assert.assertEquals("", res);
         }
-        
     }
 
     @Test
@@ -729,6 +728,36 @@ public class HandleBarsServiceTest {
                 "{{{count_if op_1=true op_2=false pointers='/question1,/question2,/question3,/question4'}}}",
                 node);
         Assert.assertEquals("2", value);
+    }
+
+    @Test
+    public void testStrMatch() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+        val node = mapper.createObjectNode()
+                .put("question1", "blah1")
+                .put("question2", "blah2")
+                .put("question3", "blah3");
+
+        final String value = hb.transform(
+                "{{{count_match_str op_blah1=true op_blah2=true pointers='/question1,/question2,/question3,/question4'}}}",
+                node);
+        Assert.assertEquals("2", value);
+    }
+
+    @Test
+    public void testStrEq() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+        val node = mapper.createObjectNode()
+                .put("question1", "1 1");
+
+        final String value = hb.transform(
+                "{{#if (streq question1 \"1 1\")}}greaterThanTwo{{/if}}",
+                node);
+        Assert.assertEquals("greaterThanTwo", value);
     }
 
     @Test

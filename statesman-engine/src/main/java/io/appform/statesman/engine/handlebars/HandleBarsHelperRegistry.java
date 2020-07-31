@@ -89,6 +89,7 @@ public class HandleBarsHelperRegistry {
         registerLocalTime();
         registerAdd();
         registerCountIf();
+        registerCountMatchStr();
     }
 
     private Object compareGte(int lhs) {
@@ -322,6 +323,37 @@ public class HandleBarsHelperRegistry {
                                 value = readString(node, key, lastIndex);
                             }
                             return options.hash("op_" + value);
+                        })
+                        .count();
+                return Long.toString(count);
+            }
+
+        });
+    }
+
+    private void registerCountMatchStr() {
+        handlebars.registerHelper("count_match_str", new Helper<JsonNode>() {
+            @Override
+            public CharSequence apply(JsonNode node, Options options) throws IOException {
+                final String pointers = options.hash("pointers");
+                if(Strings.isNullOrEmpty(pointers)) {
+                    return "0";
+                }
+                val keys = pointers.split(",");
+                if(keys.length == 0) {
+                    return "0";
+                }
+                val count = Arrays.stream(keys)
+                        .filter(keyElement -> {
+                            String value = "";
+                            val key = keyElement.trim();
+                            if (!Strings.isNullOrEmpty(key)) {
+                                val dataNode = node.at(key);
+                                if (!(null == dataNode || dataNode.isNull() || dataNode.isMissingNode() || !dataNode.isValueNode())) {
+                                    value = dataNode.asText();
+                                }
+                            }
+                            return options.hash(normalizedKey(value), false);
                         })
                         .count();
                 return Long.toString(count);
