@@ -71,6 +71,7 @@ public class HandleBarsHelperRegistry {
         registerLte();
         registerGt();
         registerGte();
+        registerSelectValuesGivenRange();
         registerMapLookup();
         registerMapLookupArray();
         registerMapArrLookup();
@@ -136,6 +137,31 @@ public class HandleBarsHelperRegistry {
             }
             if (option instanceof String) {
                 return compareGte(Double.compare(aNumber.doubleValue(), Double.valueOf((String) option)));
+            }
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
+        });
+    }
+
+    private void registerSelectValuesGivenRange() {
+        handlebars.registerHelper("selectValuesGivenRange", (Helper<Number>) (aNumber, options) -> {
+            val optionFrom = options.param(0);
+            val optionTo = options.param(1);
+            val optionTrue = options.param(2);
+            val optionFalse = options.param(3);
+
+            if ( aNumber == null ) return optionFalse;
+
+            if (optionFrom instanceof Long && optionTo instanceof Long) {
+                return (Long.compare(aNumber.longValue(), (Long) optionFrom) > 0 && Long.compare((Long) optionTo, aNumber.longValue()) > 0) ? optionTrue : optionFalse;
+            }
+            if (optionFrom instanceof Integer && optionTo instanceof Integer) {
+                return (Integer.compare(aNumber.intValue(), (Integer) optionFrom) > 0 && Integer.compare((Integer) optionTo, aNumber.intValue()) > 0) ? optionTrue : optionFalse;
+            }
+            if (optionFrom instanceof Double && optionTo instanceof Double) {
+                return (Double.compare(aNumber.doubleValue(), (Double) optionFrom) > 0 && Double.compare((Double) optionTo, aNumber.doubleValue()) > 0) ? optionTrue : optionFalse;
+            }
+            if (optionFrom instanceof String && optionTo instanceof String) {
+                return (Double.compare(aNumber.doubleValue(), Double.valueOf((String) optionFrom)) > 0 && Double.compare(Double.valueOf((String) optionTo), aNumber.doubleValue()) > 0) ? optionTrue : optionFalse;
             }
             throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });
