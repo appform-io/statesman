@@ -81,3 +81,8 @@ eventPublisherConfig:
   batchSize: 50
   queuePath: /tmp/statesman
 
+foxtrot:
+  endpoint: http://localhost
+  accessToken: token
+
+
