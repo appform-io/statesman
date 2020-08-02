@@ -17,7 +17,7 @@ csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
 statesmanUrl = "http://localhost:8080"
 phones = set()
-stateWorkflows = {'delhi': '3efd0e4b-a6cc-4e59-9f88-bb0141a66142','punjab':'933bed6c-e6a6-4de4-9ea8-7a31d64a08dc'}
+stateWorkflows = {"delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
 
 def now():
     return calendar.timegm(time.gmtime()) * 1000
@@ -44,7 +44,8 @@ def trigger_new_workflow(payload,mobileNumber,wfSource):
 
 
 def existing_workflow(phone,state):
-    finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId = '%s' and eventType = 'STATE_CHANGED' and eventData.newState = 'HOME_QUARANTINE' and eventData.data.mobile_number = '%s' limit 1  """ % (stateWorkflows[state], str(phone))
+    finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId in ('%s') and eventType = 'STATE_CHANGED' and eventData.newState in ('HOME_QUARANTINE','HI_ONBOARD')  and eventData.data.mobile_number = '%s' limit 1  """ % (stateWorkflows[state], str(phone))
+    #print(finalFql)
     r = requests.post('https://foxtrot.telemed-ind.appform.io/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':'Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmb3h0cm90LXNlcnZlciIsImp0aSI6IjhiMDk0MzkxLWNhYWYtNDg5MC04NTg1LWYyYWY1Y2MyOTUxMCIsImlhdCI6MTU4Njc4Mjg5NCwibmJmIjoxNTg2NzgyNzc0LCJzdWIiOiJyZXBvcnRpbmciLCJhdWQiOiJTVEFUSUMifQ.xdqRera5ZhNhzbxYtLmk2L05n_iqyfVRZiU9NGodR8iH5nQOwMmJUXUeIb92JHd2ehVHmNF9v1L50CH_txLmYw'})
     if(r.status_code == 200):
         for row in r.json()['rows']:
@@ -93,13 +94,14 @@ for csvFileName in csvFileNames:
                     if(convrow.has_key("district")):
                         convrow["district"] = convrow['district'].lower().strip()
                     convrow['state'] = convrow['state'].lower().strip()
+                    flow = convrow['flow'].lower().strip()
                     if(not stateWorkflows.has_key(convrow['state'])):
                         print("Error: Inavlid state mentioned skiping row:" + str(row))
                         continue
                     if(convrow['mobile_number'] in phones):
                         print("INFO: Already processed the mobile_number:" + convrow['mobile_number'])
                     phones.add(convrow['mobile_number'])
-                    convrow['wfSource'] = convrow['state'] + '_hq_monitoring_csv'
+                    convrow['wfSource'] = convrow['state'] + '_'+ flow +'_monitoring_csv'
                     endTime = epoch_time(convrow['end_date'])
                     convrow['maxDays'] = day_diff(now(),endTime)
                     convrow['endTime'] = endTime
