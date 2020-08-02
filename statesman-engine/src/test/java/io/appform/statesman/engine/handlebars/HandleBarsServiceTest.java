@@ -827,5 +827,37 @@ public class HandleBarsServiceTest {
 
 
     }
+
+    @Test
+    public void testNumWithinRange() {
+        val hb = new HandleBarsService();
+        final ObjectMapper mapper = Jackson.newObjectMapper();
+
+        val node = mapper.createObjectNode()
+                .put("question1", 5)
+                .put("question3", 1);
+
+
+        {
+            final String value = hb.transform(
+                    "{{selectValuesGivenRange question1 2 100 3 2}}",
+                    node);
+            Assert.assertEquals("3", value);
+        }
+
+        {
+            final String value = hb.transform(
+                    "{{selectValuesGivenRange question1 20 100 'a' 'b'}}",
+                    node);
+            Assert.assertEquals("b", value);
+        }
+
+        {
+            final String value = hb.transform(
+                    "{{selectValuesGivenRange question3 20 100 'a' 'b'}}",
+                    node);
+            Assert.assertEquals("Non existant","b", value);
+        }
+    }
     
 }
