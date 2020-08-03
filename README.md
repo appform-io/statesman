@@ -12,11 +12,11 @@ cd statesman-server/
 
 Change the line on Dockerfile (in the path $CODE/statesman-server/Dockerfile): 
 
-ADD config/docker.yml docker.yml
+ADD config/docker.yml config/docker.yml
 
 To the following for local:
 
-ADD config/local.yml docker.yml
+ADD config/local.yml config/docker.yml
 ```
 docker-compose build
 docker-compose up 
