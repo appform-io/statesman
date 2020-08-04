@@ -38,7 +38,6 @@ STATE_CALLBACK_PAYLOAD = {
     "HI_IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
     "HI_IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
     "HI_IVR_ATTEMPT_3" : {"status": "noanswer"},
-    "HI_IVR_ATTEMPT_3_DELAYED" : {"status": "noanswer"},
     "HI_VOILATION" :  {"dayEnd": True}
     
 }
