@@ -29,7 +29,18 @@ STATE_CALLBACK_PAYLOAD = {
     "IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
     "IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
     "IVR_ATTEMPT_3" : {"status": "noanswer"},
-    "HQ_VOILATION": {"dayEnd": True}
+    "HQ_VOILATION": {"dayEnd": True},
+    "HI_ONBOARD" :  {"onboard":  True},
+    "HOME_ISOLATION" : {  "now": DAY_START_TIME },
+    "HI_IVR_START" : { "callTrigger": True },
+    "HI_ONBOARD_DOCTOR_FOLLOW" : { "callTrigger": True },
+    "HI_DAILY_FOLLOWUP" : { "callTrigger": True },
+    "HI_IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
+    "HI_IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
+    "HI_IVR_ATTEMPT_3" : {"status": "noanswer"},
+    "HI_IVR_ATTEMPT_3_DELAYED" : {"status": "noanswer"},
+    "HI_VOILATION" :  {"dayEnd": True},
+    
 }
 
 queueLock = threading.Lock()
