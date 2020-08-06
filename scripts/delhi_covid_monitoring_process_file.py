@@ -88,7 +88,7 @@ for csvFileName in csvFileNames:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
-                    convrow = dict((k.lower().strip().replace(' ', '_'), v.strip()) for k,v in row.iteritems())
+                    convrow = dict((k.lower().strip().replace(' ', '_'), v.strip().replace('\n', "").replace('\r',"")) for k,v in row.iteritems())
                     if(convrow.has_key("")):
                         del convrow[""]
                     if(convrow.has_key("district")):
