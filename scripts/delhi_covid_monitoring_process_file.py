@@ -17,7 +17,7 @@ csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
 statesmanUrl = "http://localhost:8080"
 phones = set()
-stateWorkflows = {"delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
+stateWorkflows = {"bihar":"77ee9073-eed9-4fbb-8150-31d96af4a536","maharashtra":"7735772e-523c-45f2-b64d-116489048a2e","delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
 
 def now():
     return calendar.timegm(time.gmtime()) * 1000
