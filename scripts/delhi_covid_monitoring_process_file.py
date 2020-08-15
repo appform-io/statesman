@@ -44,7 +44,7 @@ def trigger_new_workflow(payload,mobileNumber,wfSource):
 
 
 def existing_workflow(phone,state):
-    finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId in ('%s') and eventType = 'STATE_CHANGED' and eventData.newState in ('HOME_QUARANTINE','HI_ONBOARD')  and eventData.data.mobile_number = '%s' limit 1  """ % (stateWorkflows[state], str(phone))
+    finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId in ('%s') and eventType = 'STATE_CHANGED' and eventData.newState in ('HOME_QUARANTINE','HI_ONBOARD','HOME_ISOLATION')  and eventData.data.mobile_number = '%s' limit 1  """ % (stateWorkflows[state], str(phone))
     #print(finalFql)
     r = requests.post('https://foxtrot.telemed-ind.appform.io/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':'Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmb3h0cm90LXNlcnZlciIsImp0aSI6IjhiMDk0MzkxLWNhYWYtNDg5MC04NTg1LWYyYWY1Y2MyOTUxMCIsImlhdCI6MTU4Njc4Mjg5NCwibmJmIjoxNTg2NzgyNzc0LCJzdWIiOiJyZXBvcnRpbmciLCJhdWQiOiJTVEFUSUMifQ.xdqRera5ZhNhzbxYtLmk2L05n_iqyfVRZiU9NGodR8iH5nQOwMmJUXUeIb92JHd2ehVHmNF9v1L50CH_txLmYw'})
     if(r.status_code == 200):
@@ -69,7 +69,7 @@ def update_workflow(w,payload,mobileNumber):
                 wd["end_date"] = payload['body']["end_date"]
                 wd["maxDays"] = day_diff(workflow['created'],wd["endTime"])
                 if(workflow['dataObject']['currentState']['name'] == "END"):
-                    workflow['dataObject']['currentState']['name'] = "HOME_QUARANTINE"
+                    workflow['dataObject']['currentState']['name'] = "HOME_ISOLATION"
                     workflow['dataObject']['currentState']['terminal'] = False
 
                 r = requests.put(statesmanUrl + '/v1/housekeeping/update/workflow',data = json.dumps(workflow) , headers = {'content-type': 'application/json'})
