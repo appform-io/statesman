@@ -16,6 +16,7 @@ rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
 statesmanUrl = "http://localhost:8080"
+date_fields = ['date_of_sample_collection','date_of_isolation','end_date']
 phones = set()
 stateWorkflows = {"bihar":"77ee9073-eed9-4fbb-8150-31d96af4a536","maharashtra":"7735772e-523c-45f2-b64d-116489048a2e","delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
 CURRENT_DATE = datetime.date.today()
@@ -33,6 +34,11 @@ def day_diff(from_epoch, till_epoch):
         return 1
     return int (math.ceil( (float)(till_epoch - from_epoch) / 86400000))
 
+def sanitizeAge(row):
+    if(row.has_key("age")):
+        age = row['age'].strip()
+        age = age.split('.')[0].split(" ")[0]
+        row['age'] = age
 
 def trigger_new_workflow(payload,mobileNumber,wfSource):
     for i in range(3):
@@ -103,6 +109,10 @@ for csvFileName in csvFileNames:
                     if(convrow['mobile_number'] in phones):
                         print("INFO: Already processed the mobile_number:" + convrow['mobile_number'])
                     phones.add(convrow['mobile_number'])
+                    for date_field in date_fields:
+                        if(convrow.has_key(date_field)):
+                            convrow[date_field] = convrow[date_field].replace('.',r'/').replace('-',r'/')
+                    sanitizeAge(convrow)
                     convrow['wfSource'] = convrow['state'] + '_'+flow+'_monitoring_csv'
                     endTime = epoch_time(convrow['end_date'])
                     convrow['maxDays'] = day_diff(now(),endTime)
