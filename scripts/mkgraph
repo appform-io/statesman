@@ -32,7 +32,11 @@ def add_transition(G, from_node, to_node, tr_name, color='black', linestyle='sol
         labeltooltip=tr_name
     )
 
-def drawGraph(workflowId, workflowName, addEdge, data):
+def draw_graph(workflow_id, workflowName, add_edge, data):
+
+    if data is None or len(data) ==0:
+        print("Skipping as no transitions present for: " + workflow_id)
+        return
 
     G = pgv.AGraph(
             strict=False,
@@ -57,7 +61,7 @@ def drawGraph(workflowId, workflowName, addEdge, data):
         to_node = d["toState"]["name"]
         terminal = d["toState"]["terminal"]
         transition_type = d["type"]
-        tr_name = idx if addEdge else ""
+        tr_name = idx if add_edge else ""
         tr_action = "" if "action" not in d else d["action"]
         tr_rule = "" if "rule" not in d else d["rule"]
         tr_rule = tr_rule.replace("&","&amp;").replace("|", "&brvbar;").replace("<","&lt;").replace(">","&gt;")
@@ -75,7 +79,7 @@ def drawGraph(workflowId, workflowName, addEdge, data):
             add_transition(G, from_node, to_node, tr_name)
         idx = idx + 1
 
-    if addEdge:
+    if add_edge:
         table="""< 
         <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"1\" CELLPADDING=\"4\" ALIGN=\"LEFT\">
             <TR>
@@ -101,12 +105,26 @@ def drawGraph(workflowId, workflowName, addEdge, data):
         G.add_node('legendn', shape='none', fontsize=8, margin=1, label=table, rank="same")
 
     G.layout('dot')
-    G.draw(workflowId + '.svg')
-    print("Generated output in: " + workflowId + ".svg")
+    G.draw(workflow_id + '.svg')
+    print("Generated output in: " + workflow_id + ".svg")
+
+def generate_graph(wf, add_edge, statesman, proxies):
+    workflow_id = wf["id"]
+    if wf["active"] == False:
+        print("Skipping inactive workflow: " + workflow_id)
+        return
+    wf_name = wf["name"]
+
+    r = requests.get(statesman + '/v1/templates/workflow/' + workflow_id + '/transitions', proxies = proxies)
+    if r.status_code != 200:
+        print("Did not find state transitions for workflow " + workflow_id)
+        return
+
+    draw_graph(workflow_id, wf_name, add_edge, r.json())
 
 parser = argparse.ArgumentParser(description='Generate graph for statesman workflow')
 
-parser.add_argument('-w', '--workflow', required=True,
+parser.add_argument('-w', '--workflow',
                     help='Workflow Template ID')
 parser.add_argument('-s', '--statesman', required=True,
                     help='Statesman endpoint. [For example: http://localhost:8080]')
@@ -124,19 +142,16 @@ if len(args.proxy) > 0:
         'http': "socks5://" + args.proxy,
         'https': "socks5://" + args.proxy
     }
-r = requests.get(args.statesman + '/v1/templates/workflow/' + args.workflow, proxies = proxies)
-data = {}
-if r.status_code == 200:
-   data = r.json()
-if len(data) == 0:
-    sys.exit("No details found for workflow")
-wf_name = data["name"]
-data = []
-r = requests.get(args.statesman + '/v1/templates/workflow/' + args.workflow + '/transitions', proxies = proxies)
-if r.status_code == 200:
-    data = r.json()
+if not args.workflow is None:
+    r = requests.get(args.statesman + '/v1/templates/workflow/' + args.workflow, proxies = proxies)
+    if r.status_code != 200:
+        sys.exit("No details found for workflow " + args.workflow)
+    generate_graph(r.json(), args.edge, args.statesman, proxies)
+else:
+    print("Generating graphs for all workflows")
 
-if len(data) == 0:
-    sys.exit("Did not find state transitions for workflow " + args.workflow)
-
-drawGraph(args.workflow, wf_name, args.edge, data)
+    r = requests.get(args.statesman + '/v1/templates/workflow', proxies = proxies)
+    if r.status_code != 200:
+        sys.exit("No details found for workflow")
+    for wf in r.json():
+        generate_graph(wf, args.edge, args.statesman, proxies)
