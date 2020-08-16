@@ -1,0 +1,142 @@
+#!/usr/bin/python 
+
+import argparse
+import graphviz
+import pygraphviz as pgv
+import json
+from graphviz import render
+from graphviz import Source
+import re
+import requests
+import sys
+
+def add_state(G, state, color='black', rank=''):
+    G.add_node(
+        state,
+        shape="box",
+        margin=0.25,
+        label="< <B>" + state + "</B> >",
+        rank=rank,
+        fontsize=10,
+        color=color)
+
+def add_transition(G, from_node, to_node, tr_name, color='black', linestyle='solid'):
+    G.add_edge(
+        from_node,
+        to_node,
+        color=color,
+        style=linestyle,
+        arrowhead='empty',
+        label=tr_name,
+        fontsize=8,
+        labeltooltip=tr_name
+    )
+
+def drawGraph(workflowId, workflowName, addEdge, data):
+
+    G = pgv.AGraph(
+            strict=False,
+            directed=True,
+            pad=0.5,
+            label=workflowName,
+            labelloc='t',
+            fontsize='30',
+            ranksep='+0.8',
+            nodesep='+0.8',
+            rankdir='TB',
+            fontname="Helvetica Bold")
+
+    idx = 1
+    legend=list()
+
+    max_id_len = 0
+    max_action_len = 0
+
+    for d in data:
+        from_node = d["fromState"]
+        to_node = d["toState"]["name"]
+        terminal = d["toState"]["terminal"]
+        transition_type = d["type"]
+        tr_name = idx if addEdge else ""
+        tr_action = "" if "action" not in d else d["action"]
+        tr_rule = "" if "rule" not in d else d["rule"]
+        tr_rule = tr_rule.replace("&","&amp;").replace("|", "&brvbar;").replace("<","&lt;").replace(">","&gt;")
+        tr_rule = re.sub("(&amp;&amp;|&brvbar;&brvbar;)", "<BR/> \\1", tr_rule, 0, re.DOTALL)
+        legend.append((str(idx),d["id"], tr_action, tr_rule))
+        add_state(G, from_node)
+        add_state(G, to_node)
+        if terminal:
+            add_state(G, to_node, 'red')
+        else:
+            add_state(G, to_node)
+        if transition_type == "DEFAULT":
+            add_transition(G, from_node, to_node, tr_name, 'blue')
+        else:
+            add_transition(G, from_node, to_node, tr_name)
+        idx = idx + 1
+
+    if addEdge:
+        table="""< 
+        <TABLE BORDER=\"0\" CELLBORDER=\"1\" CELLSPACING=\"1\" CELLPADDING=\"4\" ALIGN=\"LEFT\">
+            <TR>
+              <TD COLSPAN=\"4\"><B>Legend</B></TD>
+            </TR>
+            <TR>
+              <TD></TD>
+              <TD><B>Id</B></TD>
+              <TD><B>Action</B></TD>
+              <TD><B>Rule</B></TD>
+            </TR>
+        """
+        for item in legend:
+            table = table + """
+            <TR>
+              <TD><B>""" + item[0] + """</B></TD>
+              <TD ALIGN=\"LEFT\">""" + item[1] + """</TD>
+              <TD ALIGN=\"LEFT\">""" + item[2] + """</TD>
+              <TD ALIGN=\"LEFT\" BALIGN=\"LEFT\">""" + item[3] + """</TD>
+            </TR>"""
+        table = table + """</TABLE>
+         >"""
+        G.add_node('legendn', shape='none', fontsize=8, margin=1, label=table, rank="same")
+
+    G.layout('dot')
+    G.draw(workflowId + '.svg')
+    print("Generated output in: " + workflowId + ".svg")
+
+parser = argparse.ArgumentParser(description='Generate graph for statesman workflow')
+
+parser.add_argument('-w', '--workflow', required=True,
+                    help='Workflow Template ID')
+parser.add_argument('-s', '--statesman', required=True,
+                    help='Statesman endpoint. [For example: http://localhost:8080]')
+parser.add_argument('-e', '--edge', action='store_true', default=False,
+                    help='Add edge details in the image. By default only states are present.')
+parser.add_argument('-p', '--proxy', 
+                    help='SOCKS proxy to connect to statesman if needed. [For example: localhost:8080')
+
+
+args = parser.parse_args()
+proxies = {}
+
+if len(args.proxy) > 0:
+    proxies = {
+        'http': "socks5://" + args.proxy,
+        'https': "socks5://" + args.proxy
+    }
+r = requests.get(args.statesman + '/v1/templates/workflow/' + args.workflow, proxies = proxies)
+data = {}
+if r.status_code == 200:
+   data = r.json()
+if len(data) == 0:
+    sys.exit("No details found for workflow")
+wf_name = data["name"]
+data = []
+r = requests.get(args.statesman + '/v1/templates/workflow/' + args.workflow + '/transitions', proxies = proxies)
+if r.status_code == 200:
+    data = r.json()
+
+if len(data) == 0:
+    sys.exit("Did not find state transitions for workflow " + args.workflow)
+
+drawGraph(args.workflow, wf_name, args.edge, data)
