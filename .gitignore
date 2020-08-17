@@ -86,3 +86,4 @@ out
 dep
 out.*
 .out.*
+*.svg
