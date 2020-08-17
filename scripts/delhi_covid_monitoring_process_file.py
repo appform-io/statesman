@@ -36,8 +36,8 @@ def day_diff(from_epoch, till_epoch):
 
 def sanitizeAge(row):
     if(row.has_key("age")):
-        age = row['age'].strip()
-        age = age.split('.')[0].split(" ")[0]
+        age = row['age'].strip().lower()
+        age = age.split('.')[0].split(" ")[0].split("y")[0]
         row['age'] = age
 
 def trigger_new_workflow(payload,mobileNumber,wfSource):
