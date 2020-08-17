@@ -103,6 +103,7 @@ for csvFileName in csvFileNames:
                         convrow["district"] = convrow['district'].lower().strip()
                     convrow['state'] = convrow['state'].lower().strip()
                     flow = convrow['flow'].lower().strip()
+                    convrow['mobile_number'] = convrow['mobile_number'].split(",")[0].strip()
                     if(not stateWorkflows.has_key(convrow['state'])):
                         print("Error: Inavlid state mentioned skiping row:" + str(row))
                         continue
