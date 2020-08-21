@@ -14,40 +14,96 @@ DATABASE = 'statesman_db_'
 SHARDS = 16
 WORKING_THREADS = 8
 EXIT_FLAG = 0
-STATE_WORKFLOW_SQL = """ select workflow_id,current_state from workflow_instances where current_state IN ('%s') and updated < DATE_SUB(NOW(), INTERVAL 15 MINUTE)"""
 STATESMAN_RECON_URL = "http://statesman.telemed-ind.appform.io:8080/v1/housekeeping/trigger/workflow/{}"
 HEADERS = {
     "Content-Type": "application/json"
 }
 CURRENT_DATE = datetime.date.today()
 DAY_START_TIME = (int(datetime.datetime(CURRENT_DATE.year, CURRENT_DATE.month, CURRENT_DATE.day, 0, 0, 0).strftime('%s'))) * 1000
-STATE_CALLBACK_PAYLOAD = {
-    "CALL_NEEDED_SPAM_CHECK_RETRY_3" : {"notReachable": True},
-    "CALL_NEEDED_SPAM_CHECK_RETRY_2": {"retryAttempt3": True},
-    "CALL_NEEDED_SPAM_CHECK" : {"retryAttempt2": True},
-    "HOME_QUARANTINE" : {"callTrigger": True, "now": DAY_START_TIME},
-    "IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
-    "IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
-    "IVR_ATTEMPT_3" : {"status": "noanswer"},
-    "HQ_VOILATION": {"dayEnd": True},
-    "HI_ONBOARD" :  {"onboard":  True},
-    "HOME_ISOLATION" : {  "now": DAY_START_TIME },
-    "HI_IVR_START" : { "callTrigger": True },
-    "HI_ONBOARD_DOCTOR_FOLLOW" : { "callTrigger": True },
-    "HI_DAILY_FOLLOWUP" : { "callTrigger": True },
-    "HI_IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
-    "HI_IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
-    "HI_IVR_ATTEMPT_3" : {"status": "noanswer"},
-    "HI_PUNE_IVR_START" : { "callTrigger": True },
-    "HI_PUNE_IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
-    "HI_PUNE_IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
-    "HI_PUNE_IVR_ATTEMPT_3" : {"status": "noanswer"},
-    "HI_BIHAR_IVR_START" : { "callTrigger": True },
-    "HI_BIHAR_IVR_ATTEMPT_1" : {"retryCallAttempt2": True},
-    "HI_BIHAR_IVR_ATTEMPT_2" : {"retryCallAttempt3": True},
-    "HI_BIHAR_IVR_ATTEMPT_3" : {"status": "noanswer"},
-    "HI_VOILATION" :  {"dayEnd": True}
-    
+CALLBACK_TEMPLATE = {
+    "CALL_NEEDED_SPAM_CHECK_RETRY_3": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('CALL_NEEDED_SPAM_CHECK_RETRY_3') and updated < DATE_SUB(NOW(), INTERVAL 15 MINUTE)",
+        "callback_payload": {"notReachable": True}
+    },
+    "CALL_NEEDED_SPAM_CHECK_RETRY_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('CALL_NEEDED_SPAM_CHECK_RETRY_2') and updated < DATE_SUB(NOW(), INTERVAL 15 MINUTE)",
+        "callback_payload": {"retryAttempt3": True}
+    },
+    "CALL_NEEDED_SPAM_CHECK": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('CALL_NEEDED_SPAM_CHECK') and updated < DATE_SUB(NOW(), INTERVAL 15 MINUTE)",
+        "callback_payload": {"retryAttempt2": True}
+    },
+    "HOME_QUARANTINE": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HOME_QUARANTINE')",
+        "callback_payload": {"callTrigger": True, "now": DAY_START_TIME}
+    },
+    "IVR_ATTEMPT_1": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('IVR_ATTEMPT_1')",
+        "callback_payload": {"retryCallAttempt2": True}},
+    "IVR_ATTEMPT_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('IVR_ATTEMPT_2')",
+        "callback_payload": {"retryCallAttempt3": True}},
+    "IVR_ATTEMPT_3": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('IVR_ATTEMPT_3')",
+        "callback_payload": {"status": "noanswer"}},
+    "HQ_VOILATION": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HQ_VOILATION')",
+        "callback_payload": {"dayEnd": True}},
+    "HI_ONBOARD": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD')",
+        "callback_payload": {"onboard": True}},
+    "HOME_ISOLATION": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HOME_ISOLATION')",
+        "callback_payload": {"now": DAY_START_TIME}},
+    "HI_IVR_START": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_START')",
+        "callback_payload": {"callTrigger": True}},
+    "HI_PUNJAB_ONBOARD_DOCTOR_FOLLOW": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD_DOCTOR_FOLLOW') and template_id in ('11dd4791-472b-454b-8f7a-39a589a6335c')",
+        "callback_payload": {"callTrigger": True}},
+    "HI_DAILY_FOLLOWUP": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_DAILY_FOLLOWUP')",
+        "callback_payload": {"callTrigger": True}},
+    "HI_IVR_ATTEMPT_1": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_ATTEMPT_1')",
+        "callback_payload": {"retryCallAttempt2": True}},
+    "HI_IVR_ATTEMPT_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_ATTEMPT_2')",
+        "callback_payload": {"retryCallAttempt3": True}},
+    "HI_IVR_ATTEMPT_3": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_ATTEMPT_3')",
+        "callback_payload": {"status": "noanswer"}},
+    "HI_PUNE_ONBOARD_DOCTOR_FOLLOW": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD_DOCTOR_FOLLOW') and template_id in ('7735772e-523c-45f2-b64d-116489048a2e')",
+        "callback_payload": {"callTrigger": True}},
+    "HI_PUNE_IVR_START": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_START')",
+        "callback_payload": {"callTrigger": True}},
+    "HI_PUNE_IVR_ATTEMPT_1": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_ATTEMPT_1')",
+        "callback_payload": {"retryCallAttempt2": True}},
+    "HI_PUNE_IVR_ATTEMPT_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_ATTEMPT_2')",
+        "callback_payload": {"retryCallAttempt3": True}},
+    "HI_PUNE_IVR_ATTEMPT_3": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_ATTEMPT_3')",
+        "callback_payload": {"status": "noanswer"}},
+    "HI_BIHAR_IVR_START": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_START')",
+        "callback_payload": {"callTrigger": True}},
+    "HI_BIHAR_IVR_ATTEMPT_1": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_ATTEMPT_1')",
+        "callback_payload": {"retryCallAttempt2": True}},
+    "HI_BIHAR_IVR_ATTEMPT_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_ATTEMPT_2')",
+        "callback_payload": {"retryCallAttempt3": True}},
+    "HI_BIHAR_IVR_ATTEMPT_3": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_ATTEMPT_3')",
+        "callback_payload": {"status": "noanswer"}},
+    "HI_VOILATION": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_VOILATION')",
+        "callback_payload": {"dayEnd": True}}
+
 }
 
 queueLock = threading.Lock()
@@ -153,8 +209,8 @@ def callback(workflow_id, payload):
     return {}
 
 
-def statesman_callback(states):
-    sql = STATE_WORKFLOW_SQL % ("','".join(states))
+def statesman_callback(template):
+    sql = CALLBACK_TEMPLATE[template]['sql']
     print("INFO: SQL:" + sql)
     result = execute_query(sql)
     for row in result:
@@ -162,6 +218,7 @@ def statesman_callback(states):
             jobData = dict()
             jobData['state'] = row[1]
             jobData['workflow_id'] = row[0]
+            jobData['callback_payload'] = CALLBACK_TEMPLATE[template]['callback_payload']
             workQueue.put(jobData.copy())
         except:
             print("ERROR: Processing row:" + str(",".join(row)))
@@ -170,19 +227,21 @@ def statesman_callback(states):
 
 def process(jobData):
     #print("INFO: workflow_id:" + jobData['workflow_id'] + " state:" + jobData['state'])
-    callback(jobData['workflow_id'], STATE_CALLBACK_PAYLOAD[jobData['state']])
+    callback(jobData['workflow_id'], jobData['callback_payload'])
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-s",   "--state", action='append', required=True,  help="State for which callback needs to be triggered")
+parser.add_argument("-t",   "--template", action='append', required=True,  help="TemplateName for which callback needs to be triggered")
 options = parser.parse_args()
-states = options.state
+templates = options.template
 
-for state in states:
-    if(not STATE_CALLBACK_PAYLOAD.has_key(state)):
-        print("ERROR: Invalid state:" + state)
+for template in templates:
+    if(not CALLBACK_TEMPLATE.has_key(template)):
+        print("ERROR: Invalid state:" + template)
         exit(1)
 
 initThreads()
-statesman_callback(states)
+for template in templates:
+    statesman_callback(template)
+
 waitForCompleteion()
 exit(0)
