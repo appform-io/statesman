@@ -18,7 +18,7 @@ jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
 statesmanUrl = "http://localhost:8080"
 date_fields = ['date_of_sample_collection','date_of_isolation','end_date']
 phones = set()
-stateWorkflows = {"pondicherry":"fd20aa74-3210-4761-9e3b-4d6ab43477fb","bihar":"77ee9073-eed9-4fbb-8150-31d96af4a536","maharashtra":"7735772e-523c-45f2-b64d-116489048a2e","delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
+stateWorkflows = {"tamil_nadu":"fd20aa74-3210-4761-9e3b-4d6ab43477fb","bihar":"77ee9073-eed9-4fbb-8150-31d96af4a536","maharashtra":"7735772e-523c-45f2-b64d-116489048a2e","delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
 CURRENT_DATE = datetime.date.today()
 DAY_START_TIME = (int(datetime.datetime(CURRENT_DATE.year, CURRENT_DATE.month, CURRENT_DATE.day, 0, 0, 0).strftime('%s'))) * 1000
 
@@ -101,7 +101,7 @@ for csvFileName in csvFileNames:
                         del convrow[""]
                     if(convrow.has_key("district")):
                         convrow["district"] = convrow['district'].lower().strip()
-                    convrow['state'] = convrow['state'].lower().strip()
+                    convrow['state'] = convrow['state'].lower().strip().replace(' ', '_')
                     flow = convrow['flow'].lower().strip()
                     convrow['mobile_number'] = convrow['mobile_number'].split(",")[0].strip()
                     if(not stateWorkflows.has_key(convrow['state'])):
