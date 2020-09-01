@@ -109,6 +109,7 @@ for csvFileName in csvFileNames:
                         continue
                     if(convrow['mobile_number'] in phones):
                         print("INFO: Already processed the mobile_number:" + convrow['mobile_number'])
+                        continue
                     phones.add(convrow['mobile_number'])
                     for date_field in date_fields:
                         if(convrow.has_key(date_field)):
