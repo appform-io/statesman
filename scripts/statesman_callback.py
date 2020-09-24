@@ -100,6 +100,18 @@ CALLBACK_TEMPLATE = {
     "HI_BIHAR_IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_ATTEMPT_3') and template_id = '77ee9073-eed9-4fbb-8150-31d96af4a536' ",
         "callback_payload": {"status": "noanswer"}},
+    "HI_TN_IVR_START": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_START') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
+        "callback_payload": {"callTrigger": True}},
+    "HI_TN_IVR_ATTEMPT_1": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_ATTEMPT_1') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
+        "callback_payload": {"retryCallAttempt2": True}},
+    "HI_TN_IVR_ATTEMPT_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_ATTEMPT_2') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
+        "callback_payload": {"retryCallAttempt3": True}},
+    "HI_TN_IVR_ATTEMPT_3": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_ATTEMPT_3') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
+        "callback_payload": {"status": "noanswer"}},
     "HI_PONDY_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PONDY_IVR_START') and template_id = 'fd20aa74-3210-4761-9e3b-4d6ab43477fb' ",
         "callback_payload": {"callTrigger": True}},
