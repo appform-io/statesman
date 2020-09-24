@@ -19,8 +19,10 @@ statesmanUrl = "http://localhost:8080"
 date_fields = ['date_of_sample_collection','date_of_isolation','end_date']
 phones = set()
 stateWorkflows = {"tamil_nadu":"fd20aa74-3210-4761-9e3b-4d6ab43477fb","bihar":"77ee9073-eed9-4fbb-8150-31d96af4a536","maharashtra":"7735772e-523c-45f2-b64d-116489048a2e","delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
+TEN_DAYS_IN_MS = 10 * 24 * 60 * 60 * 1000
 CURRENT_DATE = datetime.date.today()
 DAY_START_TIME = (int(datetime.datetime(CURRENT_DATE.year, CURRENT_DATE.month, CURRENT_DATE.day, 0, 0, 0).strftime('%s'))) * 1000
+mandatoryFields = ['state','district','patient_name','mobile_number','date_of_isolation','end_date']
 
 def now():
     return calendar.timegm(time.gmtime()) * 1000
@@ -28,6 +30,8 @@ def now():
 def epoch_time(str_time):
     return (int(time.mktime(time.strptime(str_time, "%d/%m/%Y")))) * 1000
 
+def str_date(time_in_epoch):
+    return datetime.datetime.fromtimestamp(time_in_epoch / 1000).strftime('%d/%m/%Y')
 
 def day_diff(from_epoch, till_epoch):
     if(till_epoch < from_epoch):
@@ -54,7 +58,7 @@ def trigger_new_workflow(payload,mobileNumber,wfSource):
 def existing_workflow(phone,state):
     finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId in ('%s') and eventType = 'STATE_CHANGED' and eventData.newState in ('HOME_QUARANTINE','HI_ONBOARD','HOME_ISOLATION')  and eventData.data.mobile_number = '%s' limit 1  """ % (stateWorkflows[state], str(phone))
     #print(finalFql)
-    r = requests.post('https://foxtrot.ps1infra.net/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':'Bearer '})
+    r = requests.post('https://foxtrot.ps1infra.net/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':'Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmb3h0cm90LXNlcnZlciIsImp0aSI6IjhiMDk0MzkxLWNhYWYtNDg5MC04NTg1LWYyYWY1Y2MyOTUxMCIsImlhdCI6MTU4Njc4Mjg5NCwibmJmIjoxNTg2NzgyNzc0LCJzdWIiOiJyZXBvcnRpbmciLCJhdWQiOiJTVEFUSUMifQ.xdqRera5ZhNhzbxYtLmk2L05n_iqyfVRZiU9NGodR8iH5nQOwMmJUXUeIb92JHd2ehVHmNF9v1L50CH_txLmYw'})
     if(r.status_code == 200):
         for row in r.json()['rows']:
             return row['eventData.workflowId']
@@ -96,9 +100,19 @@ for csvFileName in csvFileNames:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
-                    convrow = dict((k.lower().strip().replace(' ', '_'), v.strip().replace('\n', "").replace('\r',"")) for k,v in row.iteritems())
+                    convrow = dict((" ".join(k.split()).lower().strip().replace(' ', '_'), v.strip().replace('\n', "").replace('\r',"")) for k,v in row.iteritems())
                     if(convrow.has_key("")):
                         del convrow[""]
+                    if(convrow.has_key("date_of_isolation") and not convrow.has_key("end_date")):
+                        convrow["end_date"] = str_date(epoch_time(convrow['date_of_isolation']) + TEN_DAYS_IN_MS)
+                    invalid_schema = False
+                    for f in mandatoryFields:
+                        if(not convrow.has_key(f)):
+                            print("ERROR: missing field:"+f + " for row:"+ str(row))
+                            invalid_schema = True
+                            break
+                    if(invalid_schema):
+                        continue
                     if(convrow.has_key("district")):
                         convrow["district"] = convrow['district'].lower().strip()
                     convrow['state'] = convrow['state'].lower().strip().replace(' ', '_')
@@ -123,7 +137,7 @@ for csvFileName in csvFileNames:
                     body = { 'id' : convrow['wfSource'] , 'body' : convrow, 'apiPath' : csvFileName }
                     print('Queuing job mobile_number: ' + convrow['mobile_number'] + " patient_name:"+convrow['patient_name'])
                     jobQueue.put(json.dumps(body))
-                    print('Queued job mobile_number: ' + convrow['mobile_number'] + " patient_name:"+convrow['patient_name'])
+                    #print('Queued job mobile_number: ' + convrow['mobile_number'] + " patient_name:"+convrow['patient_name'])
                 except Exception as e:
                     print('Error processing row: ' + str(row))
                     print(e)
@@ -137,7 +151,7 @@ print('Total queue size: ' + str(jobQueue.size))
 while jobQueue.size > 0:
     payload = jobQueue.get()
     try:
-        print(payload)
+        #print(payload)
         payloadDict = json.loads(payload)
         mobileNumber = str(payloadDict['body']['mobile_number'])
         state = str(payloadDict['body']['state'])
@@ -149,11 +163,12 @@ while jobQueue.size > 0:
             else:
                 jobQueue.ack_failed(payload)
         else:
-            print("Has workflow to update for mobile_number:"+ mobileNumber)
-            if(update_workflow(w, payloadDict, mobileNumber)):
-                jobQueue.ack(payload)
-            else:
-                jobQueue.ack_failed(payload)
+            print("Already exisit mobile_number:"+ mobileNumber)
+            #if(update_workflow(w, payloadDict, mobileNumber)):
+            #    jobQueue.ack(payload)
+            #else:
+            #    jobQueue.ack_failed(payload)
+            jobQueue.ack(payload)
     except Exception as e:
         print('Error processing job: ' + str(payload))
         jobQueue.ack_failed(payload)
