@@ -16,7 +16,7 @@ STATESMAN_WORKFLOW_GET_URL = "http://127.0.0.1:8080/v1/housekeeping/debug/workfl
 STATESMAN_RECON_URL = "https://127.0.0.1/callbacks/FRESHDESK"
 FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
 FRESHDESK_TICKETS_FILE_URL = "https://127.0.0.1/reports/scheduled_exports/4830771586540088/download_file.json"
-FRESHDESK_TICKET_URL = "https://127.0.0.1/api/v2/tickets/{}"
+FRESHDESK_TICKET_URL = "https://{}.freshdesk.com/api/v2/tickets/{}"
 HEADERS = {
     "Content-Type": "application/json",
     "Authorization": "Basic "
@@ -28,7 +28,7 @@ PASSWORD = ''
 DATABASE = 'statesman_db_'
 SHARDS = 16
 
-PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_REQUIRED','CALL_NEEDED_MENTAL_HEALTH','CALL_NEEDED_COVID_POSITIVE','DOCTOR_FOLLOW','FINAL_DOCTOR_FOLLOW','SYMPTOMS_DOCTOR_FOLLOW','INTENDED_PLASMA_DONATION') and updated > '2020-05-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
+PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_REQUIRED','CALL_NEEDED_MENTAL_HEALTH','CALL_NEEDED_COVID_POSITIVE','DOCTOR_FOLLOW','FINAL_DOCTOR_FOLLOW','SYMPTOMS_DOCTOR_FOLLOW','INTENDED_PLASMA_DONATION') and updated > '2020-09-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
 
 
 ############ DATE HELPER ###########
@@ -70,8 +70,8 @@ def execute_query(sql):
 
 ############ FRESHDESK HELPER ##########
 
-def fetch_freshdesk_ticket(ticket_id):
-    response = requests.get(url=FRESHDESK_TICKET_URL.format(ticket_id), headers=HEADERS)
+def fetch_freshdesk_ticket(ticket_domain, ticket_id):
+    response = requests.get(url=FRESHDESK_TICKET_URL.format(ticket_domain, ticket_id), headers=HEADERS)
     if response.status_code == 200:
         return response.json()
     else:
@@ -449,8 +449,9 @@ def statesman_db_based_recon():
             if (workflow_data.has_key('data') and workflow_data['data'].has_key('freshDeskActionCall') and
                     workflow_data['data']['freshDeskActionCall'].has_key('ticketId')):
                 ticket_id = workflow_data['data']['freshDeskActionCall']['ticketId']
-                print(workflow_id + "," + ticket_id)
-                ticket_details = fetch_freshdesk_ticket(ticket_id)
+                ticket_domain = workflow_data['data']['freshDeskActionCall']['domain'] if workflow_data['data']['freshDeskActionCall'].has_key('domain') else 'telemeds'
+                print(workflow_id + "," + ticket_id+","+ ticket_domain)
+                ticket_details = fetch_freshdesk_ticket(ticket_domain, ticket_id)
                 if(recon_required_based_on_ticket_details(ticket_details)):
                     payload = create_recon_payload_from_ticket_details(ticket_details,workflow_id)
                     recon_workflow(payload)
