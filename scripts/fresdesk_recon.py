@@ -17,14 +17,14 @@ STATESMAN_RECON_URL = "https://127.0.0.1/callbacks/FRESHDESK"
 FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
 FRESHDESK_TICKETS_FILE_URL = "https://127.0.0.1/reports/scheduled_exports/4830771586540088/download_file.json"
 FRESHDESK_TICKET_URL = "https://{}.freshdesk.com/api/v2/tickets/{}"
-HEADERS = {"Content-Type": "application/json", "Authorization": "Basic YXNnYW5lc2gyMzRAZ21haWwuY29tOnRlbGVtZWQxOQ=="}
+HEADERS = {"Content-Type": "application/json", "Authorization": "Basic "}
 FD_HEADERS = {"telemeds": {
     "Content-Type": "application/json",
-    "Authorization": "Basic YXNnYW5lc2gyMzRAZ21haWwuY29tOnRlbGVtZWQxOQ=="
+    "Authorization": "Basic"
 },
     "covidwatch": {
         "Content-Type": "application/json",
-        "Authorization": "dHVzaGFyQHByb2plY3RzdGVwb25lLm9yZzohMjM0UXdlcg=="
+        "Authorization": "Basic"
     }
 }
 
