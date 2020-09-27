@@ -17,9 +17,15 @@ STATESMAN_RECON_URL = "https://127.0.0.1/callbacks/FRESHDESK"
 FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
 FRESHDESK_TICKETS_FILE_URL = "https://127.0.0.1/reports/scheduled_exports/4830771586540088/download_file.json"
 FRESHDESK_TICKET_URL = "https://{}.freshdesk.com/api/v2/tickets/{}"
-HEADERS = {
+HEADERS = {"Content-Type": "application/json", "Authorization": "Basic YXNnYW5lc2gyMzRAZ21haWwuY29tOnRlbGVtZWQxOQ=="}
+FD_HEADERS = {"telemeds": {
     "Content-Type": "application/json",
-    "Authorization": "Basic "
+    "Authorization": "Basic YXNnYW5lc2gyMzRAZ21haWwuY29tOnRlbGVtZWQxOQ=="
+},
+    "covidwatch": {
+        "Content-Type": "application/json",
+        "Authorization": "dHVzaGFyQHByb2plY3RzdGVwb25lLm9yZzohMjM0UXdlcg=="
+    }
 }
 
 HOST = '127.0.0.1'
@@ -28,7 +34,7 @@ PASSWORD = ''
 DATABASE = 'statesman_db_'
 SHARDS = 16
 
-PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_REQUIRED','CALL_NEEDED_MENTAL_HEALTH','CALL_NEEDED_COVID_POSITIVE','DOCTOR_FOLLOW','FINAL_DOCTOR_FOLLOW','SYMPTOMS_DOCTOR_FOLLOW','INTENDED_PLASMA_DONATION') and updated > '2020-09-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
+PENDING_WORKFLOW_SQL = """ select workflow_id,data from workflow_instances where current_state IN ('CALL_NEEDED','CALL_REQUIRED','CALL_NEEDED_MENTAL_HEALTH','CALL_NEEDED_COVID_POSITIVE','DOCTOR_FOLLOW','FINAL_DOCTOR_FOLLOW','SYMPTOMS_DOCTOR_FOLLOW','INTENDED_PLASMA_DONATION','HI_ONBOARD_DOCTOR_FOLLOW','HI_DAILY_FOLLOWUP','HI_SYMPTOMS_DOCTOR_FOLLOW','HI_SYMPTOMS_DOCTOR_EMERGENCY') and updated > '2020-09-05 05:00:00' and  updated < DATE_SUB(NOW(), INTERVAL 1 HOUR) """
 
 
 ############ DATE HELPER ###########
@@ -71,7 +77,7 @@ def execute_query(sql):
 ############ FRESHDESK HELPER ##########
 
 def fetch_freshdesk_ticket(ticket_domain, ticket_id):
-    response = requests.get(url=FRESHDESK_TICKET_URL.format(ticket_domain, ticket_id), headers=HEADERS)
+    response = requests.get(url=FRESHDESK_TICKET_URL.format(ticket_domain, ticket_id), headers=FD_HEADERS[ticket_domain])
     if response.status_code == 200:
         return response.json()
     else:
