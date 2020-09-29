@@ -1,30 +1,29 @@
 import MySQLdb
-import csv
 import datetime
 import glob
 import json
 import os
 import requests
 import time
-import urllib
 
-FROM = 1586375271662
-TO = 1586460257299
-
-FILE_PATH_PREFIX = "/var/tmp/reports/FRESHDESK_"
-STATESMAN_WORKFLOW_GET_URL = "http://127.0.0.1:8080/v1/housekeeping/debug/workflow/{}"
-STATESMAN_RECON_URL = "https://127.0.0.1/callbacks/FRESHDESK"
-FRESHDESK_URL = "https://127.0.0.1/api/v2/tickets?order_by=updated_at&order_type=asc&per_page=100&page={}&updated_since={}"
-FRESHDESK_TICKETS_FILE_URL = "https://127.0.0.1/reports/scheduled_exports/4830771586540088/download_file.json"
-FRESHDESK_TICKET_URL = "https://{}.freshdesk.com/api/v2/tickets/{}"
-HEADERS = {"Content-Type": "application/json", "Authorization": "Basic "}
-FD_HEADERS = {"telemeds": {
-    "Content-Type": "application/json",
-    "Authorization": "Basic"
-},
+STATESMAN_WORKFLOW_GET_URL = "http://127.0.0.1/v1/housekeeping/debug/workflow/{}"
+HEADERS = {"Content-Type": "application/json"}
+FD_DOMAIN_DATA = {
+    "telemeds": {
+        "statesman_recon_url" : "https://127.0.0.1/callbacks/FRESHDESK",
+        "fd_url": "https://127.0.0.1/api/v2/tickets/{}",
+        "fd_headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Basic =="
+        }
+    },
     "covidwatch": {
-        "Content-Type": "application/json",
-        "Authorization": "Basic"
+        "statesman_recon_url" : "https://127.0.0.1/callbacks/COVIDWATCH_FRESHDESK",
+        "fd_url": "https://127.0.0.1/api/v2/tickets/{}",
+        "fd_headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Basic =="
+        }
     }
 }
 
@@ -77,60 +76,9 @@ def execute_query(sql):
 ############ FRESHDESK HELPER ##########
 
 def fetch_freshdesk_ticket(ticket_domain, ticket_id):
-    response = requests.get(url=FRESHDESK_TICKET_URL.format(ticket_domain, ticket_id), headers=FD_HEADERS[ticket_domain])
+    response = requests.get(url=FD_DOMAIN_DATA[ticket_domain]['fd_url'].format(ticket_id), headers=FD_DOMAIN_DATA[ticket_domain]['fd_headers'])
     if response.status_code == 200:
         return response.json()
-    else:
-        return None
-
-
-def fetch_next_freshdesk_tickets(page, from_str_time):
-    response = requests.get(url=FRESHDESK_URL.format(page, urllib.quote(from_str_time)), headers=HEADERS)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        return []
-
-
-def fetch_next_freshdesk_tickets_till_date_changes(from_time_till_date_change):
-    page = 1
-    last_ticket_time_till_date_change = from_time_till_date_change
-    all_tickets = []
-    while last_ticket_time_till_date_change == from_time_till_date_change:
-        tickets = fetch_next_freshdesk_tickets(str(page), formatted_date_time(from_time_till_date_change))
-        if (len(tickets) == 0):
-            break
-        page += 1
-        last_ticket_time_till_date_change = epoch_time(tickets[-1]["updated_at"])
-        all_tickets = tickets + all_tickets
-    return all_tickets
-
-
-def fetch_freshdesk_tickets(from_time, to_time):
-    all_tickets = []
-    while from_time < to_time:
-        tickets = fetch_next_freshdesk_tickets_till_date_changes(from_time)
-        if (len(tickets) == 0):
-            break
-        last_ticket_time = epoch_time(tickets[-1]["updated_at"])
-        if (last_ticket_time == from_time):
-            from_time = last_ticket_time + 1000  # adding one sec
-        else:
-            from_time = last_ticket_time
-        all_tickets = tickets + all_tickets
-    return all_tickets
-
-
-def download_tickets_last_hour():
-    file_path = FILE_PATH_PREFIX + str_current_time()
-    response = requests.get(url=FRESHDESK_TICKETS_FILE_URL, headers=HEADERS)
-    if response.status_code == 200:
-        url = response.json()["export"]["url"]
-        file_response = requests.get(url=url)
-        file_handler = open(file_path, 'wb')
-        file_handler.write(file_response.content)
-        file_handler.close()
-        return file_path
     else:
         return None
 
@@ -150,10 +98,10 @@ def get_workflow(workflow_id):
     return {}
 
 
-def recon_workflow(payload):
+def recon_workflow(ticket_domain,payload):
     try:
         print(json.dumps(payload))
-        response = requests.post(url=STATESMAN_RECON_URL, data=json.dumps(payload), headers=HEADERS)
+        response = requests.post(url=FD_DOMAIN_DATA[ticket_domain]['statesman_recon_url'], data=json.dumps(payload), headers=HEADERS)
         print(response.text)
         if response.status_code == 200:
             return response.json()
@@ -193,6 +141,9 @@ def create_recon_payload(patient_language,
                          cf_2nd_mobile_number,
                          cf_clinical_status,
                          cf_comoribities_diabetes,
+                         cf_comorbidity_diabetic,
+                         cf_comorbidity_hiv,
+                         cf_comorbidity_heart_disease,
                          cf_comorbidity_hypertension,
                          cf_comorbidity_cancer,
                          cf_stepone_doctor_suggestion,
@@ -204,19 +155,28 @@ def create_recon_payload(patient_language,
                          cf_tele_agent_input,
                          cf_covid_care_center_name,
                          cf_hospital_name,
+                         cf_hospital,
                          cf_tele_agent_notes,
                          cf_symptom_difficulty_in_breathing,
+                         cf_symptoms_breathing_issues,
                          cf_symptom_fever_above_101_since_3_days,
+                         cf_symptoms_fever,
                          cf_symptom_severe_cough,
+                         cf_symptoms_cough,
                          cf_symptom_diarrhoea_above_4_times_a_day,
+                         cf_symptoms_diarrhoealoose_stools,
                          cf_symptom_loss_of_smell_taste,
                          cf_screeners_decision,
                          cf_if_your_current_blood_oxygen_level_is_below_95,
+                         cf_is_your_current_blood_oxygen_level_below_95,
                          cf_pulse_rate_range,
                          cf_do_you_have_a_fever_today,
+                         cf_do_you_have_fever_today,
                          cf_did_you_have_more_than_4_loose_motions_today,
                          cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating,
+                         cf_do_you_have_chest_pain_or_abnormal_sweating,
                          cf_do_you_have_any_breathing_difficulty,
+                         cf_do_you_have_breathing_difficulty,
                          cf_do_you_have_cough_or_sore_throat_today,
                          cf_plasma_counsellors_decision):
     paylaod = {
@@ -250,6 +210,9 @@ def create_recon_payload(patient_language,
             "ticket_cf_2nd_mobile_number": cf_2nd_mobile_number,
             "ticket_cf_clinical_status": cf_clinical_status,
             "ticket_cf_comoribities_diabetes": cf_comoribities_diabetes,
+            "ticket_cf_comorbidity_diabetic": cf_comorbidity_diabetic,
+            "ticket_cf_comorbidity_hiv": cf_comorbidity_hiv,
+            "ticket_cf_comorbidity_heart_disease": cf_comorbidity_heart_disease,
             "ticket_cf_comorbidity_hypertension": cf_comorbidity_hypertension,
             "ticket_cf_comorbidity_cancer": cf_comorbidity_cancer,
             "ticket_cf_stepone_doctor_suggestion": cf_stepone_doctor_suggestion,
@@ -261,19 +224,28 @@ def create_recon_payload(patient_language,
             "ticket_cf_tele_agent_input": cf_tele_agent_input,
             "ticket_cf_covid_care_center_name": cf_covid_care_center_name,
             "ticket_cf_hospital_name": cf_hospital_name,
+            "ticket_cf_hospital": cf_hospital,
             "ticket_cf_tele_agent_notes": cf_tele_agent_notes,
             "ticket_cf_symptom_difficulty_in_breathing": cf_symptom_difficulty_in_breathing,
+            "ticket_cf_symptoms_breathing_issues": cf_symptoms_breathing_issues,
             "ticket_cf_symptom_fever_above_101_since_3_days": cf_symptom_fever_above_101_since_3_days,
+            "ticket_cf_symptoms_fever": cf_symptoms_fever,
             "ticket_cf_symptom_severe_cough": cf_symptom_severe_cough,
+            "ticket_cf_symptoms_cough": cf_symptoms_cough,
             "ticket_cf_symptom_diarrhoea_above_4_times_a_day": cf_symptom_diarrhoea_above_4_times_a_day,
+            "ticket_cf_symptoms_diarrhoealoose_stools": cf_symptoms_diarrhoealoose_stools,
             "ticket_cf_symptom_loss_of_smell_taste": cf_symptom_loss_of_smell_taste,
             "ticket_cf_screeners_decision": cf_screeners_decision,
             "ticket_cf_if_your_current_blood_oxygen_level_is_below_95":cf_if_your_current_blood_oxygen_level_is_below_95,
+            "ticket_cf_is_your_current_blood_oxygen_level_below_95":cf_is_your_current_blood_oxygen_level_below_95,
             "ticket_cf_pulse_rate_range":cf_pulse_rate_range,
             "ticket_cf_do_you_have_a_fever_today":cf_do_you_have_a_fever_today,
+            "ticket_cf_do_you_have_fever_today":cf_do_you_have_fever_today,
             "ticket_cf_did_you_have_more_than_4_loose_motions_today":cf_did_you_have_more_than_4_loose_motions_today,
             "ticket_cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating":cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating,
+            "ticket_cf_do_you_have_chest_pain_or_abnormal_sweating":cf_do_you_have_chest_pain_or_abnormal_sweating,
             "ticket_cf_do_you_have_any_breathing_difficulty":cf_do_you_have_any_breathing_difficulty,
+            "ticket_cf_do_you_have_breathing_difficulty":cf_do_you_have_breathing_difficulty,
             "ticket_cf_do_you_have_cough_or_sore_throat_today":cf_do_you_have_cough_or_sore_throat_today,
             "ticket_cf_plasma_counsellors_decision": cf_plasma_counsellors_decision
         }
@@ -332,6 +304,9 @@ def create_recon_payload_from_ticket_details(ticket_details, worklow_id):
                                 cf_2nd_mobile_number=get_or_default(cf, "cf_2nd_mobile_number", ""),
                                 cf_clinical_status=get_or_default(cf, "cf_clinical_status", ""),
                                 cf_comoribities_diabetes=get_or_default(cf, "cf_comoribities_diabetes", ""),
+                                cf_comorbidity_diabetic=get_or_default(cf, "cf_comorbidity_diabetic", ""),
+                                cf_comorbidity_hiv=get_or_default(cf, "cf_comorbidity_hiv", ""),
+                                cf_comorbidity_heart_disease=get_or_default(cf, "cf_comorbidity_heart_disease", ""),
                                 cf_comorbidity_hypertension=get_or_default(cf, "cf_comorbidity_hypertension", ""),
                                 cf_comorbidity_cancer=get_or_default(cf, "cf_comorbidity_cancer", ""),
                                 cf_stepone_doctor_suggestion=get_or_default(cf, "cf_stepone_doctor_suggestion", ""),
@@ -343,20 +318,29 @@ def create_recon_payload_from_ticket_details(ticket_details, worklow_id):
                                 cf_tele_agent_input=get_or_default(cf, "cf_tele_agent_input", ""),
                                 cf_covid_care_center_name=get_or_default(cf, "cf_covid_care_center_name", ""),
                                 cf_hospital_name=get_or_default(cf, "cf_hospital_name", ""),
+                                cf_hospital=get_or_default(cf, "cf_hospital", ""),
                                 cf_tele_agent_notes=get_or_default(cf, "cf_tele_agent_notes", ""),
                                 cf_symptom_difficulty_in_breathing=get_or_default(cf, "cf_symptom_difficulty_in_breathing", ""),
+                                cf_symptoms_breathing_issues=get_or_default(cf, "cf_symptoms_breathing_issues", ""),
                                 cf_symptom_fever_above_101_since_3_days=get_or_default(cf, "cf_symptom_fever_above_101_since_3_days", ""),
+                                cf_symptoms_fever=get_or_default(cf, "cf_symptoms_fever", ""),
                                 cf_symptom_severe_cough=get_or_default(cf, "cf_symptom_severe_cough", ""),
+                                cf_symptoms_cough=get_or_default(cf, "cf_symptoms_cough", ""),
                                 cf_symptom_diarrhoea_above_4_times_a_day=get_or_default(cf, "cf_symptom_diarrhoea_above_4_times_a_day", ""),
+                                cf_symptoms_diarrhoealoose_stools=get_or_default(cf, "cf_symptoms_diarrhoealoose_stools", ""),
                                 cf_symptom_loss_of_smell_taste=get_or_default(cf, "cf_symptom_loss_of_smell_taste", ""),
                                 cf_plasma_counsellors_decision=get_or_default(cf, "cf_plasma_counsellors_decision", ""),
                                 cf_screeners_decision=get_or_default(cf, "cf_screeners_decision", ""),
                                 cf_if_your_current_blood_oxygen_level_is_below_95=get_or_default(cf,"cf_if_your_current_blood_oxygen_level_is_below_95",""),
+                                cf_is_your_current_blood_oxygen_level_below_95=get_or_default(cf,"cf_is_your_current_blood_oxygen_level_below_95",""),
                                 cf_pulse_rate_range=get_or_default(cf,"cf_pulse_rate_range",""),
                                 cf_do_you_have_a_fever_today=get_or_default(cf,"cf_do_you_have_a_fever_today",""),
+                                cf_do_you_have_fever_today=get_or_default(cf,"cf_do_you_have_fever_today",""),
                                 cf_did_you_have_more_than_4_loose_motions_today=get_or_default(cf,"cf_did_you_have_more_than_4_loose_motions_today",""),
                                 cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating=get_or_default(cf,"cf_do_you_have_any_chest_pain_or_have_any_abnormal_sweating",""),
+                                cf_do_you_have_chest_pain_or_abnormal_sweating=get_or_default(cf,"cf_do_you_have_chest_pain_or_abnormal_sweating",""),
                                 cf_do_you_have_any_breathing_difficulty=get_or_default(cf,"cf_do_you_have_any_breathing_difficulty",""),
+                                cf_do_you_have_breathing_difficulty=get_or_default(cf,"cf_do_you_have_breathing_difficulty",""),
                                 cf_do_you_have_cough_or_sore_throat_today=get_or_default(cf,"cf_do_you_have_cough_or_sore_throat_today",""),
                                 fsm_customer_signature=worklow_id)
 
@@ -388,62 +372,7 @@ def filter_resolved(tickets):
     return resolved_tickets
 
 
-############ API BASED RECON ###########
-
-
-def api_based_recon():
-    for resolved_ticket in filter_resolved(fetch_freshdesk_tickets(FROM, TO)):
-        print resolved_ticket
-        if (resolved_ticket.has_key("custom_fields") and resolved_ticket["custom_fields"].has_key(
-                "cf_fsm_customer_signature") and resolved_ticket["custom_fields"][
-            "cf_fsm_customer_signature"] != ''):
-            workflow = get_workflow(resolved_ticket["custom_fields"]["cf_fsm_customer_signature"])
-            recon_required_based_on_workflow(workflow)
-
-
-############ FILE BASED RECON ###########
-
-def create_recon_payload_from_csv_line(row):
-    return create_recon_payload(patient_language=get_or_default(row, "Patient Language", ""),
-                                status=get_or_default(row, "Status", ""),
-                                contact_name=get_or_default(row, "Contact", "Contact Id"),
-                                patient_age=get_or_default(row, "Patient Age", ""),
-                                patient_name=get_or_default(row, "Patient Name", ""),
-                                patient_number=get_or_default(row, "Phone number", ""),
-                                patient_gender=get_or_default(row, "Patient Gender", ""),
-                                patient_pincode=get_or_default(row, "Patient Pincode", ""),
-                                fsm_service_location=get_or_default(row, "fsm_service_location", ""),
-                                fsm_appointment_end_time=get_or_default(row, "fsm_appointment_end_time", ""),
-                                fsm_appointment_start_time=get_or_default(row, "fsm_appointment_start_time", ""),
-                                foreign_travel_history=get_or_default(row, "Foreign Travel History", ""),
-                                contact=get_or_default(row, "Contact", ""),
-                                category=get_or_default(row, "Category", ""),
-                                agent_email=get_or_default(row, "Agent Email", ""),
-                                state=get_or_default(row, "State", ""),
-                                group_name=get_or_default(row, "Group", ""),
-                                id=get_or_default(row, "Ticket Id", ""),
-                                url=get_or_default(row, "Ticket URL", ""),
-                                agent_name=get_or_default(row, "Agent", ""),
-                                tags=get_or_default(row, "Tags", ""),
-                                fsm_customer_signature=get_or_default(row, "Customer's signature", ""),
-                                doctor_notes=get_or_default(row, "Doctor Notes", ""),
-                                ticket_type=get_or_default(row, "Type", ""))
-
-
-def file_based_recon():
-    file_name = download_tickets_last_hour()
-    if (file_name is not None):
-        input_file = csv.DictReader(open(file_name))
-        for row in input_file:
-            if (row.has_key("Customer's signature") and (row['Status'] == 'Resolved' or row['Status'] == 'Closed')):
-                workflow = get_workflow(row["Customer's signature"])
-                if (recon_required_based_on_workflow(workflow)):
-                    payload = create_recon_payload_from_csv_line(row)
-                    recon_workflow(payload)
-
-
 ############ STATESMAN DB BASED RECON ###########
-
 
 
 def statesman_db_based_recon():
@@ -459,13 +388,9 @@ def statesman_db_based_recon():
                 print(workflow_id + "," + ticket_id+","+ ticket_domain)
                 ticket_details = fetch_freshdesk_ticket(ticket_domain, ticket_id)
                 if(recon_required_based_on_ticket_details(ticket_details)):
-                    payload = create_recon_payload_from_ticket_details(ticket_details,workflow_id)
-                    recon_workflow(payload)
+                    payload = create_recon_payload_from_ticket_details(ticket_details, workflow_id)
+                    recon_workflow(ticket_domain,payload)
         except Exception, e:
             print("Error for row:" + ','.join(row) + " Error" + str(e))
-
-
-# delete_match(FILE_PATH_PREFIX + "*")
-# file_based_recon()
 
 statesman_db_based_recon()
