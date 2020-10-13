@@ -129,7 +129,10 @@ CALLBACK_TEMPLATE = {
         "callback_payload": {"dayEnd": True}},
     "HI_VOILATION": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_VOILATION')",
-        "callback_payload": {"dayEnd": True}}
+        "callback_payload": {"dayEnd": True}},
+    "PLASMA_DONATION_INIT": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('PLASMA_DONATION_INIT')",
+        "callback_payload": {"retargetDormant": True}}
 
 }
 

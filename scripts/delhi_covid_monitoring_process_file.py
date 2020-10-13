@@ -58,7 +58,7 @@ def trigger_new_workflow(payload,mobileNumber,wfSource):
 def existing_workflow(phone,state):
     finalFql = """ select eventData.workflowId from statesman where eventData.workflowTemplateId in ('%s') and eventType = 'STATE_CHANGED' and eventData.newState in ('HOME_QUARANTINE','HI_ONBOARD','HOME_ISOLATION')  and eventData.data.mobile_number = '%s' limit 1  """ % (stateWorkflows[state], str(phone))
     #print(finalFql)
-    r = requests.post('https://foxtrot.ps1infra.net/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':'Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJmb3h0cm90LXNlcnZlciIsImp0aSI6IjhiMDk0MzkxLWNhYWYtNDg5MC04NTg1LWYyYWY1Y2MyOTUxMCIsImlhdCI6MTU4Njc4Mjg5NCwibmJmIjoxNTg2NzgyNzc0LCJzdWIiOiJyZXBvcnRpbmciLCJhdWQiOiJTVEFUSUMifQ.xdqRera5ZhNhzbxYtLmk2L05n_iqyfVRZiU9NGodR8iH5nQOwMmJUXUeIb92JHd2ehVHmNF9v1L50CH_txLmYw'})
+    r = requests.post('https://foxtrot.ps1infra.net/foxtrot/v1/fql', data=finalFql, headers = {"Accept": "application/json",'content-type': 'application/json','Authorization':'Bearer '})
     if(r.status_code == 200):
         for row in r.json()['rows']:
             return row['eventData.workflowId']
