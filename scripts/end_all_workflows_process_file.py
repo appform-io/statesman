@@ -15,9 +15,9 @@ processedPath='processed_end_all_workflows'
 rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('end-all-workflows')
-fqls = ["""select distinct(eventData.workflowId) from statesman where eventData.data.mobile_number = '%s'""",
-        """select distinct(eventData.workflowId) from statesman where eventData.data.contact_number = '%s'""",
-        """select distinct(eventData.workflowId) from statesman where eventData.data.phone = '%s'"""
+fqls = ["""select distinct(eventData.workflowId) from statesman where eventData.data.mobile_number = '%s' and eventData.oldState = 'HOME_ISOLATION' and last('10d') """
+        #"""select distinct(eventData.workflowId) from statesman where eventData.data.contact_number = '%s'""",
+        #"""select distinct(eventData.workflowId) from statesman where eventData.data.phone = '%s'"""
         ]
 
 def now():
@@ -54,9 +54,9 @@ for csvFileName in csvFileNames:
             for row in reader:
                 try:
                     convrow = dict((k.lower().strip().replace(' ', '_'), v.strip()) for k,v in row.iteritems())
-                    workflows = get_workflow(convrow['mobile_number'])
+                    workflows = get_workflow(convrow['phone_number'])
                     for w in workflows:
-                        jobData = {"mobile_number":convrow['mobile_number'],
+                        jobData = {"mobile_number":convrow['phone_number'],
                                    "workflowId": w,
                                    "name": "FORCE_END",
                                    "terminal": True}
