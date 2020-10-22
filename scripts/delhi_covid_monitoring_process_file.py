@@ -65,7 +65,7 @@ def existing_workflow(phone,state):
     return None
 
 
-def update_workflow(w,payload,mobileNumber):
+def update_or_trigger_new_workflow(w,payload,mobileNumber,wfSource):
     for i in range(3):
         r = requests.get(statesmanUrl + '/v1/housekeeping/debug/workflow/'+w, headers = {'content-type': 'application/json'})
         if(r.status_code != 200):
@@ -80,16 +80,17 @@ def update_workflow(w,payload,mobileNumber):
                 wd["endTime"] = payload['body']["endTime"]
                 wd["end_date"] = payload['body']["end_date"]
                 wd["maxDays"] = day_diff(workflow['created'],wd["endTime"])
-                if(workflow['dataObject']['currentState']['name'] == "END"):
-                    workflow['dataObject']['currentState']['name'] = "HOME_ISOLATION"
-                    workflow['dataObject']['currentState']['terminal'] = False
-
-                r = requests.put(statesmanUrl + '/v1/housekeeping/update/workflow',data = json.dumps(workflow) , headers = {'content-type': 'application/json'})
-                if(r.status_code == 200):
-                    print("Updated for mobileNumber:" + mobileNumber + ' workflowId:'+ w  )
-                    return True
+                if(workflow['dataObject']['currentState']['name'] == "END" or workflow['dataObject']['currentState']['name'] == "FORCE_END"):
+                    #workflow['dataObject']['currentState']['name'] = "HOME_ISOLATION"
+                    #workflow['dataObject']['currentState']['terminal'] = False
+                    return trigger_new_workflow(json.dumps(payload),mobileNumber,wfSource)
                 else:
-                    print(str(i) + ': could not update data for mobileNumber: ' + mobileNumber + ' workflowId:'+ w +  ' status:' + str(r.status_code))
+                    r = requests.put(statesmanUrl + '/v1/housekeeping/update/workflow',data = json.dumps(workflow) , headers = {'content-type': 'application/json'})
+                    if(r.status_code == 200):
+                        print("Updated for mobileNumber:" + mobileNumber + ' workflowId:'+ w  )
+                        return True
+                    else:
+                        print(str(i) + ': could not update data for mobileNumber: ' + mobileNumber + ' workflowId:'+ w +  ' status:' + str(r.status_code))
     return False
 
 for csvFileName in csvFileNames:
@@ -163,12 +164,11 @@ while jobQueue.size > 0:
             else:
                 jobQueue.ack_failed(payload)
         else:
-            print("Already exisit mobile_number:"+ mobileNumber)
-            #if(update_workflow(w, payloadDict, mobileNumber)):
-            #    jobQueue.ack(payload)
-            #else:
-            #    jobQueue.ack_failed(payload)
-            jobQueue.ack(payload)
+            #print("Has workflow to update for mobile_number:"+ mobileNumber)
+            if(update_or_trigger_new_workflow(w, payloadDict, mobileNumber,wfSource)):
+                jobQueue.ack(payload)
+            else:
+                jobQueue.ack_failed(payload)
     except Exception as e:
         print('Error processing job: ' + str(payload))
         jobQueue.ack_failed(payload)
