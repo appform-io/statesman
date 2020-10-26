@@ -89,6 +89,7 @@ public class HandleBarsHelperRegistry {
         registerURLEncode();
         registerLocalTime();
         registerAdd();
+        registerSum();
         registerCountIf();
         registerCountMatchStr();
     }
@@ -323,6 +324,31 @@ public class HandleBarsHelperRegistry {
             }
             if (option instanceof String) {
                 return aNumber.doubleValue() + Double.valueOf((String) option);
+            }
+            throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
+        });
+    }
+
+    private void registerSum() {
+        handlebars.registerHelper("sum", (Helper<Number>) (aNumber, options) -> {
+            val option = options.param(0);
+            Object[] params = options.params;
+            if (option instanceof Long) {
+                Long[] array = Arrays.asList(params).toArray(new Long[0]);
+                return aNumber.longValue() + Arrays.stream(array).reduce((long) 0, Long::sum);
+            }
+            if (option instanceof Integer) {
+                Integer[] array = Arrays.asList(params).toArray(new Integer[0]);
+                return aNumber.intValue() + Arrays.stream(array).reduce(0, Integer::sum);
+            }
+            if (option instanceof Double) {
+                Double[] array = Arrays.asList(params).toArray(new Double[0]);
+                return aNumber.doubleValue() + Arrays.stream(array).reduce((double) 0, Double::sum);
+            }
+            if (option instanceof String) {
+                String[] stringArray = Arrays.asList(params).toArray(new String[0]);
+                Double[] array = Arrays.stream(stringArray).map(Double::valueOf).toArray(Double[]::new);
+                return aNumber.doubleValue() + Arrays.stream(array).reduce((double) 0, Double::sum);
             }
             throw new StatesmanError(ResponseCode.OPERATION_NOT_SUPPORTED);
         });

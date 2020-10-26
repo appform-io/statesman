@@ -273,6 +273,19 @@ public class HandleBarsServiceTest {
 
     @Test
     @SneakyThrows
+    public void testSumMultipleNumbers() {
+        val hb = new HandleBarsService();
+        val node = Jackson.newObjectMapper()
+                .createObjectNode()
+                .put("Q1", 4)
+                .put("Q2", 1)
+                .put("Q3", 2)
+                .put("Q4", 3);
+        Assert.assertEquals("10", hb.transform("{{sum Q1 Q2 Q3 Q4}}", node));
+    }
+
+    @Test
+    @SneakyThrows
     public void testURLEncode() {
         val hb = new HandleBarsService();
         val node = Jackson.newObjectMapper()
