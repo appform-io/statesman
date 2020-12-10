@@ -10,6 +10,7 @@ import time
 import calendar
 import math
 import datetime
+import re
 scanpath='upload_covid_monitoring'
 processedPath='processed_covid_monitoring'
 rows = []
@@ -93,6 +94,10 @@ def update_or_trigger_new_workflow(w,payload,mobileNumber,wfSource):
                         print(str(i) + ': could not update data for mobileNumber: ' + mobileNumber + ' workflowId:'+ w +  ' status:' + str(r.status_code))
     return False
 
+def sanatizeKey(key):
+    key = " ".join(key.split()).lower().strip().replace(' ', '_')
+    return re.sub(r'\W+', '', key)
+
 for csvFileName in csvFileNames:
     fqFileName=scanpath + '/' + csvFileName
     fqDestFilename=processedPath + '/' + csvFileName
@@ -101,7 +106,7 @@ for csvFileName in csvFileNames:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 try:
-                    convrow = dict((" ".join(k.split()).lower().strip().replace(' ', '_'), v.strip().replace('\n', "").replace('\r',"")) for k,v in row.iteritems())
+                    convrow = dict((sanatizeKey(k), v.strip().replace('\n', "").replace('\r',"")) for k,v in row.iteritems())
                     if(convrow.has_key("")):
                         del convrow[""]
                     if(convrow.has_key("date_of_isolation") and not convrow.has_key("end_date")):
