@@ -109,6 +109,9 @@ for csvFileName in csvFileNames:
                     convrow = dict((sanatizeKey(k), v.strip().replace('\n', "").replace('\r',"")) for k,v in row.iteritems())
                     if(convrow.has_key("")):
                         del convrow[""]
+                    empty_keys = [k for k,v in convrow.iteritems() if len(str(v)) == 0]
+                    for k in empty_keys:
+                        del convrow[k]
                     if(convrow.has_key("date_of_isolation") and not convrow.has_key("end_date")):
                         convrow["end_date"] = str_date(epoch_time(convrow['date_of_isolation']) + TEN_DAYS_IN_MS)
                     invalid_schema = False
