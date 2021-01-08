@@ -17,9 +17,9 @@ rows = []
 csvFileNames = [f for f in listdir(scanpath) if isfile(join(scanpath, f))]
 jobQueue = persistqueue.UniqueAckQ('covid-monitoring')
 statesmanUrl = "http://localhost:8080"
-date_fields = ['date_of_sample_collection','date_of_isolation','end_date']
+date_fields = ['date_of_sample_collection','date_of_isolation','end_date','test_date']
 phones = set()
-stateWorkflows = {"uttarakhand":"c606cfb1-3a43-419b-a6f9-d745270dea80","tamil_nadu": "b2c71733-3da3-4e29-86ee-021565ba87b4", "puducherry":"fd20aa74-3210-4761-9e3b-4d6ab43477fb","bihar":"77ee9073-eed9-4fbb-8150-31d96af4a536","maharashtra":"7735772e-523c-45f2-b64d-116489048a2e","delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
+stateWorkflows = {"uttarakhand": "c606cfb1-3a43-419b-a6f9-d745270dea80","tamil_nadu": "b2c71733-3da3-4e29-86ee-021565ba87b4", "puducherry":"fd20aa74-3210-4761-9e3b-4d6ab43477fb","bihar":"77ee9073-eed9-4fbb-8150-31d96af4a536","maharashtra":"7735772e-523c-45f2-b64d-116489048a2e","delhi": "3efd0e4b-a6cc-4e59-9f88-bb0141a66142","punjab":"933bed6c-e6a6-4de4-9ea8-7a31d64a08dc','11dd4791-472b-454b-8f7a-39a589a6335c"}
 TEN_DAYS_IN_MS = 10 * 24 * 60 * 60 * 1000
 CURRENT_DATE = datetime.date.today()
 DAY_START_TIME = (int(datetime.datetime(CURRENT_DATE.year, CURRENT_DATE.month, CURRENT_DATE.day, 0, 0, 0).strftime('%s'))) * 1000
@@ -109,7 +109,7 @@ for csvFileName in csvFileNames:
                     convrow = dict((sanatizeKey(k), v.strip().replace('\n', "").replace('\r',"")) for k,v in row.iteritems())
                     if(convrow.has_key("")):
                         del convrow[""]
-                    empty_keys = [k for k,v in convrow.iteritems() if len(str(v)) == 0]
+                    empty_keys = [k for k,v in convrow.iteritems() if len(str(v)) == 0 or v is None or v.lower() == 'none' ]
                     for k in empty_keys:
                         del convrow[k]
                     if(convrow.has_key("date_of_isolation") and not convrow.has_key("end_date")):
@@ -125,7 +125,8 @@ for csvFileName in csvFileNames:
                     if(convrow.has_key("district")):
                         convrow["district"] = convrow['district'].lower().strip()
                     convrow['state'] = convrow['state'].lower().strip().replace(' ', '_')
-                    flow = convrow['flow'].lower().strip()
+                    convrow['flow'] =  convrow['flow'].upper().strip()
+                    flow = convrow['flow'].lower()
                     convrow['mobile_number'] = convrow['mobile_number'].split(",")[0].strip()
                     if(not stateWorkflows.has_key(convrow['state'])):
                         print("Error: Inavlid state mentioned skiping row:" + str(row))
@@ -137,6 +138,14 @@ for csvFileName in csvFileNames:
                     for date_field in date_fields:
                         if(convrow.has_key(date_field)):
                             convrow[date_field] = convrow[date_field].replace('.',r'/').replace('-',r'/')
+                            try:
+                                epoch_time(convrow[date_field])
+                            except:
+                                print("ERROR: invalid date format for field:"+date_field + " for row:"+ str(row))
+                                invalid_schema = True
+                                break
+                    if(invalid_schema):
+                        continue
                     sanitizeAge(convrow)
                     convrow['wfSource'] = convrow['state'] + '_'+flow+'_monitoring_csv'
                     endTime = epoch_time(convrow['end_date'])
