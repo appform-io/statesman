@@ -75,7 +75,7 @@ CALLBACK_TEMPLATE = {
         "callback_payload": {"status": "noanswer"}},
     "HI_PUNE_ONBOARD_DOCTOR_FOLLOW": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD_DOCTOR_FOLLOW') and template_id = '7735772e-523c-45f2-b64d-116489048a2e' ",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"dayEnd": True}},
     "HI_PUNE_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_START') and template_id = '7735772e-523c-45f2-b64d-116489048a2e' ",
         "callback_payload": {"callTrigger": True}},
