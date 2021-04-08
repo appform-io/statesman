@@ -39,112 +39,167 @@ CALLBACK_TEMPLATE = {
     },
     "IVR_ATTEMPT_1": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('IVR_ATTEMPT_1')",
-        "callback_payload": {"retryCallAttempt2": True}},
+        "callback_payload": {"retryCallAttempt2": True}
+    },
     "IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('IVR_ATTEMPT_2')",
-        "callback_payload": {"retryCallAttempt3": True}},
+        "callback_payload": {"retryCallAttempt3": True}
+    },
     "IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('IVR_ATTEMPT_3')",
-        "callback_payload": {"status": "noanswer"}},
+        "callback_payload": {"status": "noanswer"}
+    },
     "HQ_VOILATION": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HQ_VOILATION')",
-        "callback_payload": {"dayEnd": True}},
+        "callback_payload": {"dayEnd": True}
+    },
     "HI_ONBOARD": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD')",
-        "callback_payload": {"onboard": True}},
+        "callback_payload": {"onboard": True}
+    },
     "HOME_ISOLATION": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HOME_ISOLATION')",
-        "callback_payload": {"now": DAY_START_TIME}},
+        "callback_payload": {"now": DAY_START_TIME}
+    },
     "HI_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_START')",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_PUNJAB_ONBOARD_DOCTOR_FOLLOW": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD_DOCTOR_FOLLOW') and template_id in ('11dd4791-472b-454b-8f7a-39a589a6335c')",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_DAILY_FOLLOWUP": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_DAILY_FOLLOWUP')",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_IVR_ATTEMPT_1": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_ATTEMPT_1')",
-        "callback_payload": {"retryCallAttempt2": True}},
+        "callback_payload": {"retryCallAttempt2": True}
+    },
     "HI_IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_ATTEMPT_2')",
-        "callback_payload": {"retryCallAttempt3": True}},
+        "callback_payload": {"retryCallAttempt3": True}
+    },
     "HI_IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_IVR_ATTEMPT_3')",
-        "callback_payload": {"status": "noanswer"}},
+        "callback_payload": {"status": "noanswer"}
+    },
     "HI_PUNE_ONBOARD_DOCTOR_FOLLOW": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD_DOCTOR_FOLLOW') and template_id = '7735772e-523c-45f2-b64d-116489048a2e' ",
-        "callback_payload": {"dayEnd": True}},
+        "callback_payload": {"dayEnd": True}
+    },
     "HI_PUNE_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_START') and template_id = '7735772e-523c-45f2-b64d-116489048a2e' ",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_PUNE_IVR_ATTEMPT_1": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_ATTEMPT_1') and template_id = '7735772e-523c-45f2-b64d-116489048a2e' ",
-        "callback_payload": {"retryCallAttempt2": True}},
+        "callback_payload": {"retryCallAttempt2": True}
+    },
     "HI_PUNE_IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_ATTEMPT_2') and template_id = '7735772e-523c-45f2-b64d-116489048a2e' ",
-        "callback_payload": {"retryCallAttempt3": True}},
+        "callback_payload": {"retryCallAttempt3": True}
+    },
     "HI_PUNE_IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PUNE_IVR_ATTEMPT_3') and template_id = '7735772e-523c-45f2-b64d-116489048a2e' ",
-        "callback_payload": {"status": "noanswer"}},
+        "callback_payload": {"status": "noanswer"}
+    },
     "HI_BIHAR_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_START') and template_id = '77ee9073-eed9-4fbb-8150-31d96af4a536' ",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_BIHAR_IVR_ATTEMPT_1": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_ATTEMPT_1') and template_id = '77ee9073-eed9-4fbb-8150-31d96af4a536' ",
-        "callback_payload": {"retryCallAttempt2": True}},
+        "callback_payload": {"retryCallAttempt2": True}
+    },
     "HI_BIHAR_IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_ATTEMPT_2') and template_id = '77ee9073-eed9-4fbb-8150-31d96af4a536' ",
         "callback_payload": {"retryCallAttempt3": True}},
     "HI_BIHAR_IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_BIHAR_IVR_ATTEMPT_3') and template_id = '77ee9073-eed9-4fbb-8150-31d96af4a536' ",
-        "callback_payload": {"status": "noanswer"}},
+        "callback_payload": {"status": "noanswer"}
+    },
     "HI_TN_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_START') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_TN_IVR_ATTEMPT_1": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_ATTEMPT_1') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
-        "callback_payload": {"retryCallAttempt2": True}},
+        "callback_payload": {"retryCallAttempt2": True}
+    },
     "HI_TN_IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_ATTEMPT_2') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
-        "callback_payload": {"retryCallAttempt3": True}},
+        "callback_payload": {"retryCallAttempt3": True}
+    },
     "HI_TN_IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_ATTEMPT_3') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
-        "callback_payload": {"status": "noanswer"}},
+        "callback_payload": {"status": "noanswer"}
+    },
     "HI_PONDY_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PONDY_IVR_START') and template_id = 'fd20aa74-3210-4761-9e3b-4d6ab43477fb' ",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_PONDY_IVR_ATTEMPT_1": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PONDY_IVR_ATTEMPT_1') and template_id = 'fd20aa74-3210-4761-9e3b-4d6ab43477fb' ",
-        "callback_payload": {"retryCallAttempt2": True}},
+        "callback_payload": {"retryCallAttempt2": True}
+    },
     "HI_PONDY_IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PONDY_IVR_ATTEMPT_2') and template_id = 'fd20aa74-3210-4761-9e3b-4d6ab43477fb' ",
-        "callback_payload": {"retryCallAttempt3": True}},
+        "callback_payload": {"retryCallAttempt3": True}
+    },
     "HI_PONDY_IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PONDY_IVR_ATTEMPT_3') and template_id = 'fd20aa74-3210-4761-9e3b-4d6ab43477fb' ",
-        "callback_payload": {"status": "noanswer"}},
+        "callback_payload": {"status": "noanswer"}
+    },
     "HI_PONDY_ONBOARD_DOCTOR_FOLLOW": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD_DOCTOR_FOLLOW') and template_id = 'fd20aa74-3210-4761-9e3b-4d6ab43477fb' ",
-        "callback_payload": {"dayEnd": True}},
+        "callback_payload": {"dayEnd": True}
+    },
     "HI_UK_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_UK_IVR_START') and template_id = 'c606cfb1-3a43-419b-a6f9-d745270dea80' ",
-        "callback_payload": {"callTrigger": True}},
+        "callback_payload": {"callTrigger": True}
+    },
     "HI_UK_IVR_ATTEMPT_1": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_UK_IVR_ATTEMPT_1') and template_id = 'c606cfb1-3a43-419b-a6f9-d745270dea80' ",
-        "callback_payload": {"retryCallAttempt2": True}},
+        "callback_payload": {"retryCallAttempt2": True}
+    },
     "HI_UK_IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_UK_IVR_ATTEMPT_2') and template_id = 'c606cfb1-3a43-419b-a6f9-d745270dea80' ",
-        "callback_payload": {"retryCallAttempt3": True}},
+        "callback_payload": {"retryCallAttempt3": True}
+    },
     "HI_UK_IVR_ATTEMPT_3": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_UK_IVR_ATTEMPT_3') and template_id = 'c606cfb1-3a43-419b-a6f9-d745270dea80' ",
-        "callback_payload": {"status": "noanswer"}},
+        "callback_payload": {"status": "noanswer"}
+    },
     "HI_VOILATION": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_VOILATION')",
-        "callback_payload": {"dayEnd": True}},
+        "callback_payload": {"dayEnd": True}
+    },
     "PLASMA_DONATION_INIT": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('PLASMA_DONATION_INIT')",
-        "callback_payload": {"retargetDormant": True}}
+        "callback_payload": {"retargetDormant": True}
+    },
+    "VF_AP_INIT": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('VF_AP_INIT') and template_id = '29d5e34a-8a97-4a63-aaeb-f7b72857ca25' ",
+        "callback_payload": {"onboardInit": True}
+    },
+    "VF_AP_ONBOARDED": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('VF_AP_ONBOARDED') and template_id = '29d5e34a-8a97-4a63-aaeb-f7b72857ca25' ",
+        "callback_payload": {"now": DAY_START_TIME}
+    },
+    "VF_AP_IVR_START": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('VF_AP_IVR_START') and template_id = '29d5e34a-8a97-4a63-aaeb-f7b72857ca25' ",
+        "callback_payload": {"callTrigger": True}
+    },
+    "VF_AP_IVR_ATTEMPT_1": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('VF_AP_IVR_ATTEMPT_1') and template_id = '29d5e34a-8a97-4a63-aaeb-f7b72857ca25' ",
+        "callback_payload": {"retryCallAttempt2": True}
+    },
+    "VF_AP_IVR_ATTEMPT_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('VF_AP_IVR_ATTEMPT_2') and template_id = '29d5e34a-8a97-4a63-aaeb-f7b72857ca25' ",
+        "callback_payload": {"dayEnd": True}
+    }
 
 }
 
