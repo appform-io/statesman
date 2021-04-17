@@ -199,8 +199,23 @@ CALLBACK_TEMPLATE = {
     "VF_AP_IVR_ATTEMPT_2": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('VF_AP_IVR_ATTEMPT_2') and template_id = '29d5e34a-8a97-4a63-aaeb-f7b72857ca25' ",
         "callback_payload": {"dayEnd": True}
+    },
+    "HI_KA_IVR_START": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_KA_IVR_START') and template_id = '6294a243-db91-41c1-85ca-f93c3e38d52f' ",
+        "callback_payload": {"callTrigger": True}
+    },
+    "HI_KA_IVR_ATTEMPT_1": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_KA_IVR_ATTEMPT_1') and template_id = '6294a243-db91-41c1-85ca-f93c3e38d52f' ",
+        "callback_payload": {"retryCallAttempt2": True}
+    },
+    "HI_KA_IVR_ATTEMPT_2": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_KA_IVR_ATTEMPT_2') and template_id = '6294a243-db91-41c1-85ca-f93c3e38d52f' ",
+        "callback_payload": {"retryCallAttempt3": True}
+    },
+    "HI_KA_IVR_ATTEMPT_3": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_KA_IVR_ATTEMPT_3') and template_id = '6294a243-db91-41c1-85ca-f93c3e38d52f' ",
+        "callback_payload": {"status": "noanswer"}
     }
-
 }
 
 queueLock = threading.Lock()
