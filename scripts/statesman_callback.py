@@ -136,6 +136,10 @@ CALLBACK_TEMPLATE = {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_TN_IVR_ATTEMPT_3') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
         "callback_payload": {"status": "noanswer"}
     },
+    "HI_TN_ONBOARD_DOCTOR_FOLLOW": {
+        "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_ONBOARD_DOCTOR_FOLLOW') and template_id = 'b2c71733-3da3-4e29-86ee-021565ba87b4' ",
+        "callback_payload": {"dayEnd": True}
+    },
     "HI_PONDY_IVR_START": {
         "sql": "select workflow_id,current_state from workflow_instances where current_state IN ('HI_PONDY_IVR_START') and template_id = 'fd20aa74-3210-4761-9e3b-4d6ab43477fb' ",
         "callback_payload": {"callTrigger": True}
