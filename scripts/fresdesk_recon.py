@@ -17,6 +17,14 @@ FD_DOMAIN_DATA = {
             "Authorization": "Basic =="
         }
     },
+    "steponea": {
+        "statesman_recon_url" : "https://127.0.0.1/callbacks/STEPONEA_FRESHDESK",
+        "fd_url": "https://127.0.0.1/api/v2/tickets/{}",
+        "fd_headers": {
+            "Content-Type": "application/json",
+            "Authorization": "Basic =="
+        }
+    },
     "covidwatch": {
         "statesman_recon_url" : "https://127.0.0.1/callbacks/COVIDWATCH_FRESHDESK",
         "fd_url": "https://127.0.0.1/api/v2/tickets/{}",
