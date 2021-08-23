@@ -14,7 +14,7 @@
     <properties>
         <hope.version>1.0.8</hope.version>
         <handlebars.version>4.1.2</handlebars.version>
-        <jsoup.version>1.13.1</jsoup.version>
+        <jsoup.version>1.14.2</jsoup.version>
     </properties>
 
     <dependencies>
